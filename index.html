@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEV.NAME — Web Developer</title>
+  <meta name="description" content="Personal portfolio of a web developer">
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ── Toast container ─────────────────────────────────── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ================================================================
+     NAVIGATION
+     ================================================================ -->
+<nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#home" class="nav-logo" data-logo>DEV.NAME</a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#home"     data-nav>Home</a></li>
+        <li><a href="#about"    data-nav>About</a></li>
+        <li><a href="#services" data-nav>Services</a></li>
+        <li><a href="#projects" data-nav>Projects</a></li>
+        <li><a href="#contact"  data-nav>Contact</a></li>
+      </ul>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="nav-menu-mobile" id="navMobile" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+  <a href="#home"     data-nav>Home</a>
+  <a href="#about"    data-nav>About</a>
+  <a href="#services" data-nav>Services</a>
+  <a href="#projects" data-nav>Projects</a>
+  <a href="#contact"  data-nav>Contact</a>
+</div>
+
+<!-- ================================================================
+     HERO
+     ================================================================ -->
+<section id="home" class="hero">
+  <!-- Animated gradient blobs -->
+  <div class="hero-bg" aria-hidden="true"></div>
+
+  <!-- Floating geometric shapes -->
+  <div class="hero-shapes" aria-hidden="true">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+  </div>
+
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">Available for freelance work</div>
+
+      <h1 class="hero-heading gradient-text" id="heroHeading">
+        Crafting Digital Experiences That Inspire
+      </h1>
+
+      <p class="hero-sub" id="heroSub">
+        Full-stack developer specialising in modern web applications. I build things for the web that are fast, accessible, and delightful to use.
+      </p>
+
+      <div class="hero-ctas">
+        <a href="#projects" class="btn btn-primary" id="ctaPrimary">
+          See My Work
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#contact" class="btn btn-ghost" id="ctaSecondary">Contact Me</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="hero-scroll" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="hero-scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ================================================================
+     ABOUT
+     ================================================================ -->
+<section id="about" class="about">
+  <div class="container">
+    <div class="about-grid">
+      <!-- Image -->
+      <div class="about-image-wrap reveal" id="aboutImage">
+        <div class="about-image-placeholder">👨‍💻</div>
+      </div>
+
+      <!-- Text -->
+      <div class="about-text">
+        <div class="reveal">
+          <p class="section-label">About Me</p>
+          <h2 class="section-title">Passionate about <span class="gradient-text">great software</span></h2>
+        </div>
+
+        <p class="about-bio reveal" id="aboutBio">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        </p>
+
+        <div class="reveal">
+          <p style="font-size:0.8rem;font-weight:600;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:0.75rem">Tech stack</p>
+          <div class="skills-wrap" id="skillsWrap">
+            <span class="skill-tag">JavaScript</span>
+            <span class="skill-tag">TypeScript</span>
+            <span class="skill-tag">React</span>
+            <span class="skill-tag">Node.js</span>
+            <span class="skill-tag">PostgreSQL</span>
+            <span class="skill-tag">Supabase</span>
+            <span class="skill-tag">CSS</span>
+            <span class="skill-tag">HTML</span>
+            <span class="skill-tag">Git</span>
+            <span class="skill-tag">REST APIs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="about-stats" id="statsWrap">
+      <div class="stat-card glass reveal">
+        <div class="stat-number">5+</div>
+        <div class="stat-label">Years Experience</div>
+      </div>
+      <div class="stat-card glass reveal">
+        <div class="stat-number">50+</div>
+        <div class="stat-label">Projects Delivered</div>
+      </div>
+      <div class="stat-card glass reveal">
+        <div class="stat-number">30+</div>
+        <div class="stat-label">Happy Clients</div>
+      </div>
+      <div class="stat-card glass reveal">
+        <div class="stat-number">99%</div>
+        <div class="stat-label">Client Satisfaction</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     SERVICES
+     ================================================================ -->
+<section id="services" class="services">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">What I Do</p>
+      <h2 class="section-title">Services I <span class="gradient-text">offer</span></h2>
+      <p class="section-desc">From concept to deployment, I help startups and businesses build products their users love.</p>
+    </div>
+
+    <div class="services-grid" id="servicesGrid">
+      <!-- Populated by JS -->
+      <div class="service-card glass reveal">
+        <span class="service-icon">🎨</span>
+        <h3 class="service-title">UI / UX Design</h3>
+        <p class="service-desc">Crafting intuitive, beautiful interfaces that users love. Pixel-perfect designs translated into responsive code.</p>
+      </div>
+      <div class="service-card glass reveal">
+        <span class="service-icon">⚡</span>
+        <h3 class="service-title">Web Development</h3>
+        <p class="service-desc">Building fast, modern web applications with clean code and best practices. From MVPs to large-scale platforms.</p>
+      </div>
+      <div class="service-card glass reveal">
+        <span class="service-icon">📱</span>
+        <h3 class="service-title">Mobile-First</h3>
+        <p class="service-desc">Every project is built mobile-first and tested across all screen sizes for a flawless experience on any device.</p>
+      </div>
+      <div class="service-card glass reveal">
+        <span class="service-icon">🔒</span>
+        <h3 class="service-title">Performance &amp; SEO</h3>
+        <p class="service-desc">Optimising Core Web Vitals, accessibility, and search rankings so your site not only looks great but ranks and converts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     PROJECTS
+     ================================================================ -->
+<section id="projects" class="projects">
+  <div class="container">
+    <div class="projects-header">
+      <div class="reveal">
+        <p class="section-label">My Work</p>
+        <h2 class="section-title">Featured <span class="gradient-text">Projects</span></h2>
+      </div>
+      <a href="#contact" class="btn btn-ghost reveal">Hire Me →</a>
+    </div>
+
+    <div class="projects-grid" id="projectsGrid">
+      <!-- Populated by JS; fallback cards shown until data loads -->
+      <div class="project-card glass reveal">
+        <div class="project-image-placeholder">S</div>
+        <div class="project-body">
+          <h3 class="project-title">SaaS Dashboard</h3>
+          <p class="project-desc">A real-time analytics dashboard built with vanilla JS and Supabase. Features live charts, user management, and export tools.</p>
+          <div class="project-tags">
+            <span class="project-tag">JavaScript</span>
+            <span class="project-tag">Supabase</span>
+            <span class="project-tag">CSS Grid</span>
+          </div>
+        </div>
+        <div class="project-footer">
+          <a href="#" class="project-link">View Live <span>→</span></a>
+        </div>
+      </div>
+
+      <div class="project-card glass reveal">
+        <div class="project-image-placeholder">E</div>
+        <div class="project-body">
+          <h3 class="project-title">E-Commerce Store</h3>
+          <p class="project-desc">Full-featured online store with cart, checkout, and Stripe payments. Optimised for performance and conversion.</p>
+          <div class="project-tags">
+            <span class="project-tag">HTML</span>
+            <span class="project-tag">CSS</span>
+            <span class="project-tag">Stripe</span>
+          </div>
+        </div>
+        <div class="project-footer">
+          <a href="#" class="project-link">View Live <span>→</span></a>
+        </div>
+      </div>
+
+      <div class="project-card glass reveal">
+        <div class="project-image-placeholder">P</div>
+        <div class="project-body">
+          <h3 class="project-title">Portfolio Generator</h3>
+          <p class="project-desc">A drag-and-drop portfolio builder that generates a static site in seconds. Exports clean HTML/CSS.</p>
+          <div class="project-tags">
+            <span class="project-tag">JavaScript</span>
+            <span class="project-tag">IndexedDB</span>
+            <span class="project-tag">Web APIs</span>
+          </div>
+        </div>
+        <div class="project-footer">
+          <a href="#" class="project-link">View Live <span>→</span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="projects-more">
+      <button class="btn btn-ghost" id="loadMoreBtn" style="display:none">
+        Load More Projects
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     CONTACT
+     ================================================================ -->
+<section id="contact" class="contact">
+  <div class="container">
+    <div class="contact-header reveal">
+      <p class="section-label">Get In Touch</p>
+      <h2 class="section-title">Let's <span class="gradient-text">work together</span></h2>
+      <p class="section-desc">Have a project in mind? I'd love to hear about it. Send me a message and I'll get back to you as soon as possible.</p>
+    </div>
+
+    <div class="contact-grid">
+      <!-- Contact info -->
+      <div class="contact-info reveal">
+        <div class="contact-info-item">
+          <div class="contact-info-icon">📧</div>
+          <div>
+            <div class="contact-info-label">Email</div>
+            <a href="mailto:hello@example.com" class="contact-info-value" id="contactEmail">hello@example.com</a>
+          </div>
+        </div>
+
+        <div class="contact-info-item">
+          <div class="contact-info-icon">📱</div>
+          <div>
+            <div class="contact-info-label">Phone</div>
+            <a href="tel:+15550000000" class="contact-info-value" id="contactPhone">+1 (555) 000-0000</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="contact-info-label" style="margin-bottom:0.75rem">Find me on</div>
+          <div class="social-links">
+            <a href="https://github.com" target="_blank" rel="noopener" class="social-link" id="githubLink" aria-label="GitHub">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-link" id="linkedinLink" aria-label="LinkedIn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener" class="social-link" id="instagramLink" aria-label="Instagram">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form class="contact-form glass reveal" id="contactForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="fieldName">Name *</label>
+            <input class="form-input" type="text" id="fieldName" name="name" placeholder="John Doe" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fieldEmail">Email *</label>
+            <input class="form-input" type="email" id="fieldEmail" name="email" placeholder="john@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="fieldSubject">Subject</label>
+          <input class="form-input" type="text" id="fieldSubject" name="subject" placeholder="Project enquiry">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="fieldMessage">Message *</label>
+          <textarea class="form-textarea" id="fieldMessage" name="message" placeholder="Tell me about your project…" required></textarea>
+        </div>
+
+        <div class="form-status" id="formStatus" role="alert" aria-live="polite"></div>
+
+        <button type="submit" class="btn btn-primary" style="align-self:flex-start">
+          Send Message
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <a href="#home" class="footer-logo" data-logo>DEV.NAME</a>
+      <p class="footer-copy" data-copyright>© 2026 DEV.NAME. All rights reserved.</p>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#projects">Projects</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<!-- ================================================================
+     SCRIPTS
+     ================================================================ -->
+<script src="/js/supabase-config.js"></script>
+<script src="/js/main.js"></script>
+
+</body>
+</html>

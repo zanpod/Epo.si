@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — DEV.NAME</title>
+  <meta name="robots" content="noindex,nofollow">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+
+<!-- ── Toast ───────────────────────────────────────────── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ================================================================
+     LOGIN SCREEN
+     ================================================================ -->
+<div id="loginScreen" style="display:none">
+  <main class="admin-login">
+    <div class="login-card glass">
+      <div class="login-logo">DEV.NAME</div>
+      <h1 class="login-title">Welcome back</h1>
+      <p class="login-sub">Sign in to manage your portfolio</p>
+
+      <div class="login-error" id="loginError"></div>
+
+      <form class="login-form" id="loginForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email</label>
+          <input class="form-input" type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Password</label>
+          <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<!-- ================================================================
+     ADMIN LAYOUT (shown after login)
+     ================================================================ -->
+<div id="adminLayout" style="display:none" class="admin-layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="sidebar glass" id="sidebar" role="navigation" aria-label="Admin navigation">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">DEV.NAME</div>
+      <div class="sidebar-role">Admin Panel</div>
+    </div>
+
+    <nav class="sidebar-nav" role="list">
+      <button class="sidebar-link" data-section="dashboard" role="listitem">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="sidebar-link" data-section="hero" role="listitem">
+        <span class="icon">🏠</span> Hero
+      </button>
+      <button class="sidebar-link" data-section="about" role="listitem">
+        <span class="icon">👤</span> About
+      </button>
+      <button class="sidebar-link" data-section="services" role="listitem">
+        <span class="icon">⚙️</span> Services
+      </button>
+      <button class="sidebar-link" data-section="projects" role="listitem">
+        <span class="icon">💼</span> Projects
+      </button>
+      <button class="sidebar-link" data-section="messages" role="listitem">
+        <span class="icon">💬</span> Messages
+        <span class="sidebar-badge" id="msgBadge" style="display:none">0</span>
+      </button>
+      <button class="sidebar-link" data-section="settings" role="listitem">
+        <span class="icon">🔧</span> Settings
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-link btn-danger" data-section="logout" style="width:100%">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────── -->
+  <div class="admin-main">
+
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+      <h1 class="admin-topbar-title" id="topbarTitle">Dashboard</h1>
+      <a href="/" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">View Site ↗</a>
+    </header>
+
+    <!-- Content -->
+    <main class="admin-content">
+
+      <!-- ============================================================
+           SECTION: Dashboard
+           ============================================================ -->
+      <div class="admin-section active" id="section-dashboard">
+        <div class="stats-grid">
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashProjects">—</div>
+            <div class="admin-stat-label">Total Projects</div>
+          </div>
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashMessages">—</div>
+            <div class="admin-stat-label">Total Messages</div>
+          </div>
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashUnread">—</div>
+            <div class="admin-stat-label">Unread Messages</div>
+          </div>
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashUpdated">—</div>
+            <div class="admin-stat-label">Last Updated</div>
+          </div>
+        </div>
+
+        <div class="admin-card glass">
+          <div class="admin-card-title">Quick actions</div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="navigateTo('projects')">+ Add Project</button>
+            <button class="btn btn-ghost"   onclick="navigateTo('messages')">View Messages</button>
+            <button class="btn btn-ghost"   onclick="navigateTo('settings')">Site Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION: Hero
+           ============================================================ -->
+      <div class="admin-section" id="section-hero">
+        <div class="admin-card glass">
+          <div class="admin-card-title">Hero Section</div>
+          <form class="admin-form" id="heroForm">
+            <div class="form-group">
+              <label class="form-label" for="heroHeadingInput">Main Heading</label>
+              <input class="form-input" type="text" id="heroHeadingInput" placeholder="Crafting Digital Experiences…">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="heroSubInput">Subheading / Description</label>
+              <textarea class="form-textarea" id="heroSubInput" placeholder="Short description…"></textarea>
+            </div>
+
+            <div class="admin-form form-row">
+              <div class="form-group">
+                <label class="form-label" for="ctaPrimaryText">Primary CTA Text</label>
+                <input class="form-input" type="text" id="ctaPrimaryText" placeholder="See My Work">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ctaPrimaryLink">Primary CTA Link</label>
+                <input class="form-input" type="text" id="ctaPrimaryLink" placeholder="#projects">
+              </div>
+            </div>
+
+            <div class="admin-form form-row">
+              <div class="form-group">
+                <label class="form-label" for="ctaSecondaryText">Secondary CTA Text</label>
+                <input class="form-input" type="text" id="ctaSecondaryText" placeholder="Contact Me">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ctaSecondaryLink">Secondary CTA Link</label>
+                <input class="form-input" type="text" id="ctaSecondaryLink" placeholder="#contact">
+              </div>
+            </div>
+
+            <div>
+              <button type="submit" class="btn btn-primary">Save Hero</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION: About
+           ============================================================ -->
+      <div class="admin-section" id="section-about">
+        <!-- Profile photo -->
+        <div class="admin-card glass">
+          <div class="admin-card-title">Profile Photo</div>
+          <div class="image-upload-area">
+            <input type="file" id="aboutImageFile" accept="image/*" aria-label="Upload profile photo">
+            <div class="image-upload-text">
+              <strong>Click to upload</strong> or drag & drop<br>
+              <small>PNG, JPG, WebP — max 5 MB</small>
+            </div>
+          </div>
+          <img id="aboutImagePreview" class="image-preview" src="" alt="Profile preview" style="display:none">
+        </div>
+
+        <!-- Bio + skills + stats -->
+        <div class="admin-card glass">
+          <div class="admin-card-title">Bio, Skills &amp; Stats</div>
+          <form class="admin-form" id="aboutForm">
+            <div class="form-group">
+              <label class="form-label" for="aboutBioInput">Bio</label>
+              <textarea class="form-textarea" id="aboutBioInput" placeholder="Write a short bio…" style="height:120px"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Skills (press Enter to add)</label>
+              <div class="tags-input-wrap" id="skillTagsWrap">
+                <input class="tags-input" type="text" id="skillInput" placeholder="Add a skill…" autocomplete="off">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+                <label class="form-label" style="margin:0">Stats</label>
+                <button type="button" class="btn btn-sm btn-ghost" id="addStatBtn">+ Add stat</button>
+              </div>
+              <div class="stats-rows" id="statsRowsWrap"></div>
+            </div>
+
+            <div>
+              <button type="submit" class="btn btn-primary">Save About</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION: Services
+           ============================================================ -->
+      <div class="admin-section" id="section-services">
+        <div class="admin-card glass">
+          <div class="admin-card-title" style="display:flex;align-items:center;justify-content:space-between">
+            Services
+            <button class="btn btn-sm btn-primary" id="addServiceBtn">+ Add Service</button>
+          </div>
+          <div class="admin-list" id="servicesList"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION: Projects
+           ============================================================ -->
+      <div class="admin-section" id="section-projects">
+        <div class="admin-card glass">
+          <div class="admin-card-title" style="display:flex;align-items:center;justify-content:space-between">
+            Projects
+            <button class="btn btn-sm btn-primary" id="addProjectBtn">+ Add Project</button>
+          </div>
+          <div class="admin-projects-grid" id="adminProjectsGrid"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION: Messages
+           ============================================================ -->
+      <div class="admin-section" id="section-messages">
+        <div class="admin-card glass">
+          <div class="admin-card-title">Contact Messages</div>
+          <div class="messages-table-wrap">
+            <table class="messages-table" role="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Subject</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="messagesBody">
+                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION: Settings
+           ============================================================ -->
+      <div class="admin-section" id="section-settings">
+        <div class="admin-card glass">
+          <div class="admin-card-title">Site Settings</div>
+          <form class="admin-form" id="settingsForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="setSiteName">Site Name</label>
+                <input class="form-input" type="text" id="setSiteName" placeholder="DEV.NAME">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setLogoText">Logo Text</label>
+                <input class="form-input" type="text" id="setLogoText" placeholder="DEV.NAME">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="setEmail">Contact Email</label>
+                <input class="form-input" type="email" id="setEmail" placeholder="hello@example.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setPhone">Contact Phone</label>
+                <input class="form-input" type="tel" id="setPhone" placeholder="+1 (555) 000-0000">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="setGithub">GitHub URL</label>
+                <input class="form-input" type="url" id="setGithub" placeholder="https://github.com/you">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setLinkedin">LinkedIn URL</label>
+                <input class="form-input" type="url" id="setLinkedin" placeholder="https://linkedin.com/in/you">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="setInstagram">Instagram URL</label>
+              <input class="form-input" type="url" id="setInstagram" placeholder="https://instagram.com/you">
+            </div>
+
+            <hr style="border-color:var(--border);margin:0.5rem 0">
+
+            <div class="form-group">
+              <label class="form-label" for="setMetaTitle">SEO Meta Title</label>
+              <input class="form-input" type="text" id="setMetaTitle" placeholder="DEV.NAME — Web Developer">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="setMetaDesc">SEO Meta Description</label>
+              <textarea class="form-textarea" id="setMetaDesc" placeholder="Short description for search engines…" style="height:80px"></textarea>
+            </div>
+
+            <div>
+              <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main><!-- /admin-content -->
+  </div><!-- /admin-main -->
+</div><!-- /admin-layout -->
+
+<!-- ================================================================
+     MODALS
+     ================================================================ -->
+
+<!-- Service modal -->
+<div class="modal-overlay" id="serviceModal" role="dialog" aria-modal="true" aria-labelledby="serviceModalTitle">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2 class="modal-title" id="serviceModalTitle">Add Service</h2>
+      <button class="modal-close" onclick="closeModal('serviceModal')" aria-label="Close">✕</button>
+    </div>
+    <form class="admin-form" id="serviceForm">
+      <input type="hidden" id="svcId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="svcIcon">Icon (emoji)</label>
+          <input class="form-input" type="text" id="svcIcon" placeholder="🚀" maxlength="8">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="svcOrder">Sort Order</label>
+          <input class="form-input" type="number" id="svcOrder" value="0" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="svcTitle">Title</label>
+        <input class="form-input" type="text" id="svcTitle" placeholder="Service title" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="svcDesc">Description</label>
+        <textarea class="form-textarea" id="svcDesc" placeholder="Service description…" style="height:100px" required></textarea>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('serviceModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Service</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Project modal -->
+<div class="modal-overlay" id="projectModal" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2 class="modal-title" id="projectModalTitle">Add Project</h2>
+      <button class="modal-close" onclick="closeModal('projectModal')" aria-label="Close">✕</button>
+    </div>
+    <form class="admin-form" id="projectForm">
+      <input type="hidden" id="projId">
+      <input type="hidden" id="projImageUrl">
+
+      <!-- Image upload -->
+      <div class="form-group">
+        <label class="form-label">Project Image</label>
+        <div class="image-upload-area">
+          <input type="file" id="projImageFile" accept="image/*" aria-label="Upload project image">
+          <div class="image-upload-text">
+            <strong>Click to upload</strong> or drag & drop<br>
+            <small>PNG, JPG, WebP — max 5 MB</small>
+          </div>
+        </div>
+        <img id="projImagePreview" class="image-preview" src="" alt="Project preview" style="display:none">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="projTitle">Title *</label>
+          <input class="form-input" type="text" id="projTitle" placeholder="My Project" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="projOrder">Sort Order</label>
+          <input class="form-input" type="number" id="projOrder" value="0" min="0">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="projDesc">Description</label>
+        <textarea class="form-textarea" id="projDesc" placeholder="Short project description…" style="height:90px"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="projTags">Tags (comma-separated)</label>
+          <input class="form-input" type="text" id="projTags" placeholder="React, Supabase, CSS">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="projUrl">Live URL</label>
+          <input class="form-input" type="url" id="projUrl" placeholder="https://example.com">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-wrap">
+          <label class="toggle" for="projVisible" aria-label="Visible on public site">
+            <input type="checkbox" id="projVisible" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="form-label" style="margin:0">Visible on public site</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('projectModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Message view modal -->
+<div class="modal-overlay" id="messageModal" role="dialog" aria-modal="true" aria-label="View message">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2 class="modal-title">Message</h2>
+      <button class="modal-close" onclick="closeModal('messageModal')" aria-label="Close">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div>
+        <div class="form-label">From</div>
+        <div id="msgViewFrom" style="font-weight:600"></div>
+      </div>
+      <div>
+        <div class="form-label">Subject</div>
+        <div id="msgViewSubject" style="font-weight:600"></div>
+      </div>
+      <div>
+        <div class="form-label">Date</div>
+        <div id="msgViewDate" style="color:var(--text-muted);font-size:.88rem"></div>
+      </div>
+      <div>
+        <div class="form-label">Message</div>
+        <div id="msgViewBody" style="color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;padding:1rem;background:rgba(255,255,255,.03);border-radius:var(--radius);border:1px solid var(--border)"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeModal('messageModal')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     SCRIPTS
+     ================================================================ -->
+<script src="/js/supabase-config.js"></script>
+<script src="/js/admin.js"></script>
+
+</body>
+</html>
