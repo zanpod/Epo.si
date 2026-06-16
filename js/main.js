@@ -87,7 +87,7 @@ function applySettings(s) {
   if (metaDesc && s.meta_description) metaDesc.content = s.meta_description;
 
   // Logo
-  document.querySelectorAll('[data-logo]').forEach(el => el.textContent = s.logo_text || 'DEV.NAME');
+  document.querySelectorAll('[data-logo]').forEach(el => el.textContent = s.logo_text || 'EPO.SI');
 
   // Hero
   const heroHeading = document.getElementById('heroHeading');
@@ -161,7 +161,7 @@ function applySettings(s) {
 
   // Footer
   document.querySelectorAll('[data-copyright]').forEach(el => {
-    el.textContent = `© ${new Date().getFullYear()} ${s.site_name || 'DEV.NAME'}. Vse pravice pridržane.`;
+    el.textContent = `© ${new Date().getFullYear()} ${s.site_name || 'EPO.SI'}. Vse pravice pridržane.`;
   });
 }
 

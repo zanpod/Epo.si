@@ -9,14 +9,14 @@ create extension if not exists "uuid-ossp";
 -- ── settings (single row) ─────────────────────────────────
 create table if not exists settings (
   id                  uuid primary key default uuid_generate_v4(),
-  site_name           text not null default 'DEV.NAME',
-  logo_text           text not null default 'DEV.NAME',
+  site_name           text not null default 'EPO.SI',
+  logo_text           text not null default 'EPO.SI',
   contact_email       text default 'hello@example.com',
   contact_phone       text default '+1 (555) 000-0000',
   github_url          text default 'https://github.com',
   linkedin_url        text default 'https://linkedin.com',
   instagram_url       text default 'https://instagram.com',
-  meta_title          text default 'DEV.NAME — Web Developer',
+  meta_title          text default 'EPO.SI — Spletne rešitve po meri',
   meta_description    text default 'Personal portfolio of a web developer',
   hero_heading        text default 'Crafting Digital Experiences That Inspire',
   hero_subheading     text default 'Full-stack developer specializing in modern web applications. I build things for the web that are fast, accessible, and delightful to use.',
