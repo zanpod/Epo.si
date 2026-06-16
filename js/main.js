@@ -264,6 +264,7 @@ function initContactForm() {
         name:    data.name.trim(),
         email:   data.email.trim(),
         subject: data.subject.trim(),
+        company: (data.company || '').trim(),
         message: data.message.trim(),
       }]);
 
@@ -271,7 +272,7 @@ function initContactForm() {
 
       // Attempt to call Edge Function for email notification (non-blocking)
       supabaseClient.functions.invoke('send-contact-email', {
-        body: { name: data.name, email: data.email, subject: data.subject, message: data.message },
+        body: { name: data.name, email: data.email, subject: data.subject, company: data.company, message: data.message },
       }).catch(() => {}); // ignore if function not deployed
 
       form.reset();
@@ -303,7 +304,7 @@ function setLoading(btn, loading) {
     btn.innerHTML = '<span class="spinner"></span> Pošiljam…';
     btn.disabled = true;
   } else {
-    btn.innerHTML = btn.dataset.originalText || 'Pošlji sporočilo';
+    btn.innerHTML = btn.dataset.originalText || 'Pošljite sporočilo';
     btn.disabled = false;
   }
 }
