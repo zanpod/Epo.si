@@ -459,9 +459,10 @@ body::before {
 .hero-heading {
   font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 900;
-  line-height: 1.08;
+  line-height: 1.15;
   letter-spacing: -0.03em;
   margin-bottom: 1.5rem;
+  padding-bottom: 0.12em;
   max-width: 800px;
 }
 
