@@ -975,6 +975,7 @@ async function loadCustomers() {
         <div style="display:flex;align-items:center;gap:0.6rem">
           <span style="font-weight:600">${eur(q.total)}</span>
           <button class="btn btn-sm btn-ghost" onclick="downloadStoredQuote('${q.id}')">PDF</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteQuote('${q.id}')" aria-label="Izbriši ponudbo">✕</button>
         </div>
       </div>
     `).join('') : '<div style="font-size:0.85rem;color:var(--text-muted);padding-top:0.45rem;border-top:1px solid var(--border)">Še ni ponudb.</div>';
@@ -1051,6 +1052,14 @@ async function deleteCustomer(id) {
   const { error } = await supabaseClient.from('customers').delete().eq('id', id);
   if (error) { toast('Napaka pri brisanju stranke', 'error'); return; }
   toast('Stranka izbrisana', 'success');
+  loadCustomers();
+}
+
+async function deleteQuote(id) {
+  if (!confirm('Trajno izbrišete to ponudbo? Tega dejanja ni mogoče razveljaviti.')) return;
+  const { error } = await supabaseClient.from('quotes').delete().eq('id', id);
+  if (error) { toast('Napaka pri brisanju ponudbe', 'error'); return; }
+  toast('Ponudba izbrisana', 'success');
   loadCustomers();
 }
 
