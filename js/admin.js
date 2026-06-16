@@ -97,7 +97,7 @@ function navigateTo(section) {
   const title = document.getElementById('topbarTitle');
   const labels = {
     dashboard: 'Nadzorna plošča', hero: 'Naslovna stran', about: 'O nas',
-    services: 'Storitve', projects: 'Projekti',
+    services: 'Storitve', projects: 'Projekti', customers: 'Stranke',
     messages: 'Sporočila', settings: 'Nastavitve',
   };
   if (title) title.textContent = labels[section] || section;
@@ -117,6 +117,7 @@ async function loadSection(section) {
     case 'about':     return loadAbout();
     case 'services':  return loadServices();
     case 'projects':  return loadProjects();
+    case 'customers': return loadCustomers();
     case 'messages':  return loadMessages();
     case 'settings':  return loadSettings();
   }
@@ -534,21 +535,44 @@ let agencyInfo = {};
 async function createQuote(contactId) {
   const { data: contact } = await supabaseClient.from('contacts').select('*').eq('id', contactId).single();
   await loadAgencyInfo();
+  openQuoteModal({
+    contactId: contact?.id ?? '',
+    name:      contact?.company || contact?.name || '',
+    email:     contact?.email ?? '',
+    items:     [{ description: contact?.subject ? `Izdelava: ${contact.subject}` : '', qty: 1, price: 0 }],
+  });
+}
 
-  setVal('quoteContactId',     contact?.id ?? '');
-  setVal('quoteCustomerName',  contact?.name ?? '');
-  setVal('quoteCustomerEmail', contact?.email ?? '');
-  setVal('quoteNumber',        genQuoteNumber());
-  setVal('quoteNotes',         'Veljavnost ponudbe je 14 dni. Plačilo v roku 8 dni po izstavitvi računa.');
+// Open the quote builder for an existing customer.
+async function createQuoteForCustomer(customerId) {
+  const { data: c } = await supabaseClient.from('customers').select('*').eq('id', customerId).single();
+  await loadAgencyInfo();
+  openQuoteModal({
+    customerId: c?.id ?? '',
+    name:       c?.company_name ?? '',
+    email:      c?.email ?? '',
+    tax:        c?.tax_number ?? '',
+    address:    c?.address ?? '',
+    items:      [{ description: '', qty: 1, price: 0 }],
+  });
+}
+
+function openQuoteModal(p = {}) {
+  setVal('quoteContactId',      p.contactId ?? '');
+  setVal('quoteCustomerId',     p.customerId ?? '');
+  setVal('quoteCustomerName',   p.name ?? '');
+  setVal('quoteCustomerEmail',  p.email ?? '');
+  setVal('quoteCustomerTax',    p.tax ?? '');
+  setVal('quoteCustomerAddress', p.address ?? '');
+  setVal('quoteNumber',         genQuoteNumber());
+  setVal('quoteNotes',          'Veljavnost ponudbe je 14 dni. Plačilo v roku 8 dni po izstavitvi računa.');
 
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + 14);
   setVal('quoteValidUntil', validUntil.toISOString().slice(0, 10));
 
-  const firstDesc = contact?.subject ? `Izdelava: ${contact.subject}` : '';
-  quoteItems = [{ description: firstDesc, qty: 1, price: 0 }];
+  quoteItems = (p.items && p.items.length) ? p.items : [{ description: '', qty: 1, price: 0 }];
   renderQuoteItems();
-
   openModal('quoteModal');
 }
 
@@ -618,17 +642,39 @@ function eur(n) {
   return new Intl.NumberFormat('sl-SI', { style: 'currency', currency: 'EUR' }).format(n || 0);
 }
 
+// Pure totals helper (works on any items + vat rate).
+function totalsFor(items, vatRate) {
+  const subtotal = (items || []).reduce((s, it) => s + ((it.qty || 0) * (it.price || 0)), 0);
+  const rate = vatRate || 0;
+  const vat  = subtotal * rate / 100;
+  return { subtotal, vatRate: rate, vat, total: subtotal + vat };
+}
+
+// Read the current quote form into a plain data object.
+function currentQuoteData() {
+  return {
+    number:          getVal('quoteNumber'),
+    validUntil:      getVal('quoteValidUntil'),
+    customerName:    getVal('quoteCustomerName'),
+    customerEmail:   getVal('quoteCustomerEmail'),
+    customerTax:     getVal('quoteCustomerTax'),
+    customerAddress: getVal('quoteCustomerAddress'),
+    notes:           getVal('quoteNotes'),
+    vatRate:         document.getElementById('quoteVatEnabled')?.checked ? (parseFloat(getVal('quoteVat')) || 0) : 0,
+    items:           quoteItems.map(it => ({ description: it.description, qty: it.qty, price: it.price })),
+  };
+}
+
 // Build the printable quote HTML (light theme, A4 width) for PDF rendering.
-function buildQuoteHtml() {
-  const t = computeQuoteTotals();
+function buildQuoteHtml(q) {
+  const t = totalsFor(q.items, q.vatRate);
   const a = agencyInfo;
   const company  = a.company_name || a.site_name || a.logo_text || 'EPO.SI';
-  const number   = getVal('quoteNumber');
+  const number   = q.number;
   const today    = new Date().toLocaleDateString('sl-SI');
-  const validUntil = getVal('quoteValidUntil')
-    ? new Date(getVal('quoteValidUntil')).toLocaleDateString('sl-SI') : '';
+  const validUntil = q.validUntil ? new Date(q.validUntil).toLocaleDateString('sl-SI') : '';
 
-  const rows = quoteItems
+  const rows = (q.items || [])
     .filter(it => it.description || it.price)
     .map((it, idx) => `
       <tr>
@@ -664,8 +710,10 @@ function buildQuoteHtml() {
 
     <div style="margin-bottom:26px">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px">Naslovnik</div>
-      <div style="font-size:15px;font-weight:600">${escHtml(getVal('quoteCustomerName'))}</div>
-      <div style="font-size:13px;color:#555">${escHtml(getVal('quoteCustomerEmail'))}</div>
+      <div style="font-size:15px;font-weight:600">${escHtml(q.customerName)}</div>
+      ${q.customerAddress ? `<div style="font-size:13px;color:#555">${escHtml(q.customerAddress)}</div>` : ''}
+      ${q.customerTax ? `<div style="font-size:13px;color:#555">Davčna št.: ${escHtml(q.customerTax)}</div>` : ''}
+      <div style="font-size:13px;color:#555">${escHtml(q.customerEmail)}</div>
     </div>
 
     <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -689,10 +737,10 @@ function buildQuoteHtml() {
       </table>
     </div>
 
-    ${getVal('quoteNotes') ? `
+    ${q.notes ? `
     <div style="margin-top:34px;padding-top:18px;border-top:1px solid #eee">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px">Opombe</div>
-      <div style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">${escHtml(getVal('quoteNotes'))}</div>
+      <div style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">${escHtml(q.notes)}</div>
     </div>` : ''}
 
     <div style="margin-top:42px;text-align:center;font-size:11px;color:#aaa">
@@ -702,12 +750,12 @@ function buildQuoteHtml() {
 }
 
 // Render the quote HTML to a jsPDF document via html2canvas.
-async function generateQuotePdf() {
+async function generateQuotePdf(q) {
   if (!window.jspdf || !window.html2canvas) {
     throw new Error('Knjižnice za PDF se niso naložile');
   }
   const tpl = document.getElementById('quotePdfTemplate');
-  tpl.innerHTML = buildQuoteHtml();
+  tpl.innerHTML = buildQuoteHtml(q);
   const node = tpl.firstElementChild;
 
   try {
@@ -740,8 +788,9 @@ document.getElementById('quoteDownloadBtn')?.addEventListener('click', async (e)
   const btn = e.currentTarget;
   setLoading(btn, true);
   try {
-    const pdf = await generateQuotePdf();
-    pdf.save(`${getVal('quoteNumber') || 'ponudba'}.pdf`);
+    const q = currentQuoteData();
+    const pdf = await generateQuotePdf(q);
+    pdf.save(`${q.number || 'ponudba'}.pdf`);
   } catch (err) {
     toast('Izdelava PDF ni uspela: ' + (err.message || err), 'error');
   } finally {
@@ -749,66 +798,244 @@ document.getElementById('quoteDownloadBtn')?.addEventListener('click', async (e)
   }
 });
 
+// Find an existing customer (by tax number, then name, then email) or create one.
+async function findOrCreateCustomer(q) {
+  const explicitId = getVal('quoteCustomerId');
+  const record = {
+    company_name: q.customerName,
+    tax_number:   q.customerTax || '',
+    email:        q.customerEmail || '',
+    address:      q.customerAddress || '',
+  };
+
+  // Quote opened directly from an existing customer → update & reuse it.
+  if (explicitId) {
+    await supabaseClient.from('customers').update(record).eq('id', explicitId);
+    return explicitId;
+  }
+
+  let match = null;
+  if (q.customerTax) {
+    ({ data: match } = await supabaseClient.from('customers').select('id')
+      .eq('tax_number', q.customerTax).limit(1).maybeSingle());
+  }
+  if (!match && q.customerName) {
+    ({ data: match } = await supabaseClient.from('customers').select('id')
+      .ilike('company_name', q.customerName).limit(1).maybeSingle());
+  }
+  if (!match && q.customerEmail) {
+    ({ data: match } = await supabaseClient.from('customers').select('id')
+      .ilike('email', q.customerEmail).limit(1).maybeSingle());
+  }
+
+  if (match) {
+    await supabaseClient.from('customers').update(record).eq('id', match.id);
+    return match.id;
+  }
+
+  const { data: created } = await supabaseClient.from('customers').insert([record]).select('id').single();
+  return created?.id ?? null;
+}
+
 document.getElementById('quoteForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = e.target.querySelector('[type="submit"]');
-  const to  = getVal('quoteCustomerEmail');
-  if (!to) { toast('Vnesite e-pošto stranke', 'error'); return; }
+  const q   = currentQuoteData();
+  if (!q.customerEmail) { toast('Vnesite e-pošto stranke', 'error'); return; }
 
   setLoading(btn, true);
   try {
-    const pdf = await generateQuotePdf();
+    const pdf = await generateQuotePdf(q);
     const pdfBase64 = pdf.output('datauristring').split(',')[1];
 
-    const t       = computeQuoteTotals();
-    const number  = getVal('quoteNumber');
+    const t       = totalsFor(q.items, q.vatRate);
     const company = agencyInfo.company_name || agencyInfo.site_name || 'EPO.SI';
-    const validUntil = getVal('quoteValidUntil')
-      ? new Date(getVal('quoteValidUntil')).toLocaleDateString('sl-SI') : '';
+    const validUntilStr = q.validUntil ? new Date(q.validUntil).toLocaleDateString('sl-SI') : '';
 
     const { error } = await supabaseClient.functions.invoke('send-quote', {
       body: {
-        to,
-        toName:       getVal('quoteCustomerName'),
-        subject:      `Ponudba ${number} — ${company}`,
+        to:           q.customerEmail,
+        toName:       q.customerName,
+        subject:      `Ponudba ${q.number} — ${company}`,
         replyTo:      agencyInfo.contact_email || undefined,
-        fileName:     `${number || 'ponudba'}.pdf`,
+        fileName:     `${q.number || 'ponudba'}.pdf`,
         pdfBase64,
         companyName:  company,
         companyEmail: agencyInfo.contact_email || '',
         companyPhone: agencyInfo.contact_phone || '',
-        quoteNumber:  number,
+        quoteNumber:  q.number,
         total:        eur(t.total),
-        validUntil,
+        validUntil:   validUntilStr,
       },
     });
     if (error) throw error;
 
-    // Record the quote (best-effort; ignore if table not yet created)
+    // Create/locate the customer, then record the quote under it (best-effort).
     try {
+      const customerId = await findOrCreateCustomer(q);
       await supabaseClient.from('quotes').insert([{
-        contact_id:     getVal('quoteContactId') || null,
-        quote_number:   number,
-        customer_name:  getVal('quoteCustomerName'),
-        customer_email: to,
-        items:          quoteItems,
-        subtotal:       t.subtotal,
-        vat_rate:       t.vatRate,
-        total:          t.total,
-        notes:          getVal('quoteNotes'),
-        valid_until:    getVal('quoteValidUntil') || null,
-        sent_at:        new Date().toISOString(),
+        contact_id:       getVal('quoteContactId') || null,
+        customer_id:      customerId,
+        quote_number:     q.number,
+        customer_name:    q.customerName,
+        customer_email:   q.customerEmail,
+        customer_tax:     q.customerTax || '',
+        customer_address: q.customerAddress || '',
+        items:            q.items,
+        subtotal:         t.subtotal,
+        vat_rate:         t.vatRate,
+        total:            t.total,
+        notes:            q.notes,
+        valid_until:      q.validUntil || null,
+        sent_at:          new Date().toISOString(),
       }]);
-    } catch (_) { /* quotes table optional */ }
+    } catch (_) { /* customers/quotes tables optional */ }
 
     toast('Ponudba poslana stranki', 'success');
     closeModal('quoteModal');
+    if (currentSection === 'customers') loadCustomers();
   } catch (err) {
     toast('Pošiljanje ponudbe ni uspelo: ' + (err.message || err), 'error');
   } finally {
     setLoading(btn, false);
   }
 });
+
+// ── Customers (stranke) ───────────────────────────────────────
+async function loadCustomers() {
+  await loadAgencyInfo();
+  const [{ data: customers }, { data: quotes }] = await Promise.all([
+    supabaseClient.from('customers').select('*').order('company_name'),
+    supabaseClient.from('quotes').select('*').order('created_at', { ascending: false }),
+  ]);
+
+  const list = document.getElementById('customersList');
+  if (!list) return;
+
+  if (!customers?.length) {
+    list.innerHTML = '<p style="color:var(--text-muted)">Še ni strank. Stranka se ustvari samodejno ob pošiljanju ponudbe ali jo dodate ročno.</p>';
+    return;
+  }
+
+  const byCustomer = {};
+  (quotes || []).forEach(q => {
+    const k = q.customer_id || '_none';
+    (byCustomer[k] = byCustomer[k] || []).push(q);
+  });
+
+  list.innerHTML = customers.map(c => {
+    const cq = byCustomer[c.id] || [];
+    const quotesHtml = cq.length ? cq.map(q => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.45rem 0;border-top:1px solid var(--border)">
+        <div style="font-size:0.85rem">
+          <strong>${escHtml(q.quote_number)}</strong>
+          <span style="color:var(--text-muted)"> · ${q.sent_at ? new Date(q.sent_at).toLocaleDateString('sl-SI') : new Date(q.created_at).toLocaleDateString('sl-SI')}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.6rem">
+          <span style="font-weight:600">${eur(q.total)}</span>
+          <button class="btn btn-sm btn-ghost" onclick="downloadStoredQuote('${q.id}')">PDF</button>
+        </div>
+      </div>
+    `).join('') : '<div style="font-size:0.85rem;color:var(--text-muted);padding-top:0.45rem;border-top:1px solid var(--border)">Še ni ponudb.</div>';
+
+    return `
+      <div class="admin-list-item" data-id="${c.id}" style="flex-direction:column;align-items:stretch;gap:0.6rem">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem">
+          <div class="admin-list-item-body">
+            <div class="admin-list-item-title">${escHtml(c.company_name || '(brez naziva)')}</div>
+            <div class="admin-list-item-desc">
+              ${c.tax_number ? `Davčna: ${escHtml(c.tax_number)} · ` : ''}${escHtml(c.email || '')}${c.phone ? ` · ${escHtml(c.phone)}` : ''}
+            </div>
+          </div>
+          <div class="admin-list-item-actions" style="display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn btn-sm btn-primary" onclick="createQuoteForCustomer('${c.id}')">+ Ponudba</button>
+            <button class="btn btn-sm btn-ghost" onclick="editCustomer('${c.id}')">Uredi</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${c.id}')">Izbriši</button>
+          </div>
+        </div>
+        <div>${quotesHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+document.getElementById('addCustomerBtn')?.addEventListener('click', () => openCustomerModal(null));
+
+async function editCustomer(id) {
+  const { data } = await supabaseClient.from('customers').select('*').eq('id', id).single();
+  if (data) openCustomerModal(data);
+}
+
+function openCustomerModal(c) {
+  setVal('custId',          c?.id ?? '');
+  setVal('custCompanyName', c?.company_name ?? '');
+  setVal('custTax',         c?.tax_number ?? '');
+  setVal('custEmail',       c?.email ?? '');
+  setVal('custPhone',       c?.phone ?? '');
+  setVal('custAddress',     c?.address ?? '');
+  setVal('custNotes',       c?.notes ?? '');
+  document.getElementById('customerModalTitle').textContent = c ? 'Uredi stranko' : 'Dodaj stranko';
+  openModal('customerModal');
+}
+
+document.getElementById('customerForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type="submit"]');
+  const id  = getVal('custId');
+  const payload = {
+    company_name: getVal('custCompanyName'),
+    tax_number:   getVal('custTax'),
+    email:        getVal('custEmail'),
+    phone:        getVal('custPhone'),
+    address:      getVal('custAddress'),
+    notes:        getVal('custNotes'),
+  };
+
+  setLoading(btn, true);
+  let error;
+  if (id) {
+    ({ error } = await supabaseClient.from('customers').update(payload).eq('id', id));
+  } else {
+    ({ error } = await supabaseClient.from('customers').insert([payload]));
+  }
+  setLoading(btn, false);
+
+  if (error) { toast('Napaka pri shranjevanju stranke', 'error'); return; }
+  toast('Stranka shranjena', 'success');
+  closeModal('customerModal');
+  loadCustomers();
+});
+
+async function deleteCustomer(id) {
+  if (!confirm('Izbrišete to stranko? Povezane ponudbe ostanejo shranjene, a brez povezave na stranko.')) return;
+  const { error } = await supabaseClient.from('customers').delete().eq('id', id);
+  if (error) { toast('Napaka pri brisanju stranke', 'error'); return; }
+  toast('Stranka izbrisana', 'success');
+  loadCustomers();
+}
+
+// Regenerate and download a previously stored quote as PDF.
+async function downloadStoredQuote(id) {
+  await loadAgencyInfo();
+  const { data: row } = await supabaseClient.from('quotes').select('*').eq('id', id).single();
+  if (!row) { toast('Ponudbe ni mogoče najti', 'error'); return; }
+  const q = {
+    number:          row.quote_number,
+    validUntil:      row.valid_until,
+    customerName:    row.customer_name,
+    customerEmail:   row.customer_email,
+    customerTax:     row.customer_tax,
+    customerAddress: row.customer_address,
+    notes:           row.notes,
+    vatRate:         Number(row.vat_rate) || 0,
+    items:           Array.isArray(row.items) ? row.items : [],
+  };
+  try {
+    const pdf = await generateQuotePdf(q);
+    pdf.save(`${q.number || 'ponudba'}.pdf`);
+  } catch (err) {
+    toast('Izdelava PDF ni uspela: ' + (err.message || err), 'error');
+  }
+}
 
 // ── Settings ──────────────────────────────────────────────────
 async function loadSettings() {

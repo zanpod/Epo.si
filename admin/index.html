@@ -74,6 +74,9 @@
       <button class="sidebar-link" data-section="projects" role="listitem">
         <span class="icon">💼</span> Projekti
       </button>
+      <button class="sidebar-link" data-section="customers" role="listitem">
+        <span class="icon">👥</span> Stranke
+      </button>
       <button class="sidebar-link" data-section="messages" role="listitem">
         <span class="icon">💬</span> Sporočila
         <span class="sidebar-badge" id="msgBadge" style="display:none">0</span>
@@ -252,6 +255,19 @@
             <button class="btn btn-sm btn-primary" id="addProjectBtn">+ Dodaj projekt</button>
           </div>
           <div class="admin-projects-grid" id="adminProjectsGrid"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           RAZDELEK: Stranke
+           ============================================================ -->
+      <div class="admin-section" id="section-customers">
+        <div class="admin-card glass">
+          <div class="admin-card-title" style="display:flex;align-items:center;justify-content:space-between">
+            Stranke
+            <button class="btn btn-sm btn-primary" id="addCustomerBtn">+ Dodaj stranko</button>
+          </div>
+          <div class="admin-list" id="customersList"></div>
         </div>
       </div>
 
@@ -520,15 +536,27 @@
     </div>
     <form class="admin-form" id="quoteForm">
       <input type="hidden" id="quoteContactId">
+      <input type="hidden" id="quoteCustomerId">
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="quoteCustomerName">Stranka *</label>
+          <label class="form-label" for="quoteCustomerName">Stranka / naziv *</label>
           <input class="form-input" type="text" id="quoteCustomerName" required>
         </div>
         <div class="form-group">
           <label class="form-label" for="quoteCustomerEmail">E-pošta stranke *</label>
           <input class="form-input" type="email" id="quoteCustomerEmail" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="quoteCustomerTax">Davčna številka</label>
+          <input class="form-input" type="text" id="quoteCustomerTax" placeholder="SI12345678">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="quoteCustomerAddress">Naslov stranke</label>
+          <input class="form-input" type="text" id="quoteCustomerAddress" placeholder="Ulica 1, 1000 Ljubljana">
         </div>
       </div>
 
@@ -578,6 +606,51 @@
         <button type="button" class="btn btn-ghost"   onclick="closeModal('quoteModal')">Prekliči</button>
         <button type="button" class="btn btn-ghost"   id="quoteDownloadBtn">Prenesi PDF</button>
         <button type="submit"  class="btn btn-primary">Pošlji stranki</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal za stranko -->
+<div class="modal-overlay" id="customerModal" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2 class="modal-title" id="customerModalTitle">Dodaj stranko</h2>
+      <button class="modal-close" onclick="closeModal('customerModal')" aria-label="Zapri">✕</button>
+    </div>
+    <form class="admin-form" id="customerForm">
+      <input type="hidden" id="custId">
+      <div class="form-group">
+        <label class="form-label" for="custCompanyName">Naziv / ime *</label>
+        <input class="form-input" type="text" id="custCompanyName" placeholder="Podjetje d.o.o." required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="custTax">Davčna številka</label>
+          <input class="form-input" type="text" id="custTax" placeholder="SI12345678">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="custEmail">E-pošta</label>
+          <input class="form-input" type="email" id="custEmail" placeholder="info@podjetje.si">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="custPhone">Telefon</label>
+          <input class="form-input" type="tel" id="custPhone" placeholder="+386 ...">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="custAddress">Naslov</label>
+          <input class="form-input" type="text" id="custAddress" placeholder="Ulica 1, 1000 Ljubljana">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="custNotes">Opombe</label>
+        <textarea class="form-textarea" id="custNotes" style="height:70px"></textarea>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('customerModal')">Prekliči</button>
+        <button type="submit" class="btn btn-primary">Shrani stranko</button>
       </div>
     </form>
   </div>

@@ -23,7 +23,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { name, email, subject, message } = await req.json();
+    const { name, email, subject, company, message } = await req.json();
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     const NOTIFY_EMAIL   = Deno.env.get('NOTIFY_EMAIL');
@@ -40,6 +40,7 @@ serve(async (req: Request) => {
 New contact form submission from your portfolio.
 
 From:    ${name} <${email}>
+Company: ${company || '(not provided)'}
 Subject: ${subject || '(no subject)'}
 
 Message:
@@ -56,6 +57,10 @@ Sent via your portfolio contact form.
     <tr>
       <td style="padding:0.5rem 0;color:#aaa;width:80px">From:</td>
       <td style="padding:0.5rem 0"><strong>${escHtml(name)}</strong> &lt;${escHtml(email)}&gt;</td>
+    </tr>
+    <tr>
+      <td style="padding:0.5rem 0;color:#aaa">Company:</td>
+      <td style="padding:0.5rem 0">${escHtml(company || '(not provided)')}</td>
     </tr>
     <tr>
       <td style="padding:0.5rem 0;color:#aaa">Subject:</td>

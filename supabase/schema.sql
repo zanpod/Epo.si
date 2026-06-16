@@ -96,18 +96,41 @@ create table if not exists contacts (
   name       text not null,
   email      text not null,
   subject    text not null default '',
+  company    text not null default '',
   message    text not null,
   is_read    boolean not null default false,
   created_at timestamptz default now()
 );
 
+-- Optional company name from the contact form (upgrades existing DBs).
+alter table contacts add column if not exists company text not null default '';
+
+-- ── customers (stranke) ───────────────────────────────────
+create table if not exists customers (
+  id           uuid primary key default uuid_generate_v4(),
+  company_name text not null default '',
+  tax_number   text default '',  -- davčna številka
+  email        text default '',
+  phone        text default '',
+  address      text default '',
+  notes        text default '',
+  created_at   timestamptz default now()
+);
+
+-- De-duplicate customers by tax number when one is provided.
+create unique index if not exists customers_tax_number_key
+  on customers (tax_number) where tax_number <> '';
+
 -- ── quotes (ponudbe sent to customers) ────────────────────
 create table if not exists quotes (
   id             uuid primary key default uuid_generate_v4(),
-  contact_id     uuid references contacts(id) on delete set null,
+  contact_id     uuid references contacts(id)  on delete set null,
+  customer_id    uuid references customers(id) on delete set null,
   quote_number   text not null,
   customer_name  text not null default '',
   customer_email text not null default '',
+  customer_tax   text default '',
+  customer_address text default '',
   items          jsonb not null default '[]',
   subtotal       numeric not null default 0,
   vat_rate       numeric not null default 0,
@@ -118,6 +141,11 @@ create table if not exists quotes (
   created_at     timestamptz default now()
 );
 
+-- Upgrade existing quotes tables.
+alter table quotes add column if not exists customer_id      uuid references customers(id) on delete set null;
+alter table quotes add column if not exists customer_tax     text default '';
+alter table quotes add column if not exists customer_address text default '';
+
 -- ============================================================
 -- Row-Level Security
 -- ============================================================
@@ -126,6 +154,7 @@ alter table settings  enable row level security;
 alter table services  enable row level security;
 alter table projects  enable row level security;
 alter table contacts  enable row level security;
+alter table customers enable row level security;
 alter table quotes    enable row level security;
 
 -- settings: public read, authenticated write
@@ -155,6 +184,10 @@ create policy "Public can submit contacts"
 
 create policy "Authenticated can manage contacts"
   on contacts for all using (auth.role() = 'authenticated');
+
+-- customers: only authenticated (admin) can read/manage
+create policy "Authenticated can manage customers"
+  on customers for all using (auth.role() = 'authenticated');
 
 -- quotes: only authenticated (admin) can read/manage
 create policy "Authenticated can manage quotes"
