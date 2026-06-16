@@ -303,7 +303,7 @@ function setLoading(btn, loading) {
     btn.innerHTML = '<span class="spinner"></span> Pošiljam…';
     btn.disabled = true;
   } else {
-    btn.innerHTML = btn.dataset.originalText || 'Pošlji sporočilo';
+    btn.innerHTML = btn.dataset.originalText || 'Pošljite sporočilo';
     btn.disabled = false;
   }
 }

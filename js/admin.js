@@ -206,14 +206,21 @@ document.getElementById('skillInput')?.addEventListener('keydown', (e) => {
 });
 
 function renderSkillTags() {
-  const wrap = document.getElementById('skillTagsWrap');
-  if (!wrap) return;
-  wrap.innerHTML = skillsList.map((s, i) => `
+  const wrap  = document.getElementById('skillTagsWrap');
+  const input = document.getElementById('skillInput');
+  if (!wrap || !input) return;
+
+  // Remove existing tags but keep the input element (and its listeners) intact
+  wrap.querySelectorAll('.tag-item').forEach(el => el.remove());
+
+  const html = skillsList.map((s, i) => `
     <span class="tag-item">
       ${escHtml(s)}
       <button class="tag-remove" onclick="removeSkill(${i})" type="button">×</button>
     </span>
   `).join('');
+
+  input.insertAdjacentHTML('beforebegin', html);
 }
 
 function removeSkill(i) {
