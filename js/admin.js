@@ -784,6 +784,58 @@ async function generateQuotePdf(q) {
   }
 }
 
+// Create or update the quote record (idempotent per quote number),
+// creating/linking the customer. Returns the stored quote id.
+async function persistQuote(q, { markSent = false } = {}) {
+  const t = totalsFor(q.items, q.vatRate);
+
+  let customerId = null;
+  try { customerId = await findOrCreateCustomer(q); } catch (_) { /* customers table optional */ }
+
+  const record = {
+    contact_id:       getVal('quoteContactId') || null,
+    customer_id:      customerId,
+    quote_number:     q.number,
+    customer_name:    q.customerName,
+    customer_email:   q.customerEmail,
+    customer_tax:     q.customerTax || '',
+    customer_address: q.customerAddress || '',
+    items:            q.items,
+    subtotal:         t.subtotal,
+    vat_rate:         t.vatRate,
+    total:            t.total,
+    notes:            q.notes,
+    valid_until:      q.validUntil || null,
+  };
+  if (markSent) record.sent_at = new Date().toISOString();
+
+  const { data: existing } = await supabaseClient.from('quotes')
+    .select('id').eq('quote_number', q.number).limit(1).maybeSingle();
+
+  if (existing) {
+    await supabaseClient.from('quotes').update(record).eq('id', existing.id);
+    return existing.id;
+  }
+  const { data: created } = await supabaseClient.from('quotes').insert([record]).select('id').single();
+  return created?.id ?? null;
+}
+
+document.getElementById('quoteSaveBtn')?.addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const q   = currentQuoteData();
+  if (!q.customerName) { toast('Vnesite naziv stranke', 'error'); return; }
+  setLoading(btn, true);
+  try {
+    await persistQuote(q);
+    toast('Ponudba shranjena', 'success');
+    if (currentSection === 'customers') loadCustomers();
+  } catch (err) {
+    toast('Shranjevanje ponudbe ni uspelo: ' + (err.message || err), 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
 document.getElementById('quoteDownloadBtn')?.addEventListener('click', async (e) => {
   const btn = e.currentTarget;
   setLoading(btn, true);
@@ -791,6 +843,11 @@ document.getElementById('quoteDownloadBtn')?.addEventListener('click', async (e)
     const q = currentQuoteData();
     const pdf = await generateQuotePdf(q);
     pdf.save(`${q.number || 'ponudba'}.pdf`);
+    // Auto-save so the quote is reviewable later
+    try {
+      await persistQuote(q);
+      if (currentSection === 'customers') loadCustomers();
+    } catch (_) { /* non-blocking */ }
   } catch (err) {
     toast('Izdelava PDF ni uspela: ' + (err.message || err), 'error');
   } finally {
@@ -870,25 +927,9 @@ document.getElementById('quoteForm')?.addEventListener('submit', async (e) => {
     });
     if (error) throw error;
 
-    // Create/locate the customer, then record the quote under it (best-effort).
+    // Record the quote under its customer (best-effort), marked as sent.
     try {
-      const customerId = await findOrCreateCustomer(q);
-      await supabaseClient.from('quotes').insert([{
-        contact_id:       getVal('quoteContactId') || null,
-        customer_id:      customerId,
-        quote_number:     q.number,
-        customer_name:    q.customerName,
-        customer_email:   q.customerEmail,
-        customer_tax:     q.customerTax || '',
-        customer_address: q.customerAddress || '',
-        items:            q.items,
-        subtotal:         t.subtotal,
-        vat_rate:         t.vatRate,
-        total:            t.total,
-        notes:            q.notes,
-        valid_until:      q.validUntil || null,
-        sent_at:          new Date().toISOString(),
-      }]);
+      await persistQuote(q, { markSent: true });
     } catch (_) { /* customers/quotes tables optional */ }
 
     toast('Ponudba poslana stranki', 'success');
