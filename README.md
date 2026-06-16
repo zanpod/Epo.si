@@ -16,12 +16,15 @@ A production-ready personal portfolio website using HTML/CSS/Vanilla JS + Supaba
 ├── js/
 │   ├── supabase-config.js        ← ⚠️  Fill in your keys here
 │   ├── main.js                   ← Public site JS
+│   ├── widgets.js                ← Cookie consent + AI chat widget
 │   └── admin.js                  ← Admin panel JS
 ├── supabase/
 │   ├── schema.sql                ← Run this in Supabase SQL Editor
 │   └── functions/
-│       └── send-contact-email/
-│           └── index.ts          ← Edge Function for email notifications
+│       ├── send-contact-email/
+│       │   └── index.ts          ← Edge Function for email notifications
+│       └── chat/
+│           └── index.ts          ← Edge Function: AI chat (Claude API)
 └── README.md
 ```
 
@@ -106,6 +109,51 @@ In Supabase Dashboard → **Edge Functions → send-contact-email → Secrets**,
 | `FROM_EMAIL`     | Verified sender address on Resend  |
 
 > **Note:** The contact form still saves submissions to the database even if this function isn't deployed. Email notifications are optional.
+
+---
+
+## Step 6b — (Optional) Enable the AI Chat Assistant
+
+A floating chat widget on the public site answers visitor questions **only** about
+EPO.SI's services and the official pricing (the three packages: EPO Start, EPO Pro,
+EPO Cenik). It is powered by the Claude API through a Supabase Edge Function, so the
+API key stays on the server and is never exposed in the browser.
+
+### Deploy the Edge Function
+
+```bash
+supabase functions deploy chat
+```
+
+### Add the Edge Function Secret
+
+In Supabase Dashboard → **Edge Functions → chat → Secrets**, add:
+
+| Key                 | Value                                                        |
+|---------------------|-------------------------------------------------------------|
+| `ANTHROPIC_API_KEY` | Your Claude API key from [platform.claude.com](https://platform.claude.com) |
+
+> **How it works:** `js/widgets.js` calls `POST {SUPABASE_URL}/functions/v1/chat`
+> with the conversation history. The function injects a fixed system prompt
+> (defined in `supabase/functions/chat/index.ts`) that restricts answers to
+> EPO.SI topics and the official pricing, then calls Claude (`claude-opus-4-8`).
+> If the function isn't deployed, the widget gracefully points visitors to the
+> contact form instead.
+
+### Editing the pricing or scope
+
+The packages, prices, services, and conversation rules live in the `SYSTEM_PROMPT`
+constant in `supabase/functions/chat/index.ts`. Edit it there and re-deploy
+(`supabase functions deploy chat`) — no front-end changes needed.
+
+---
+
+## A note on cookies (piškotki)
+
+The site shows a small consent banner (`js/widgets.js`) on first visit. It uses
+**only** a necessary cookie-equivalent (`localStorage`) to remember the visitor's
+choice — no analytics or tracking cookies are set. The banner won't reappear once
+a choice is made.
 
 ---
 
