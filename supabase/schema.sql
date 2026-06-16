@@ -68,10 +68,10 @@ create table if not exists settings (
   updated_at timestamptz default now()
 );
 
--- Ensure exactly one settings row
+-- Ensure exactly one settings row (safe to re-run: only inserts if empty)
 insert into settings (id)
-values (uuid_generate_v4())
-on conflict do nothing;
+select uuid_generate_v4()
+where not exists (select 1 from settings);
 
 -- Upgrade existing settings tables with the company / agency columns.
 alter table settings add column if not exists company_name    text default '';
@@ -89,14 +89,15 @@ create table if not exists services (
   created_at timestamptz default now()
 );
 
--- Seed default services
+-- Seed default services (safe to re-run: only seeds when the table is empty)
 insert into services (icon, title, description, sort_order)
-values
+select * from (values
   ('🎨', 'UI / UX Design', 'Crafting intuitive, beautiful interfaces that users love. Pixel-perfect designs translated into responsive code.', 0),
   ('⚡', 'Web Development', 'Building fast, modern web applications with clean code and best practices. From MVPs to large-scale platforms.', 1),
   ('📱', 'Mobile-First', 'Every project is built mobile-first and tested across all screen sizes for a flawless experience on any device.', 2),
   ('🔒', 'Performance & SEO', 'Optimising Core Web Vitals, accessibility, and search rankings so your site not only looks great but ranks and converts.', 3)
-on conflict do nothing;
+) as seed(icon, title, description, sort_order)
+where not exists (select 1 from services);
 
 -- ── projects ──────────────────────────────────────────────
 create table if not exists projects (
@@ -111,9 +112,9 @@ create table if not exists projects (
   created_at timestamptz default now()
 );
 
--- Seed sample projects
+-- Seed sample projects (safe to re-run: only seeds when the table is empty)
 insert into projects (title, description, tags, live_url, sort_order)
-values
+select * from (values
   (
     'SaaS Dashboard',
     'A real-time analytics dashboard built with vanilla JS and Supabase. Features live charts, user management, and export tools.',
@@ -156,7 +157,8 @@ values
     'https://example.com',
     5
   )
-on conflict do nothing;
+) as seed(title, description, tags, live_url, sort_order)
+where not exists (select 1 from projects);
 
 -- ── contacts ──────────────────────────────────────────────
 create table if not exists contacts (
@@ -226,40 +228,48 @@ alter table customers enable row level security;
 alter table quotes enable row level security;
 
 -- settings: public read, authenticated write
+drop policy if exists "Public can read settings" on settings;
 create policy "Public can read settings"
   on settings for select
   using (true);
 
+drop policy if exists "Authenticated can update settings" on settings;
 create policy "Authenticated can update settings"
   on settings for update
   to authenticated
   using (auth.role() = 'authenticated');
 
 -- services: public read, authenticated write
+drop policy if exists "Public can read services" on services;
 create policy "Public can read services"
   on services for select
   using (true);
 
+drop policy if exists "Authenticated can manage services" on services;
 create policy "Authenticated can manage services"
   on services for all
   to authenticated
   using (auth.role() = 'authenticated');
 
 -- projects: public read visible ones, authenticated sees all
+drop policy if exists "Public can read visible projects" on projects;
 create policy "Public can read visible projects"
   on projects for select
   using (is_visible = true);
 
+drop policy if exists "Authenticated can manage projects" on projects;
 create policy "Authenticated can manage projects"
   on projects for all
   to authenticated
   using (auth.role() = 'authenticated');
 
 -- contacts: public can insert, authenticated can read/manage
+drop policy if exists "Public can submit contacts" on contacts;
 create policy "Public can submit contacts"
   on contacts for insert
   with check (true);
 
+drop policy if exists "Authenticated can manage contacts" on contacts;
 create policy "Authenticated can manage contacts"
   on contacts for all
   to authenticated
