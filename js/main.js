@@ -112,7 +112,7 @@ function applySettings(s) {
   const aboutImg = document.getElementById('aboutImage');
   if (aboutImg) {
     if (s.about_image_url) {
-      aboutImg.innerHTML = `<img src="${s.about_image_url}" alt="Profile photo" class="about-image">`;
+      aboutImg.innerHTML = `<img src="${s.about_image_url}" alt="Profilna slika" class="about-image">`;
     }
   }
 
@@ -161,7 +161,7 @@ function applySettings(s) {
 
   // Footer
   document.querySelectorAll('[data-copyright]').forEach(el => {
-    el.textContent = `© ${new Date().getFullYear()} ${s.site_name || 'DEV.NAME'}. All rights reserved.`;
+    el.textContent = `© ${new Date().getFullYear()} ${s.site_name || 'DEV.NAME'}. Vse pravice pridržane.`;
   });
 }
 
@@ -171,7 +171,7 @@ function renderServices(services) {
   if (!grid) return;
 
   if (!services.length) {
-    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;grid-column:1/-1">No services yet.</p>';
+    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;grid-column:1/-1">Še ni storitev.</p>';
     return;
   }
 
@@ -212,7 +212,7 @@ function showProjects() {
   const visible = allProjects.slice(0, projectsShown);
 
   if (!visible.length) {
-    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;grid-column:1/-1">No projects yet.</p>';
+    grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;grid-column:1/-1">Še ni projektov.</p>';
     return;
   }
 
@@ -231,7 +231,7 @@ function showProjects() {
       ${p.live_url ? `
         <div class="project-footer">
           <a href="${p.live_url}" target="_blank" rel="noopener" class="project-link">
-            View Live <span>→</span>
+            Poglej projekt <span>→</span>
           </a>
         </div>` : ''}
     </div>
@@ -276,10 +276,10 @@ function initContactForm() {
 
       form.reset();
       status.className = 'form-status success';
-      status.textContent = '✓ Message sent! I\'ll get back to you soon.';
+      status.textContent = '✓ Sporočilo poslano! Kmalu se oglasim.';
     } catch (err) {
       status.className = 'form-status error';
-      status.textContent = '✗ Something went wrong. Please try again.';
+      status.textContent = '✗ Prišlo je do napake. Prosim poskusite znova.';
     } finally {
       setLoading(btn, false);
     }
@@ -300,10 +300,10 @@ function setLoading(btn, loading) {
   if (!btn) return;
   if (loading) {
     btn.dataset.originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Sending…';
+    btn.innerHTML = '<span class="spinner"></span> Pošiljam…';
     btn.disabled = true;
   } else {
-    btn.innerHTML = btn.dataset.originalText || 'Send Message';
+    btn.innerHTML = btn.dataset.originalText || 'Pošlji sporočilo';
     btn.disabled = false;
   }
 }

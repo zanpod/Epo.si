@@ -46,7 +46,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
 
   error.classList.remove('show');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Signing in…';
+  btn.innerHTML = '<span class="spinner"></span> Prijavljam…';
 
   const { error: authError } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
 
@@ -54,7 +54,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     error.textContent = authError.message;
     error.classList.add('show');
     btn.disabled = false;
-    btn.textContent = 'Sign In';
+    btn.textContent = 'Prijava';
   }
 });
 
@@ -96,9 +96,9 @@ function navigateTo(section) {
 
   const title = document.getElementById('topbarTitle');
   const labels = {
-    dashboard: 'Dashboard', hero: 'Hero', about: 'About',
-    services: 'Services', projects: 'Projects',
-    messages: 'Messages', settings: 'Settings',
+    dashboard: 'Nadzorna plošča', hero: 'Naslovna stran', about: 'O nas',
+    services: 'Storitve', projects: 'Projekti',
+    messages: 'Sporočila', settings: 'Nastavitve',
   };
   if (title) title.textContent = labels[section] || section;
 
@@ -229,7 +229,7 @@ function renderStatRows() {
     <div class="stats-row-item">
       <input class="form-input" value="${escAttr(s.number)}" placeholder="50+"
         oninput="statsList[${i}].number = this.value">
-      <input class="form-input" value="${escAttr(s.label)}" placeholder="Projects Delivered"
+      <input class="form-input" value="${escAttr(s.label)}" placeholder="Zaključenih projektov"
         oninput="statsList[${i}].label = this.value">
       <button class="btn btn-sm btn-danger" onclick="removeStat(${i})" type="button">✕</button>
     </div>
@@ -255,7 +255,7 @@ document.getElementById('aboutImageFile')?.addEventListener('change', async (e) 
     await updateSettings({ about_image_url: url });
     const preview = document.getElementById('aboutImagePreview');
     if (preview) { preview.src = url; preview.style.display = 'block'; }
-    toast('Profile photo updated', 'success');
+    toast('Profilna slika posodobljena', 'success');
   }
 });
 
@@ -266,7 +266,7 @@ async function loadServices() {
   if (!list) return;
 
   if (!data?.length) {
-    list.innerHTML = '<p style="color:var(--text-muted)">No services yet. Add one below.</p>';
+    list.innerHTML = '<p style="color:var(--text-muted)">Še ni storitev. Dodajte spodaj.</p>';
     return;
   }
 
@@ -278,8 +278,8 @@ async function loadServices() {
         <div class="admin-list-item-desc">${escHtml(s.description)}</div>
       </div>
       <div class="admin-list-item-actions">
-        <button class="btn btn-sm btn-ghost" onclick="editService('${s.id}')">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')">Delete</button>
+        <button class="btn btn-sm btn-ghost" onclick="editService('${s.id}')">Uredi</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')">Izbriši</button>
       </div>
     </div>
   `).join('');
@@ -300,7 +300,7 @@ function openServiceModal(service) {
   setVal('svcTitle', service?.title ?? '');
   setVal('svcDesc',  service?.description ?? '');
   setVal('svcOrder', service?.sort_order ?? 0);
-  document.getElementById('serviceModalTitle').textContent = service ? 'Edit Service' : 'Add Service';
+  document.getElementById('serviceModalTitle').textContent = service ? 'Uredi storitev' : 'Dodaj storitev';
   openModal('serviceModal');
 }
 
@@ -324,17 +324,17 @@ document.getElementById('serviceForm')?.addEventListener('submit', async (e) => 
   }
   setLoading(btn, false);
 
-  if (error) { toast('Error saving service', 'error'); return; }
-  toast('Service saved', 'success');
+  if (error) { toast('Napaka pri shranjevanju storitve', 'error'); return; }
+  toast('Storitev shranjena', 'success');
   closeModal('serviceModal');
   loadServices();
 });
 
 async function deleteService(id) {
-  if (!confirm('Delete this service?')) return;
+  if (!confirm('Izbrišete to storitev?')) return;
   const { error } = await supabaseClient.from('services').delete().eq('id', id);
-  if (error) { toast('Error deleting service', 'error'); return; }
-  toast('Service deleted', 'success');
+  if (error) { toast('Napaka pri brisanju storitve', 'error'); return; }
+  toast('Storitev izbrisana', 'success');
   loadServices();
 }
 
@@ -345,7 +345,7 @@ async function loadProjects() {
   if (!grid) return;
 
   if (!data?.length) {
-    grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">No projects yet.</p>';
+    grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">Še ni projektov.</p>';
     return;
   }
 
@@ -357,9 +357,9 @@ async function loadProjects() {
       <div class="admin-project-body">
         <div class="admin-project-title">${escHtml(p.title)}</div>
         <div class="admin-project-meta">
-          <span class="badge-visible ${p.is_visible ? 'on' : 'off'}">${p.is_visible ? 'Visible' : 'Hidden'}</span>
+          <span class="badge-visible ${p.is_visible ? 'on' : 'off'}">${p.is_visible ? 'Vidno' : 'Skrito'}</span>
           <div style="display:flex;gap:0.4rem">
-            <button class="btn btn-sm btn-ghost" onclick="editProject('${p.id}')">Edit</button>
+            <button class="btn btn-sm btn-ghost" onclick="editProject('${p.id}')">Uredi</button>
             <button class="btn btn-sm btn-danger" onclick="deleteProject('${p.id}')">✕</button>
           </div>
         </div>
@@ -394,7 +394,7 @@ function openProjectModal(project) {
     else preview.style.display = 'none';
   }
 
-  document.getElementById('projectModalTitle').textContent = project ? 'Edit Project' : 'Add Project';
+  document.getElementById('projectModalTitle').textContent = project ? 'Uredi projekt' : 'Dodaj projekt';
   openModal('projectModal');
 }
 
@@ -423,8 +423,8 @@ document.getElementById('projectForm')?.addEventListener('submit', async (e) => 
   }
   setLoading(btn, false);
 
-  if (error) { toast('Error saving project', 'error'); return; }
-  toast('Project saved', 'success');
+  if (error) { toast('Napaka pri shranjevanju projekta', 'error'); return; }
+  toast('Projekt shranjen', 'success');
   closeModal('projectModal');
   loadProjects();
 });
@@ -442,7 +442,7 @@ document.getElementById('projImageFile')?.addEventListener('change', async (e) =
 
   if (id) {
     await supabaseClient.from('projects').update({ image_url: url }).eq('id', id);
-    toast('Image updated', 'success');
+    toast('Slika posodobljena', 'success');
     loadProjects();
   } else {
     setVal('projImageUrl', url);
@@ -450,10 +450,10 @@ document.getElementById('projImageFile')?.addEventListener('change', async (e) =
 });
 
 async function deleteProject(id) {
-  if (!confirm('Delete this project permanently?')) return;
+  if (!confirm('Trajno izbrišete ta projekt?')) return;
   const { error } = await supabaseClient.from('projects').delete().eq('id', id);
-  if (error) { toast('Error deleting project', 'error'); return; }
-  toast('Project deleted', 'success');
+  if (error) { toast('Napaka pri brisanju projekta', 'error'); return; }
+  toast('Projekt izbrisan', 'success');
   loadProjects();
 }
 
@@ -464,7 +464,7 @@ async function loadMessages() {
   if (!tbody) return;
 
   if (!data?.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">No messages yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">Še ni sporočil.</td></tr>';
     return;
   }
 
@@ -475,11 +475,11 @@ async function loadMessages() {
       <td>${escHtml(m.email)}</td>
       <td>${escHtml(m.subject || '—')}</td>
       <td>
-        <span class="msg-badge ${m.is_read ? 'read' : 'unread'}">${m.is_read ? 'Read' : 'New'}</span>
+        <span class="msg-badge ${m.is_read ? 'read' : 'unread'}">${m.is_read ? 'Prebrano' : 'Novo'}</span>
       </td>
       <td>
         <div style="display:flex;gap:0.4rem">
-          <button class="btn btn-sm btn-ghost" onclick="viewMessage('${m.id}')">View</button>
+          <button class="btn btn-sm btn-ghost" onclick="viewMessage('${m.id}')">Poglej</button>
           <button class="btn btn-sm btn-danger" onclick="deleteMessage('${m.id}')">✕</button>
         </div>
       </td>
@@ -499,7 +499,7 @@ async function viewMessage(id) {
   if (!data) return;
 
   document.getElementById('msgViewFrom').textContent    = `${data.name} <${data.email}>`;
-  document.getElementById('msgViewSubject').textContent = data.subject || '(No subject)';
+  document.getElementById('msgViewSubject').textContent = data.subject || '(Brez zadeve)';
   document.getElementById('msgViewDate').textContent    = new Date(data.created_at).toLocaleString();
   document.getElementById('msgViewBody').textContent    = data.message;
   openModal('messageModal');
@@ -511,10 +511,10 @@ async function viewMessage(id) {
 }
 
 async function deleteMessage(id) {
-  if (!confirm('Delete this message?')) return;
+  if (!confirm('Izbrišete to sporočilo?')) return;
   const { error } = await supabaseClient.from('contacts').delete().eq('id', id);
-  if (error) { toast('Error deleting message', 'error'); return; }
-  toast('Message deleted', 'success');
+  if (error) { toast('Napaka pri brisanju sporočila', 'error'); return; }
+  toast('Sporočilo izbrisano', 'success');
   loadMessages();
 }
 
@@ -561,9 +561,9 @@ async function updateSettings(payload, btn = null) {
   if (btn) setLoading(btn, false);
 
   if (error) {
-    toast('Save failed: ' + error.message, 'error');
+    toast('Shranjevanje ni uspelo: ' + error.message, 'error');
   } else {
-    toast('Saved successfully', 'success');
+    toast('Shranjeno', 'success');
   }
 }
 
@@ -572,7 +572,7 @@ async function uploadFile(file, path) {
   const full = `${path}.${ext}`;
 
   const { error } = await supabaseClient.storage.from('portfolio').upload(full, file, { upsert: true });
-  if (error) { toast('Upload failed: ' + error.message, 'error'); return null; }
+  if (error) { toast('Nalaganje ni uspelo: ' + error.message, 'error'); return null; }
 
   const { data } = supabaseClient.storage.from('portfolio').getPublicUrl(full);
   return data.publicUrl;
@@ -610,10 +610,10 @@ function setLoading(btn, loading) {
   if (!btn) return;
   if (loading) {
     btn.dataset.orig = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Saving…';
+    btn.innerHTML = '<span class="spinner"></span> Shranjujem…';
     btn.disabled = true;
   } else {
-    btn.innerHTML = btn.dataset.orig || 'Save';
+    btn.innerHTML = btn.dataset.orig || 'Shrani';
     btn.disabled = false;
   }
 }
