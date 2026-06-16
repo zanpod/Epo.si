@@ -329,6 +329,29 @@
             <hr style="border-color:var(--border);margin:0.5rem 0">
 
             <div class="form-group">
+              <label class="form-label" for="setCompanyName">Naziv podjetja (za ponudbe)</label>
+              <input class="form-input" type="text" id="setCompanyName" placeholder="EPO.SI, s.p.">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="setCompanyAddress">Naslov podjetja</label>
+              <input class="form-input" type="text" id="setCompanyAddress" placeholder="Ulica 1, 1000 Ljubljana">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="setCompanyTax">Davčna št. / ID za DDV</label>
+                <input class="form-input" type="text" id="setCompanyTax" placeholder="SI12345678">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setCompanyIban">IBAN</label>
+                <input class="form-input" type="text" id="setCompanyIban" placeholder="SI56 0000 0000 0000 000">
+              </div>
+            </div>
+
+            <hr style="border-color:var(--border);margin:0.5rem 0">
+
+            <div class="form-group">
               <label class="form-label" for="setMetaTitle">SEO naslov</label>
               <input class="form-input" type="text" id="setMetaTitle" placeholder="EPO.SI — Spletne rešitve po meri">
             </div>
@@ -488,9 +511,86 @@
   </div>
 </div>
 
+<!-- Modal za izdelavo ponudbe -->
+<div class="modal-overlay" id="quoteModal" role="dialog" aria-modal="true" aria-labelledby="quoteModalTitle">
+  <div class="modal glass" style="max-width:760px">
+    <div class="modal-header">
+      <h2 class="modal-title" id="quoteModalTitle">Izdelaj ponudbo</h2>
+      <button class="modal-close" onclick="closeModal('quoteModal')" aria-label="Zapri">✕</button>
+    </div>
+    <form class="admin-form" id="quoteForm">
+      <input type="hidden" id="quoteContactId">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="quoteCustomerName">Stranka *</label>
+          <input class="form-input" type="text" id="quoteCustomerName" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="quoteCustomerEmail">E-pošta stranke *</label>
+          <input class="form-input" type="email" id="quoteCustomerEmail" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="quoteNumber">Št. ponudbe</label>
+          <input class="form-input" type="text" id="quoteNumber">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="quoteValidUntil">Velja do</label>
+          <input class="form-input" type="date" id="quoteValidUntil">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+          <label class="form-label" style="margin:0">Postavke</label>
+          <button type="button" class="btn btn-sm btn-ghost" id="addQuoteItemBtn">+ Dodaj postavko</button>
+        </div>
+        <div id="quoteItemsWrap"></div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="quoteVat">Stopnja DDV (%)</label>
+          <input class="form-input" type="number" id="quoteVat" value="22" min="0" step="0.1">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <div class="toggle-wrap">
+            <label class="toggle" for="quoteVatEnabled" aria-label="Obračunaj DDV">
+              <input type="checkbox" id="quoteVatEnabled" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="form-label" style="margin:0">Obračunaj DDV</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="quoteNotes">Opombe / plačilni pogoji</label>
+        <textarea class="form-textarea" id="quoteNotes" style="height:80px"></textarea>
+      </div>
+
+      <div id="quoteTotals" style="text-align:right;font-size:0.95rem;line-height:1.9"></div>
+
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;flex-wrap:wrap">
+        <button type="button" class="btn btn-ghost"   onclick="closeModal('quoteModal')">Prekliči</button>
+        <button type="button" class="btn btn-ghost"   id="quoteDownloadBtn">Prenesi PDF</button>
+        <button type="submit"  class="btn btn-primary">Pošlji stranki</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Skriti predloga za izris ponudbe v PDF (izven zaslona) -->
+<div id="quotePdfTemplate" aria-hidden="true" style="position:fixed;left:-10000px;top:0;width:794px;background:#fff"></div>
+
 <!-- ================================================================
      SKRIPTE
      ================================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="/js/supabase-config.js"></script>
 <script src="/js/admin.js"></script>
 

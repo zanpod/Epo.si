@@ -487,6 +487,7 @@ async function loadMessages() {
       <td>
         <div style="display:flex;gap:0.4rem">
           <button class="btn btn-sm btn-ghost" onclick="viewMessage('${m.id}')">Poglej</button>
+          <button class="btn btn-sm btn-primary" onclick="createQuote('${m.id}')">Ponudba</button>
           <button class="btn btn-sm btn-danger" onclick="deleteMessage('${m.id}')">✕</button>
         </div>
       </td>
@@ -525,6 +526,290 @@ async function deleteMessage(id) {
   loadMessages();
 }
 
+// ── Quotes (ponudbe) ──────────────────────────────────────────
+let quoteItems = [];
+let agencyInfo = {};
+
+// Open the quote builder, prefilled from a contact message.
+async function createQuote(contactId) {
+  const { data: contact } = await supabaseClient.from('contacts').select('*').eq('id', contactId).single();
+  await loadAgencyInfo();
+
+  setVal('quoteContactId',     contact?.id ?? '');
+  setVal('quoteCustomerName',  contact?.name ?? '');
+  setVal('quoteCustomerEmail', contact?.email ?? '');
+  setVal('quoteNumber',        genQuoteNumber());
+  setVal('quoteNotes',         'Veljavnost ponudbe je 14 dni. Plačilo v roku 8 dni po izstavitvi računa.');
+
+  const validUntil = new Date();
+  validUntil.setDate(validUntil.getDate() + 14);
+  setVal('quoteValidUntil', validUntil.toISOString().slice(0, 10));
+
+  const firstDesc = contact?.subject ? `Izdelava: ${contact.subject}` : '';
+  quoteItems = [{ description: firstDesc, qty: 1, price: 0 }];
+  renderQuoteItems();
+
+  openModal('quoteModal');
+}
+
+async function loadAgencyInfo() {
+  if (agencyInfo._loaded) return;
+  const { data } = await supabaseClient.from('settings').select('*').single();
+  agencyInfo = { ...(data || {}), _loaded: true };
+}
+
+function genQuoteNumber() {
+  const n = new Date();
+  const p = x => String(x).padStart(2, '0');
+  const rand = Math.floor(Math.random() * 900 + 100);
+  return `PON-${n.getFullYear()}${p(n.getMonth() + 1)}${p(n.getDate())}-${rand}`;
+}
+
+function renderQuoteItems() {
+  const wrap = document.getElementById('quoteItemsWrap');
+  if (!wrap) return;
+  wrap.innerHTML = quoteItems.map((it, i) => `
+    <div style="display:grid;grid-template-columns:1fr 64px 110px 34px;gap:0.5rem;margin-bottom:0.5rem;align-items:center">
+      <input class="form-input" placeholder="Opis postavke" value="${escAttr(it.description)}"
+        oninput="quoteItems[${i}].description = this.value">
+      <input class="form-input" type="number" min="0" step="1" value="${escAttr(it.qty)}" title="Količina"
+        oninput="quoteItems[${i}].qty = parseFloat(this.value) || 0; updateQuoteTotals()">
+      <input class="form-input" type="number" min="0" step="0.01" value="${escAttr(it.price)}" title="Cena na enoto (€)"
+        oninput="quoteItems[${i}].price = parseFloat(this.value) || 0; updateQuoteTotals()">
+      <button class="btn btn-sm btn-danger" onclick="removeQuoteItem(${i})" type="button">✕</button>
+    </div>
+  `).join('');
+  updateQuoteTotals();
+}
+
+function removeQuoteItem(i) {
+  quoteItems.splice(i, 1);
+  renderQuoteItems();
+}
+
+document.getElementById('addQuoteItemBtn')?.addEventListener('click', () => {
+  quoteItems.push({ description: '', qty: 1, price: 0 });
+  renderQuoteItems();
+});
+
+document.getElementById('quoteVat')?.addEventListener('input', updateQuoteTotals);
+document.getElementById('quoteVatEnabled')?.addEventListener('change', updateQuoteTotals);
+
+function computeQuoteTotals() {
+  const subtotal   = quoteItems.reduce((s, it) => s + (it.qty * it.price), 0);
+  const vatEnabled = document.getElementById('quoteVatEnabled')?.checked;
+  const vatRate    = vatEnabled ? (parseFloat(getVal('quoteVat')) || 0) : 0;
+  const vat        = subtotal * vatRate / 100;
+  return { subtotal, vatRate, vat, total: subtotal + vat };
+}
+
+function updateQuoteTotals() {
+  const t = computeQuoteTotals();
+  const el = document.getElementById('quoteTotals');
+  if (!el) return;
+  el.innerHTML = `
+    <div>Skupaj brez DDV: <strong>${eur(t.subtotal)}</strong></div>
+    ${t.vatRate ? `<div>DDV (${t.vatRate}%): <strong>${eur(t.vat)}</strong></div>` : ''}
+    <div style="font-size:1.1rem;margin-top:0.25rem">Za plačilo: <strong>${eur(t.total)}</strong></div>
+  `;
+}
+
+function eur(n) {
+  return new Intl.NumberFormat('sl-SI', { style: 'currency', currency: 'EUR' }).format(n || 0);
+}
+
+// Build the printable quote HTML (light theme, A4 width) for PDF rendering.
+function buildQuoteHtml() {
+  const t = computeQuoteTotals();
+  const a = agencyInfo;
+  const company  = a.company_name || a.site_name || a.logo_text || 'EPO.SI';
+  const number   = getVal('quoteNumber');
+  const today    = new Date().toLocaleDateString('sl-SI');
+  const validUntil = getVal('quoteValidUntil')
+    ? new Date(getVal('quoteValidUntil')).toLocaleDateString('sl-SI') : '';
+
+  const rows = quoteItems
+    .filter(it => it.description || it.price)
+    .map((it, idx) => `
+      <tr>
+        <td style="padding:9px 8px;border-bottom:1px solid #eee;color:#888">${idx + 1}</td>
+        <td style="padding:9px 8px;border-bottom:1px solid #eee">${escHtml(it.description)}</td>
+        <td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:center">${it.qty}</td>
+        <td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right">${eur(it.price)}</td>
+        <td style="padding:9px 8px;border-bottom:1px solid #eee;text-align:right">${eur(it.qty * it.price)}</td>
+      </tr>`).join('');
+
+  const agencyLines = [
+    a.company_address ? escHtml(a.company_address) : '',
+    a.company_tax     ? `Davčna št.: ${escHtml(a.company_tax)}` : '',
+    a.company_iban    ? `IBAN: ${escHtml(a.company_iban)}` : '',
+    a.contact_email   ? escHtml(a.contact_email) : '',
+    a.contact_phone   ? escHtml(a.contact_phone) : '',
+  ].filter(Boolean).join('<br>');
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;background:#fff;width:794px;box-sizing:border-box;padding:56px 48px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #3b82f6;padding-bottom:20px;margin-bottom:28px">
+      <div>
+        <div style="font-size:26px;font-weight:800;color:#3b82f6;letter-spacing:0.5px">${escHtml(company)}</div>
+        <div style="font-size:12px;color:#555;margin-top:8px;line-height:1.7">${agencyLines}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:22px;font-weight:700">PONUDBA</div>
+        <div style="font-size:13px;color:#555;margin-top:6px">Št.: <strong>${escHtml(number)}</strong></div>
+        <div style="font-size:13px;color:#555">Datum: ${today}</div>
+        ${validUntil ? `<div style="font-size:13px;color:#555">Velja do: ${validUntil}</div>` : ''}
+      </div>
+    </div>
+
+    <div style="margin-bottom:26px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px">Naslovnik</div>
+      <div style="font-size:15px;font-weight:600">${escHtml(getVal('quoteCustomerName'))}</div>
+      <div style="font-size:13px;color:#555">${escHtml(getVal('quoteCustomerEmail'))}</div>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="background:#f4f6fb">
+          <th style="padding:10px 8px;text-align:left;color:#555;font-weight:600;width:32px">#</th>
+          <th style="padding:10px 8px;text-align:left;color:#555;font-weight:600">Opis</th>
+          <th style="padding:10px 8px;text-align:center;color:#555;font-weight:600;width:60px">Kol.</th>
+          <th style="padding:10px 8px;text-align:right;color:#555;font-weight:600;width:110px">Cena/enoto</th>
+          <th style="padding:10px 8px;text-align:right;color:#555;font-weight:600;width:110px">Skupaj</th>
+        </tr>
+      </thead>
+      <tbody>${rows || '<tr><td colspan="5" style="padding:14px 8px;color:#999">Brez postavk</td></tr>'}</tbody>
+    </table>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:18px">
+      <table style="font-size:14px">
+        <tr><td style="padding:4px 14px;color:#555;text-align:right">Skupaj brez DDV:</td><td style="padding:4px 0;text-align:right;font-weight:600">${eur(t.subtotal)}</td></tr>
+        ${t.vatRate ? `<tr><td style="padding:4px 14px;color:#555;text-align:right">DDV (${t.vatRate}%):</td><td style="padding:4px 0;text-align:right;font-weight:600">${eur(t.vat)}</td></tr>` : ''}
+        <tr><td style="padding:8px 14px;text-align:right;font-size:16px;font-weight:700;border-top:2px solid #1a1a2e">Za plačilo:</td><td style="padding:8px 0;text-align:right;font-size:16px;font-weight:700;border-top:2px solid #1a1a2e">${eur(t.total)}</td></tr>
+      </table>
+    </div>
+
+    ${getVal('quoteNotes') ? `
+    <div style="margin-top:34px;padding-top:18px;border-top:1px solid #eee">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px">Opombe</div>
+      <div style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">${escHtml(getVal('quoteNotes'))}</div>
+    </div>` : ''}
+
+    <div style="margin-top:42px;text-align:center;font-size:11px;color:#aaa">
+      Ponudbo izdal ${escHtml(company)}. Hvala za vaše zaupanje.
+    </div>
+  </div>`;
+}
+
+// Render the quote HTML to a jsPDF document via html2canvas.
+async function generateQuotePdf() {
+  if (!window.jspdf || !window.html2canvas) {
+    throw new Error('Knjižnice za PDF se niso naložile');
+  }
+  const tpl = document.getElementById('quotePdfTemplate');
+  tpl.innerHTML = buildQuoteHtml();
+  const node = tpl.firstElementChild;
+
+  try {
+    const canvas = await window.html2canvas(node, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW  = pageW;
+    const imgH  = canvas.height * imgW / canvas.width;
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    let heightLeft = imgH;
+    let position = 0;
+    pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
+    heightLeft -= pageH;
+    while (heightLeft > 0) {
+      position -= pageH;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
+      heightLeft -= pageH;
+    }
+    return pdf;
+  } finally {
+    tpl.innerHTML = '';
+  }
+}
+
+document.getElementById('quoteDownloadBtn')?.addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  setLoading(btn, true);
+  try {
+    const pdf = await generateQuotePdf();
+    pdf.save(`${getVal('quoteNumber') || 'ponudba'}.pdf`);
+  } catch (err) {
+    toast('Izdelava PDF ni uspela: ' + (err.message || err), 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+document.getElementById('quoteForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type="submit"]');
+  const to  = getVal('quoteCustomerEmail');
+  if (!to) { toast('Vnesite e-pošto stranke', 'error'); return; }
+
+  setLoading(btn, true);
+  try {
+    const pdf = await generateQuotePdf();
+    const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+    const t       = computeQuoteTotals();
+    const number  = getVal('quoteNumber');
+    const company = agencyInfo.company_name || agencyInfo.site_name || 'EPO.SI';
+    const validUntil = getVal('quoteValidUntil')
+      ? new Date(getVal('quoteValidUntil')).toLocaleDateString('sl-SI') : '';
+
+    const { error } = await supabaseClient.functions.invoke('send-quote', {
+      body: {
+        to,
+        toName:       getVal('quoteCustomerName'),
+        subject:      `Ponudba ${number} — ${company}`,
+        replyTo:      agencyInfo.contact_email || undefined,
+        fileName:     `${number || 'ponudba'}.pdf`,
+        pdfBase64,
+        companyName:  company,
+        companyEmail: agencyInfo.contact_email || '',
+        companyPhone: agencyInfo.contact_phone || '',
+        quoteNumber:  number,
+        total:        eur(t.total),
+        validUntil,
+      },
+    });
+    if (error) throw error;
+
+    // Record the quote (best-effort; ignore if table not yet created)
+    try {
+      await supabaseClient.from('quotes').insert([{
+        contact_id:     getVal('quoteContactId') || null,
+        quote_number:   number,
+        customer_name:  getVal('quoteCustomerName'),
+        customer_email: to,
+        items:          quoteItems,
+        subtotal:       t.subtotal,
+        vat_rate:       t.vatRate,
+        total:          t.total,
+        notes:          getVal('quoteNotes'),
+        valid_until:    getVal('quoteValidUntil') || null,
+        sent_at:        new Date().toISOString(),
+      }]);
+    } catch (_) { /* quotes table optional */ }
+
+    toast('Ponudba poslana stranki', 'success');
+    closeModal('quoteModal');
+  } catch (err) {
+    toast('Pošiljanje ponudbe ni uspelo: ' + (err.message || err), 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
 // ── Settings ──────────────────────────────────────────────────
 async function loadSettings() {
   const { data } = await supabaseClient.from('settings').select('*').single();
@@ -539,6 +824,10 @@ async function loadSettings() {
   setVal('setInstagram',     data.instagram_url);
   setVal('setMetaTitle',     data.meta_title);
   setVal('setMetaDesc',      data.meta_description);
+  setVal('setCompanyName',    data.company_name);
+  setVal('setCompanyAddress', data.company_address);
+  setVal('setCompanyTax',     data.company_tax);
+  setVal('setCompanyIban',    data.company_iban);
 }
 
 document.getElementById('settingsForm')?.addEventListener('submit', async (e) => {
@@ -553,7 +842,12 @@ document.getElementById('settingsForm')?.addEventListener('submit', async (e) =>
     instagram_url:    getVal('setInstagram'),
     meta_title:       getVal('setMetaTitle'),
     meta_description: getVal('setMetaDesc'),
+    company_name:     getVal('setCompanyName'),
+    company_address:  getVal('setCompanyAddress'),
+    company_tax:      getVal('setCompanyTax'),
+    company_iban:     getVal('setCompanyIban'),
   }, e.target.querySelector('[type="submit"]'));
+  agencyInfo = {}; // force reload of agency details on next quote
 });
 
 // ── Shared helpers ────────────────────────────────────────────

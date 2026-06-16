@@ -42,6 +42,13 @@ create table if not exists settings (
 insert into settings (id) values (uuid_generate_v4())
 on conflict do nothing;
 
+-- ── Company / agency details (used on quotes) ─────────────
+-- Added via ALTER so existing databases upgrade cleanly.
+alter table settings add column if not exists company_name    text default '';
+alter table settings add column if not exists company_address text default '';
+alter table settings add column if not exists company_tax     text default '';  -- davčna / ID za DDV
+alter table settings add column if not exists company_iban    text default '';
+
 -- ── services ──────────────────────────────────────────────
 create table if not exists services (
   id          uuid primary key default uuid_generate_v4(),
@@ -94,6 +101,23 @@ create table if not exists contacts (
   created_at timestamptz default now()
 );
 
+-- ── quotes (ponudbe sent to customers) ────────────────────
+create table if not exists quotes (
+  id             uuid primary key default uuid_generate_v4(),
+  contact_id     uuid references contacts(id) on delete set null,
+  quote_number   text not null,
+  customer_name  text not null default '',
+  customer_email text not null default '',
+  items          jsonb not null default '[]',
+  subtotal       numeric not null default 0,
+  vat_rate       numeric not null default 0,
+  total          numeric not null default 0,
+  notes          text default '',
+  valid_until    date,
+  sent_at        timestamptz,
+  created_at     timestamptz default now()
+);
+
 -- ============================================================
 -- Row-Level Security
 -- ============================================================
@@ -102,6 +126,7 @@ alter table settings  enable row level security;
 alter table services  enable row level security;
 alter table projects  enable row level security;
 alter table contacts  enable row level security;
+alter table quotes    enable row level security;
 
 -- settings: public read, authenticated write
 create policy "Public can read settings"
@@ -130,6 +155,10 @@ create policy "Public can submit contacts"
 
 create policy "Authenticated can manage contacts"
   on contacts for all using (auth.role() = 'authenticated');
+
+-- quotes: only authenticated (admin) can read/manage
+create policy "Authenticated can manage quotes"
+  on quotes for all using (auth.role() = 'authenticated');
 
 -- ============================================================
 -- Storage bucket for portfolio images
