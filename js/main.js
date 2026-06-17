@@ -7,7 +7,37 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSiteData();
   initScrollReveal();
   initContactForm();
+  trackPageView();
 });
+
+// ── Analitika obiskov (anonimno, lastno v Supabase) ───────────
+async function trackPageView() {
+  if (typeof supabaseClient === 'undefined') return;
+  try {
+    // Anonimni prvoosebni ID za približno štetje unikatnih obiskovalcev
+    let vid = localStorage.getItem('epo_visitor_id');
+    if (!vid) {
+      vid = (window.crypto?.randomUUID?.() ||
+             (Date.now().toString(36) + Math.random().toString(16).slice(2)));
+      localStorage.setItem('epo_visitor_id', vid);
+    }
+
+    // Vir obiska (referrer host) ali 'direct'
+    let host = 'direct';
+    if (document.referrer) {
+      try {
+        const r = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (r && r !== location.hostname.replace(/^www\./, '')) host = r;
+      } catch (_) { /* neveljaven referrer */ }
+    }
+
+    await supabaseClient.from('page_views').insert([{
+      path:          location.pathname || '/',
+      referrer_host: host,
+      visitor_id:    vid,
+    }]);
+  } catch (_) { /* tiho — analitika ne sme motiti strani */ }
+}
 
 // ── Navigation ────────────────────────────────────────────────
 function initNav() {

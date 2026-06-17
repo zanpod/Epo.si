@@ -207,6 +207,8 @@ create table if not exists quotes (
   total numeric not null default 0,
   notes text default '',
   valid_until date,
+  status text not null default 'sent',   -- 'sent' | 'realized' | 'rejected'
+  status_changed_at timestamptz,
   sent_at timestamptz,
   created_at timestamptz default now()
 );
@@ -215,6 +217,18 @@ create table if not exists quotes (
 alter table quotes add column if not exists customer_id      uuid references customers(id) on delete set null;
 alter table quotes add column if not exists customer_tax     text default '';
 alter table quotes add column if not exists customer_address text default '';
+alter table quotes add column if not exists status           text not null default 'sent';
+alter table quotes add column if not exists status_changed_at timestamptz;
+
+-- ── page_views (analitika obiskov) ────────────────────────
+create table if not exists page_views (
+  id uuid primary key default uuid_generate_v4(),
+  path text default '/',
+  referrer_host text default '',   -- 'direct', 'google.com', 'instagram.com', ...
+  visitor_id text default '',      -- anonimni prvoosebni ID (localStorage)
+  created_at timestamptz default now()
+);
+create index if not exists page_views_created_at_idx on page_views (created_at);
 
 -- ============================================================
 -- Row-Level Security
@@ -226,6 +240,7 @@ alter table projects enable row level security;
 alter table contacts enable row level security;
 alter table customers enable row level security;
 alter table quotes enable row level security;
+alter table page_views enable row level security;
 
 -- settings: public read, authenticated write
 drop policy if exists "Public can read settings" on settings;
@@ -286,6 +301,18 @@ create policy "Authenticated can manage customers"
 drop policy if exists "Authenticated can manage quotes" on quotes;
 create policy "Authenticated can manage quotes"
   on quotes for all
+  to authenticated
+  using (auth.role() = 'authenticated');
+
+-- page_views: javnost lahko beleži obisk, samo skrbnik bere
+drop policy if exists "Public can insert page views" on page_views;
+create policy "Public can insert page views"
+  on page_views for insert
+  with check (true);
+
+drop policy if exists "Authenticated can read page views" on page_views;
+create policy "Authenticated can read page views"
+  on page_views for select
   to authenticated
   using (auth.role() = 'authenticated');
 

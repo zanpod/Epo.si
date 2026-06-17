@@ -2016,3 +2016,96 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .cookie-banner, .chat-panel, .chat-fab, .chat-typing span { transition: none; animation: none; }
 }
+
+/* ================================================================
+   ANALITIKA / STATUS PONUDBE (admin)
+   ================================================================ */
+.btn-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.btn-success:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #10b981;
+}
+
+.quote-status {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.quote-status.sent     { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.quote-status.realized { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.quote-status.rejected { background: rgba(239, 68, 68, 0.12);  color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+/* Lijak konverzije */
+.funnel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.funnel-step { text-align: center; flex: 1; min-width: 90px; }
+.funnel-num {
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.funnel-lbl { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+.funnel-arrow { font-size: 0.85rem; font-weight: 700; color: var(--cyan); white-space: nowrap; }
+
+/* Stolpčni graf obiskov */
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 140px;
+  padding-top: 0.5rem;
+}
+.chart-bar-wrap {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  min-width: 4px;
+}
+.chart-bar {
+  width: 100%;
+  background: var(--gradient);
+  border-radius: 3px 3px 0 0;
+  opacity: 0.85;
+  transition: opacity var(--transition);
+}
+.chart-bar-wrap:hover .chart-bar { opacity: 1; }
+
+/* Viri obiska */
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+}
+.source-name { flex: 0 0 120px; font-size: 0.88rem; }
+.source-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.source-bar { display: block; height: 100%; background: var(--gradient); }
+.source-count { flex: 0 0 auto; font-size: 0.82rem; color: var(--text-muted); min-width: 72px; text-align: right; }
+
+@media (max-width: 480px) {
+  .source-name { flex-basis: 80px; }
+  .funnel-arrow { display: none; }
+}

@@ -123,18 +123,117 @@ async function loadSection(section) {
   }
 }
 
-// ── Dashboard ─────────────────────────────────────────────────
+// ── Dashboard / analitika ─────────────────────────────────────
 async function loadDashboard() {
-  const [projRes, msgRes, unreadRes] = await Promise.all([
-    supabaseClient.from('projects').select('id', { count: 'exact', head: true }),
+  const since30 = new Date(Date.now() - 30 * 86400000).toISOString();
+
+  const [msgTotal, unreadRes, viewsRes, quotesRes] = await Promise.all([
     supabaseClient.from('contacts').select('id', { count: 'exact', head: true }),
     supabaseClient.from('contacts').select('id', { count: 'exact', head: true }).eq('is_read', false),
+    supabaseClient.from('page_views').select('created_at, referrer_host, visitor_id').gte('created_at', since30),
+    supabaseClient.from('quotes').select('total, status'),
   ]);
 
-  setText('dashProjects', projRes.count ?? 0);
-  setText('dashMessages', msgRes.count ?? 0);
-  setText('dashUnread',   unreadRes.count ?? 0);
-  setText('dashUpdated',  new Date().toLocaleDateString());
+  const views  = viewsRes.data || [];
+  const quotes = quotesRes.data || [];
+
+  // Obiski
+  const visits30  = views.length;
+  const uniques30 = new Set(views.map(v => v.visitor_id).filter(Boolean)).size;
+
+  // Povpraševanja
+  const inquiries = msgTotal.count ?? 0;
+
+  // Ponudbe
+  const quotesTotal   = quotes.length;
+  const realized      = quotes.filter(q => q.status === 'realized');
+  const realizedCount = realized.length;
+  const realizedValue = realized.reduce((s, q) => s + Number(q.total || 0), 0);
+
+  // Konverzija
+  const conv1 = inquiries   ? Math.round((quotesTotal   / inquiries)   * 100) : 0; // povpraševanje → ponudba
+  const conv2 = quotesTotal ? Math.round((realizedCount / quotesTotal) * 100) : 0; // ponudba → realizirana
+
+  setText('dashViews30',        visits30);
+  setText('dashUniques30',      uniques30);
+  setText('dashInquiries',      inquiries);
+  setText('dashUnread',         unreadRes.count ?? 0);
+  setText('dashQuotesSent',     quotesTotal);
+  setText('dashQuotesRealized', realizedCount);
+  setText('dashRealizedValue',  eur(realizedValue));
+  setText('dashConvReal',       conv2 + '%');
+
+  // Lijak
+  setText('funnelInquiries', inquiries);
+  setText('funnelQuotes',    quotesTotal);
+  setText('funnelRealized',  realizedCount);
+  setText('funnelConv1',     `→ ${conv1}% →`);
+  setText('funnelConv2',     `→ ${conv2}% →`);
+
+  renderVisitsChart(views);
+  renderSources(views);
+}
+
+function renderVisitsChart(views) {
+  const el = document.getElementById('dashChart');
+  if (!el) return;
+
+  const DAYS = 30;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  const map = {};
+  views.forEach(v => {
+    const d = new Date(v.created_at); d.setHours(0, 0, 0, 0);
+    const k = d.toISOString().slice(0, 10);
+    map[k] = (map[k] || 0) + 1;
+  });
+
+  const bars = [];
+  let max = 1;
+  for (let i = DAYS - 1; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const k = d.toISOString().slice(0, 10);
+    const c = map[k] || 0;
+    if (c > max) max = c;
+    bars.push({ d, c });
+  }
+
+  el.innerHTML = bars.map(({ d, c }) => {
+    const h = Math.round((c / max) * 100);
+    const title = `${d.toLocaleDateString('sl-SI')}: ${c} ${c === 1 ? 'obisk' : 'obiskov'}`;
+    return `<div class="chart-bar-wrap" title="${title}">
+      <div class="chart-bar" style="height:${Math.max(h, 2)}%"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderSources(views) {
+  const el = document.getElementById('dashSources');
+  if (!el) return;
+
+  if (!views.length) {
+    el.innerHTML = '<p style="color:var(--text-muted)">Še ni podatkov o obiskih. (Po objavi sheme se obiski začnejo beležiti ob nalaganju strani.)</p>';
+    return;
+  }
+
+  const counts = {};
+  views.forEach(v => {
+    const k = v.referrer_host || 'direct';
+    counts[k] = (counts[k] || 0) + 1;
+  });
+
+  const names = { direct: 'Neposredno', 'google.com': 'Google', 'instagram.com': 'Instagram', 'facebook.com': 'Facebook', 'l.facebook.com': 'Facebook', 'linkedin.com': 'LinkedIn' };
+  const total = views.length;
+  const rows  = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+  el.innerHTML = rows.map(([host, n]) => {
+    const pct = Math.round((n / total) * 100);
+    return `<div class="source-row">
+      <span class="source-name">${escHtml(names[host] || host)}</span>
+      <span class="source-track"><span class="source-bar" style="width:${pct}%"></span></span>
+      <span class="source-count">${n} · ${pct}%</span>
+    </div>`;
+  }).join('');
 }
 
 // ── Hero ──────────────────────────────────────────────────────
@@ -966,19 +1065,26 @@ async function loadCustomers() {
 
   list.innerHTML = customers.map(c => {
     const cq = byCustomer[c.id] || [];
-    const quotesHtml = cq.length ? cq.map(q => `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.45rem 0;border-top:1px solid var(--border)">
-        <div style="font-size:0.85rem">
+    const quotesHtml = cq.length ? cq.map(q => {
+      const st   = quoteStatusInfo(q.status);
+      const date = q.sent_at ? new Date(q.sent_at).toLocaleDateString('sl-SI') : new Date(q.created_at).toLocaleDateString('sl-SI');
+      return `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.5rem 0;border-top:1px solid var(--border);flex-wrap:wrap">
+        <div style="font-size:0.85rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
           <strong>${escHtml(q.quote_number)}</strong>
-          <span style="color:var(--text-muted)"> · ${q.sent_at ? new Date(q.sent_at).toLocaleDateString('sl-SI') : new Date(q.created_at).toLocaleDateString('sl-SI')}</span>
+          <span class="quote-status ${st.cls}">${st.label}</span>
+          <span style="color:var(--text-muted)">· ${date}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:0.6rem">
+        <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap">
           <span style="font-weight:600">${eur(q.total)}</span>
+          ${q.status !== 'realized' ? `<button class="btn btn-sm btn-success" onclick="setQuoteStatus('${q.id}','realized')">✓ Realizirana</button>` : ''}
+          ${q.status !== 'rejected' ? `<button class="btn btn-sm btn-ghost" onclick="setQuoteStatus('${q.id}','rejected')">Zavrnjena</button>` : ''}
+          ${q.status !== 'sent' ? `<button class="btn btn-sm btn-ghost" onclick="setQuoteStatus('${q.id}','sent')" title="Ponastavi na Poslano" aria-label="Ponastavi na Poslano">↺</button>` : ''}
           <button class="btn btn-sm btn-ghost" onclick="downloadStoredQuote('${q.id}')">PDF</button>
           <button class="btn btn-sm btn-danger" onclick="deleteQuote('${q.id}')" aria-label="Izbriši ponudbo">✕</button>
         </div>
-      </div>
-    `).join('') : '<div style="font-size:0.85rem;color:var(--text-muted);padding-top:0.45rem;border-top:1px solid var(--border)">Še ni ponudb.</div>';
+      </div>`;
+    }).join('') : '<div style="font-size:0.85rem;color:var(--text-muted);padding-top:0.45rem;border-top:1px solid var(--border)">Še ni ponudb.</div>';
 
     return `
       <div class="admin-list-item" data-id="${c.id}" style="flex-direction:column;align-items:stretch;gap:0.6rem">
@@ -1060,6 +1166,26 @@ async function deleteQuote(id) {
   const { error } = await supabaseClient.from('quotes').delete().eq('id', id);
   if (error) { toast('Napaka pri brisanju ponudbe', 'error'); return; }
   toast('Ponudba izbrisana', 'success');
+  loadCustomers();
+}
+
+function quoteStatusInfo(status) {
+  switch (status) {
+    case 'realized': return { cls: 'realized', label: 'Realizirana' };
+    case 'rejected': return { cls: 'rejected', label: 'Zavrnjena' };
+    default:         return { cls: 'sent',     label: 'Poslana' };
+  }
+}
+
+async function setQuoteStatus(id, status) {
+  const { error } = await supabaseClient.from('quotes')
+    .update({ status, status_changed_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) { toast('Napaka pri spremembi statusa ponudbe', 'error'); return; }
+  const msg = status === 'realized' ? 'Ponudba označena kot realizirana 🎉'
+            : status === 'rejected' ? 'Ponudba označena kot zavrnjena'
+            : 'Status ponastavljen na Poslano';
+  toast(msg, 'success');
   loadCustomers();
 }
 

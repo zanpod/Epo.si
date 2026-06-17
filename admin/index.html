@@ -112,29 +112,75 @@
       <div class="admin-section active" id="section-dashboard">
         <div class="stats-grid">
           <div class="admin-stat-card glass">
-            <div class="admin-stat-number" id="dashProjects">—</div>
-            <div class="admin-stat-label">Skupaj projektov</div>
+            <div class="admin-stat-number" id="dashViews30">—</div>
+            <div class="admin-stat-label">Obiski (30 dni)</div>
           </div>
           <div class="admin-stat-card glass">
-            <div class="admin-stat-number" id="dashMessages">—</div>
-            <div class="admin-stat-label">Skupaj sporočil</div>
+            <div class="admin-stat-number" id="dashUniques30">—</div>
+            <div class="admin-stat-label">Unikatni obiskovalci (30 dni)</div>
+          </div>
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashInquiries">—</div>
+            <div class="admin-stat-label">Povpraševanja (skupaj)</div>
           </div>
           <div class="admin-stat-card glass">
             <div class="admin-stat-number" id="dashUnread">—</div>
             <div class="admin-stat-label">Neprebrana sporočila</div>
           </div>
           <div class="admin-stat-card glass">
-            <div class="admin-stat-number" id="dashUpdated">—</div>
-            <div class="admin-stat-label">Zadnja posodobitev</div>
+            <div class="admin-stat-number" id="dashQuotesSent">—</div>
+            <div class="admin-stat-label">Poslane ponudbe</div>
           </div>
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashQuotesRealized">—</div>
+            <div class="admin-stat-label">Realizirane ponudbe</div>
+          </div>
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashRealizedValue">—</div>
+            <div class="admin-stat-label">Realizirana vrednost</div>
+          </div>
+          <div class="admin-stat-card glass">
+            <div class="admin-stat-number" id="dashConvReal">—</div>
+            <div class="admin-stat-label">Konverzija ponudba → realizirana</div>
+          </div>
+        </div>
+
+        <div class="admin-card glass">
+          <div class="admin-card-title">Lijak konverzije</div>
+          <div class="funnel-row">
+            <div class="funnel-step">
+              <div class="funnel-num" id="funnelInquiries">—</div>
+              <div class="funnel-lbl">Povpraševanja</div>
+            </div>
+            <div class="funnel-arrow" id="funnelConv1">→</div>
+            <div class="funnel-step">
+              <div class="funnel-num" id="funnelQuotes">—</div>
+              <div class="funnel-lbl">Poslane ponudbe</div>
+            </div>
+            <div class="funnel-arrow" id="funnelConv2">→</div>
+            <div class="funnel-step">
+              <div class="funnel-num" id="funnelRealized">—</div>
+              <div class="funnel-lbl">Realizirane</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-card glass">
+          <div class="admin-card-title">Obiski (zadnjih 30 dni)</div>
+          <div class="chart-bars" id="dashChart"></div>
+        </div>
+
+        <div class="admin-card glass">
+          <div class="admin-card-title">Viri obiska (30 dni)</div>
+          <div id="dashSources"></div>
         </div>
 
         <div class="admin-card glass">
           <div class="admin-card-title">Hitre akcije</div>
           <div style="display:flex;gap:1rem;flex-wrap:wrap">
-            <button class="btn btn-primary" onclick="navigateTo('projects')">+ Dodaj projekt</button>
+            <button class="btn btn-primary" onclick="navigateTo('customers')">Stranke &amp; ponudbe</button>
             <button class="btn btn-ghost"   onclick="navigateTo('messages')">Poglej sporočila</button>
-            <button class="btn btn-ghost"   onclick="navigateTo('settings')">Nastavitve strani</button>
+            <button class="btn btn-ghost"   onclick="navigateTo('projects')">+ Dodaj projekt</button>
           </div>
         </div>
       </div>

@@ -26,8 +26,8 @@ function initCookieConsent() {
   banner.innerHTML = `
     <div class="cookie-title">🍪 Piškotki</div>
     <p class="cookie-text">
-      Spletna stran uporablja le nujne piškotke za delovanje (npr. shranjevanje vaše izbire).
-      Z uporabo strani se strinjate z njihovo uporabo.
+      Spletna stran uporablja le nujne piškotke za delovanje (shranjevanje vaše izbire) in
+      anonimno štetje obiskov za lastno statistiko. Brez sledilnikov in deljenja s tretjimi.
     </p>
     <div class="cookie-actions">
       <button class="btn btn-primary" data-cookie="accept">Sprejmem</button>
