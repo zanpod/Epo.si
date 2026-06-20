@@ -216,8 +216,9 @@ body::before {
 }
 
 .nav-logo {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 800;
+  line-height: 1;
   background: var(--gradient-text);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -228,12 +229,13 @@ body::before {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.25rem;
 }
 
 .nav-links a {
-  font-size: 0.9rem;
+  font-size: 1.02rem;
   font-weight: 500;
+  line-height: 1;
   color: var(--text-secondary);
   position: relative;
   transition: color var(--transition);
