@@ -118,8 +118,8 @@ In Supabase Dashboard → **Edge Functions → send-contact-email → Secrets**,
 
 A floating chat widget on the public site answers visitor questions **only** about
 EPO.SI's services and the official pricing (the three packages: EPO Start, EPO Pro,
-EPO Cenik). It is powered by the Claude API through a Supabase Edge Function, so the
-API key stays on the server and is never exposed in the browser.
+EPO Cenik). It is powered by the **Groq API** (free tier) through a Supabase Edge
+Function, so the API key stays on the server and is never exposed in the browser.
 
 ### Deploy the Edge Function
 
@@ -129,18 +129,20 @@ supabase functions deploy chat
 
 ### Add the Edge Function Secret
 
-In Supabase Dashboard → **Edge Functions → chat → Secrets**, add:
+Get a **free** API key at [console.groq.com/keys](https://console.groq.com/keys).
+Then in Supabase Dashboard → **Edge Functions → chat → Secrets**, add:
 
-| Key                 | Value                                                        |
-|---------------------|-------------------------------------------------------------|
-| `ANTHROPIC_API_KEY` | Your Claude API key from [platform.claude.com](https://platform.claude.com) |
+| Key            | Value                                                            |
+|----------------|-----------------------------------------------------------------|
+| `GROQ_API_KEY` | Your free Groq key from [console.groq.com/keys](https://console.groq.com/keys) |
 
 > **How it works:** `js/widgets.js` calls `POST {SUPABASE_URL}/functions/v1/chat`
 > with the conversation history. The function injects a fixed system prompt
 > (defined in `supabase/functions/chat/index.ts`) that restricts answers to
-> EPO.SI topics and the official pricing, then calls Claude (`claude-opus-4-8`).
+> EPO.SI topics and the official pricing, then calls Groq (`llama-3.3-70b-versatile`).
 > If the function isn't deployed, the widget gracefully points visitors to the
-> contact form instead.
+> contact form instead. *(The `chat` and `generate` functions share the same
+> `GROQ_API_KEY`.)*
 
 ### Editing the pricing or scope
 

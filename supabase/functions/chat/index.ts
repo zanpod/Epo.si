@@ -1,13 +1,14 @@
 // Supabase Edge Function — chat
 // Javni AI pomočnik za stranke EPO.SI. Odgovarja IZKLJUČNO na vprašanja,
 // povezana z dejavnostjo EPO.SI, in navaja samo uradni cenik (3 paketi).
-// Kliče Claude API; ključ ostane na strežniku in ni izpostavljen v brskalniku.
+// Kliče Groq API (brezplačni nivo); ključ ostane na strežniku in ni
+// izpostavljen v brskalniku.
 //
 // Deploy:
 //   supabase functions deploy chat
 //
 // Zahtevane skrivnosti (Supabase Dashboard → Edge Functions → chat → Secrets):
-//   ANTHROPIC_API_KEY — vaš API ključ za Claude (platform.claude.com)
+//   GROQ_API_KEY — vaš brezplačni API ključ z https://console.groq.com/keys
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -17,7 +18,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const MODEL = 'claude-opus-4-8';
+const MODEL = 'llama-3.3-70b-versatile';
 
 // Sistemski poziv: omeji temo na dejavnost EPO.SI in zaklene cenik.
 const SYSTEM_PROMPT = `Ti si vljuden in strokoven virtualni pomočnik podjetja EPO.SI. Komuniciraš v slovenščini, jedrnato in prijazno (z vikanjem).
@@ -58,9 +59,9 @@ serve(async (req: Request) => {
   }
 
   try {
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!ANTHROPIC_API_KEY) {
-      return json({ error: 'Manjka ANTHROPIC_API_KEY' }, 500);
+    const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+    if (!GROQ_API_KEY) {
+      return json({ error: 'Manjka GROQ_API_KEY' }, 500);
     }
 
     const payload = await req.json().catch(() => null);
@@ -77,7 +78,7 @@ serve(async (req: Request) => {
       .slice(-12)
       .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
 
-    // Messages API zahteva, da se pogovor začne z uporabniškim sporočilom
+    // Pogovor naj se začne z uporabniškim sporočilom
     while (messages.length > 0 && messages[0].role !== 'user') {
       messages.shift();
     }
@@ -86,31 +87,32 @@ serve(async (req: Request) => {
       return json({ error: 'Neveljavna zahteva' }, 400);
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        authorization: `Bearer ${GROQ_API_KEY}`,
         'content-type': 'application/json',
       },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages,
+        temperature: 0.6,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...messages,
+        ],
       }),
     });
 
     if (!res.ok) {
       const detail = await res.text();
-      console.error('Anthropic error', res.status, detail);
+      console.error('Groq error', res.status, detail);
       return json({ error: 'Napaka pri pridobivanju odgovora' }, 502);
     }
 
     const data = await res.json();
-    const reply = Array.isArray(data?.content)
-      ? data.content.filter((b: { type: string }) => b.type === 'text')
-          .map((b: { text: string }) => b.text).join('').trim()
+    const reply = typeof data?.choices?.[0]?.message?.content === 'string'
+      ? data.choices[0].message.content.trim()
       : '';
 
     return json({ reply });
