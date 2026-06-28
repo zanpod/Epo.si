@@ -197,6 +197,8 @@ serve(async (req: Request) => {
     return json({ error: 'Neznan način (mode). Uporabi "post" ali "week".' }, 400);
   } catch (err) {
     console.error('generate function error:', err);
-    return json({ error: 'Generiranje ni uspelo. Poskusi znova.' }, 502);
+    const detail = err instanceof Error ? err.message : String(err);
+    // Prikaži pravi razlog (ta funkcija je dostopna le skrbniku) za lažje odpravljanje napak.
+    return json({ error: 'Generiranje ni uspelo: ' + detail.slice(0, 500) }, 502);
   }
 });
