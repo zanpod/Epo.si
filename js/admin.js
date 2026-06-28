@@ -98,7 +98,7 @@ function navigateTo(section) {
   const labels = {
     dashboard: 'Nadzorna plošča', hero: 'Naslovna stran', about: 'O nas',
     services: 'Storitve', projects: 'Projekti', customers: 'Stranke',
-    messages: 'Sporočila', settings: 'Nastavitve',
+    messages: 'Sporočila', content: 'Objave', settings: 'Nastavitve',
   };
   if (title) title.textContent = labels[section] || section;
 
@@ -119,6 +119,7 @@ async function loadSection(section) {
     case 'projects':  return loadProjects();
     case 'customers': return loadCustomers();
     case 'messages':  return loadMessages();
+    case 'content':   return loadContent();
     case 'settings':  return loadSettings();
   }
 }
@@ -1335,4 +1336,474 @@ function escHtml(str) {
 
 function escAttr(str) {
   return String(str ?? '').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+// ================================================================
+// Objave — priprava vsebin za družbena omrežja (AI generator)
+// ================================================================
+
+const CONTENT_PILLARS = [
+  'Pred / po preobrazba',
+  'Mini-nasvet za podjetnike',
+  'Problem → rešitev',
+  'Funkcija izdelka',
+  'Mit / pogosta napaka',
+  'Zakulisje EPO.SI',
+  'Rezultat / dokaz',
+];
+
+const CONTENT_STATUS_LABELS = { idea: 'Ideja', scheduled: 'Načrtovano', posted: 'Objavljeno' };
+const CONTENT_DAY_NAMES = ['Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob', 'Ned'];
+
+// Endpoint Edge funkcije za generiranje (ANTHROPIC ključ ostane na strežniku).
+const GENERATE_ENDPOINT =
+  (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL)
+    ? `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/generate`
+    : '';
+
+// Stanje razdelka
+let contentInited     = false;
+let contentPillar     = null;
+let contentResult     = null;   // { hook, caption, hashtags, imageBrief }
+let contentPosts      = [];
+let contentFilter     = 'all';
+let contentView       = 'list';
+let contentWeekStart  = contentStartOfWeek(new Date());
+
+// ── Vstop v razdelek ───────────────────────────────────────────
+function loadContent() {
+  if (!contentInited) {
+    initContent();
+    contentInited = true;
+  }
+  loadPosts();
+}
+
+function initContent() {
+  // Pilule za tip vsebine
+  const pillarsEl = document.getElementById('contentPillars');
+  if (pillarsEl) {
+    pillarsEl.innerHTML = CONTENT_PILLARS
+      .map(p => `<button type="button" class="content-pill" data-pillar="${escAttr(p)}">${escHtml(p)}</button>`)
+      .join('');
+    pillarsEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.content-pill');
+      if (!btn) return;
+      contentPillar = btn.dataset.pillar;
+      pillarsEl.querySelectorAll('.content-pill')
+        .forEach(p => p.classList.toggle('active', p === btn));
+    });
+  }
+
+  document.getElementById('contentGenerateBtn')?.addEventListener('click', runContentGenerate);
+  document.getElementById('contentAnotherBtn')?.addEventListener('click', runContentGenerate);
+  document.getElementById('contentWeekBtn')?.addEventListener('click', runContentWeek);
+
+  // Filtri knjižnice
+  const filtersEl = document.getElementById('contentFilters');
+  filtersEl?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.content-pill');
+    if (!btn) return;
+    contentFilter = btn.dataset.filter;
+    filtersEl.querySelectorAll('.content-pill').forEach(p => p.classList.toggle('active', p === btn));
+    renderContentLibrary();
+  });
+
+  // Preklop pogleda
+  document.getElementById('contentViewList')?.addEventListener('click', () => switchContentView('list'));
+  document.getElementById('contentViewCal')?.addEventListener('click', () => switchContentView('cal'));
+
+  // Navigacija koledarja
+  document.getElementById('contentCalPrev')?.addEventListener('click', () => {
+    contentWeekStart = contentAddDays(contentWeekStart, -7);
+    renderContentCalendar();
+  });
+  document.getElementById('contentCalNext')?.addEventListener('click', () => {
+    contentWeekStart = contentAddDays(contentWeekStart, 7);
+    renderContentCalendar();
+  });
+
+  // Obrazca v modalih
+  document.getElementById('postSaveForm')?.addEventListener('submit', submitPostSave);
+  document.getElementById('postEditForm')?.addEventListener('submit', submitPostEdit);
+}
+
+// ── Klic Edge funkcije ─────────────────────────────────────────
+async function callGenerate(payload) {
+  if (!GENERATE_ENDPOINT) throw new Error('Generator ni nastavljen (manjka SUPABASE_URL).');
+  const res = await fetch(GENERATE_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY
+        ? { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Napaka pri generiranju.');
+  return data;
+}
+
+// ── Generiranje ene objave ─────────────────────────────────────
+async function runContentGenerate() {
+  const errEl = document.getElementById('contentGenError');
+  if (!contentPillar) { showContentError(errEl, 'Najprej izberi tip vsebine.'); return; }
+  errEl.style.display = 'none';
+
+  const genBtn = document.getElementById('contentGenerateBtn');
+  const anotherBtn = document.getElementById('contentAnotherBtn');
+  setContentLoading(genBtn, true, 'Generiram…');
+  if (anotherBtn) anotherBtn.disabled = true;
+
+  try {
+    const topic = document.getElementById('contentTopic').value.trim();
+    const data = await callGenerate({ mode: 'post', pillar: contentPillar, topic });
+    contentResult = data;
+    renderContentResult(data);
+    if (anotherBtn) anotherBtn.style.display = 'inline-flex';
+  } catch (err) {
+    showContentError(errEl, err.message);
+  } finally {
+    setContentLoading(genBtn, false, 'Generiraj');
+    if (anotherBtn) anotherBtn.disabled = false;
+  }
+}
+
+function renderContentResult(d) {
+  const el = document.getElementById('contentResult');
+  if (!el) return;
+  const tags = (d.hashtags || []).map(h => `<span class="content-tag">#${escHtml(h)}</span>`).join('');
+  el.innerHTML = `
+    <div class="content-result-block">
+      <div class="content-result-label">Kljuka</div>
+      <div class="content-result-text">${escHtml(d.hook)}</div>
+    </div>
+    <div class="content-result-block">
+      <div class="content-result-label">Besedilo</div>
+      <div class="content-result-text">${escHtml(d.caption)}</div>
+    </div>
+    <div class="content-result-block">
+      <div class="content-result-label">Hashtagi</div>
+      <div class="content-tags">${tags || '<span style="color:var(--text-muted)">—</span>'}</div>
+    </div>
+    <div class="content-result-block">
+      <div class="content-result-label">Ideja za vizual</div>
+      <div class="content-result-text">${escHtml(d.imageBrief)}</div>
+    </div>
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
+      <button class="btn btn-primary" id="contentSaveBtn" type="button">Shrani objavo</button>
+      <button class="btn btn-ghost" id="contentCopyAllBtn" type="button">Kopiraj vse</button>
+    </div>`;
+  el.style.display = 'block';
+
+  document.getElementById('contentSaveBtn')?.addEventListener('click', openPostSaveModal);
+  document.getElementById('contentCopyAllBtn')?.addEventListener('click', (e) =>
+    contentCopy(contentFullText(contentResult), e.currentTarget));
+}
+
+// ── Shranjevanje generirane objave ─────────────────────────────
+function openPostSaveModal() {
+  setVal('postSaveStatus', 'idea');
+  setVal('postSaveDate', '');
+  openModal('postSaveModal');
+}
+
+async function submitPostSave(e) {
+  e.preventDefault();
+  if (!contentResult) return;
+  const btn = e.target.querySelector('[type="submit"]');
+  const status = getVal('postSaveStatus');
+  const row = {
+    pillar: contentPillar,
+    topic: document.getElementById('contentTopic').value.trim() || '',
+    hook: contentResult.hook,
+    caption: contentResult.caption,
+    hashtags: contentResult.hashtags || [],
+    image_brief: contentResult.imageBrief || '',
+    status,
+    scheduled_for: getVal('postSaveDate') || null,
+    posted_at: status === 'posted' ? new Date().toISOString() : null,
+  };
+
+  setLoading(btn, true);
+  const { error } = await supabaseClient.from('posts').insert([row]);
+  setLoading(btn, false);
+
+  if (error) { toast('Napaka pri shranjevanju objave', 'error'); return; }
+  toast('Objava shranjena', 'success');
+  closeModal('postSaveModal');
+  loadPosts();
+}
+
+// ── 7-dnevni načrt ─────────────────────────────────────────────
+async function runContentWeek() {
+  const errEl = document.getElementById('contentWeekError');
+  errEl.style.display = 'none';
+  const btn = document.getElementById('contentWeekBtn');
+  setContentLoading(btn, true, 'Ustvarjam…');
+  try {
+    const data = await callGenerate({ mode: 'week' });
+    renderContentWeek(data.days || []);
+  } catch (err) {
+    showContentError(errEl, err.message);
+  } finally {
+    setContentLoading(btn, false, 'Ustvari načrt');
+  }
+}
+
+function renderContentWeek(days) {
+  const grid = document.getElementById('contentWeekGrid');
+  if (!grid) return;
+  grid.innerHTML = days.map((d, i) => `
+    <div class="content-day-card">
+      <div class="content-day-name">${CONTENT_DAY_NAMES[i % 7]}</div>
+      <div class="content-day-pillar">${escHtml(d.pillar)}</div>
+      <div class="content-day-idea">${escHtml(d.idea)}</div>
+      <button class="btn btn-sm btn-ghost" data-dev="${escAttr(JSON.stringify(d))}" type="button">Razvij v objavo →</button>
+    </div>`).join('');
+
+  grid.querySelectorAll('[data-dev]').forEach(btn => {
+    btn.addEventListener('click', () => developContentIdea(JSON.parse(btn.dataset.dev)));
+  });
+}
+
+function developContentIdea(d) {
+  const pillarsEl = document.getElementById('contentPillars');
+  if (CONTENT_PILLARS.includes(d.pillar)) {
+    contentPillar = d.pillar;
+    pillarsEl?.querySelectorAll('.content-pill')
+      .forEach(p => p.classList.toggle('active', p.dataset.pillar === d.pillar));
+  }
+  setVal('contentTopic', d.idea || '');
+  document.querySelector('.admin-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  runContentGenerate();
+}
+
+// ── Knjižnica: nalaganje in izris ──────────────────────────────
+async function loadPosts() {
+  const errEl = document.getElementById('contentLibError');
+  const { data, error } = await supabaseClient
+    .from('posts').select('*').order('created_at', { ascending: false });
+  if (error) {
+    if (errEl) { errEl.textContent = 'Napaka pri nalaganju: ' + error.message; errEl.style.display = 'block'; }
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+  contentPosts = data || [];
+  renderContentLibrary();
+}
+
+function switchContentView(v) {
+  contentView = v;
+  const list = v === 'list';
+  document.getElementById('contentViewList')?.classList.toggle('btn-primary', list);
+  document.getElementById('contentViewList')?.classList.toggle('btn-ghost', !list);
+  document.getElementById('contentViewCal')?.classList.toggle('btn-primary', !list);
+  document.getElementById('contentViewCal')?.classList.toggle('btn-ghost', list);
+  document.getElementById('contentListView').style.display = list ? 'block' : 'none';
+  document.getElementById('contentFilters').style.display = list ? 'flex' : 'none';
+  document.getElementById('contentCalView').style.display = list ? 'none' : 'block';
+  renderContentLibrary();
+}
+
+function renderContentLibrary() {
+  if (contentView === 'cal') { renderContentCalendar(); return; }
+  const listEl = document.getElementById('contentListView');
+  const emptyEl = document.getElementById('contentEmpty');
+  const filtered = contentFilter === 'all'
+    ? contentPosts
+    : contentPosts.filter(p => p.status === contentFilter);
+
+  if (emptyEl) emptyEl.style.display = filtered.length ? 'none' : 'block';
+  if (!listEl) return;
+
+  listEl.innerHTML = filtered.map(renderContentPost).join('');
+  filtered.forEach(p => {
+    const item = listEl.querySelector(`.content-post[data-id="${p.id}"]`);
+    if (!item) return;
+    item.querySelectorAll('[data-act]').forEach(btn => {
+      btn.addEventListener('click', () => handleContentAction(btn.dataset.act, p, btn));
+    });
+  });
+}
+
+function renderContentPost(p) {
+  const tags = (p.hashtags || []).map(h => `#${escHtml(h)}`).join(' ');
+  const dateLine = p.scheduled_for ? ` · ${contentFormatDate(p.scheduled_for)}` : '';
+  return `
+    <div class="content-post" data-id="${p.id}">
+      <div class="content-post-meta">
+        <span class="content-post-pillar">${escHtml(p.pillar)}</span>
+        <span class="content-badge ${escAttr(p.status)}">${escHtml(CONTENT_STATUS_LABELS[p.status] || p.status)}</span>
+        <span style="color:var(--text-muted);font-size:0.82rem">${dateLine}</span>
+      </div>
+      <div class="content-post-hook">${escHtml(p.hook)}</div>
+      <div class="content-post-caption">${escHtml(p.caption)}</div>
+      ${tags ? `<div style="color:var(--text-muted);font-size:0.82rem;margin-top:0.5rem">${tags}</div>` : ''}
+      <div class="content-post-actions">
+        <button class="btn btn-sm btn-ghost" data-act="copy">Kopiraj vse</button>
+        <button class="btn btn-sm btn-ghost" data-act="edit">Uredi</button>
+        ${p.status !== 'posted' ? `<button class="btn btn-sm btn-ghost" data-act="posted">Označi objavljeno</button>` : ''}
+        <button class="btn btn-sm btn-danger" data-act="delete">Izbriši</button>
+      </div>
+    </div>`;
+}
+
+async function handleContentAction(act, p, btn) {
+  if (act === 'copy') {
+    contentCopy(contentFullText({ hook: p.hook, caption: p.caption, hashtags: p.hashtags }), btn);
+  } else if (act === 'edit') {
+    openPostEditModal(p);
+  } else if (act === 'posted') {
+    const { error } = await supabaseClient.from('posts')
+      .update({ status: 'posted', posted_at: new Date().toISOString() }).eq('id', p.id);
+    if (error) { toast('Napaka pri posodabljanju', 'error'); return; }
+    toast('Označeno kot objavljeno', 'success');
+    loadPosts();
+  } else if (act === 'delete') {
+    if (!confirm('Res izbrišem to objavo?')) return;
+    const { error } = await supabaseClient.from('posts').delete().eq('id', p.id);
+    if (error) { toast('Napaka pri brisanju', 'error'); return; }
+    toast('Objava izbrisana', 'success');
+    loadPosts();
+  }
+}
+
+// ── Urejanje objave ────────────────────────────────────────────
+function openPostEditModal(p) {
+  setVal('postEditId', p.id);
+  setVal('postEditHook', p.hook || '');
+  setVal('postEditCaption', p.caption || '');
+  setVal('postEditHashtags', (p.hashtags || []).join(', '));
+  setVal('postEditImageBrief', p.image_brief || '');
+  setVal('postEditStatus', p.status || 'idea');
+  setVal('postEditDate', p.scheduled_for || '');
+  document.getElementById('postEditForm').dataset.postedAt = p.posted_at || '';
+  openModal('postEditModal');
+}
+
+async function submitPostEdit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type="submit"]');
+  const id = getVal('postEditId');
+  const status = getVal('postEditStatus');
+  const patch = {
+    hook: getVal('postEditHook'),
+    caption: getVal('postEditCaption'),
+    hashtags: getVal('postEditHashtags').split(',').map(h => h.replace(/^#/, '').trim()).filter(Boolean),
+    image_brief: getVal('postEditImageBrief'),
+    status,
+    scheduled_for: getVal('postEditDate') || null,
+  };
+  if (status === 'posted' && !e.target.dataset.postedAt) {
+    patch.posted_at = new Date().toISOString();
+  }
+
+  setLoading(btn, true);
+  const { error } = await supabaseClient.from('posts').update(patch).eq('id', id);
+  setLoading(btn, false);
+
+  if (error) { toast('Napaka pri shranjevanju', 'error'); return; }
+  toast('Objava posodobljena', 'success');
+  closeModal('postEditModal');
+  loadPosts();
+}
+
+// ── Koledar ────────────────────────────────────────────────────
+function renderContentCalendar() {
+  const label = document.getElementById('contentCalLabel');
+  const cal = document.getElementById('contentCalendar');
+  if (!cal) return;
+  const end = contentAddDays(contentWeekStart, 6);
+  if (label) label.textContent = `${contentFormatDate(contentWeekStart)} – ${contentFormatDate(end)}`;
+
+  const todayIso = contentIsoDate(new Date());
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const day = contentAddDays(contentWeekStart, i);
+    const iso = contentIsoDate(day);
+    const dayPosts = contentPosts.filter(p => p.scheduled_for === iso);
+    const chips = dayPosts.map(p =>
+      `<div class="content-cal-chip ${p.status === 'posted' ? 'posted' : ''}" data-id="${p.id}" title="${escAttr(p.hook)}">${escHtml((p.hook || '').slice(0, 40))}</div>`
+    ).join('');
+    html += `
+      <div class="content-cal-day ${iso === todayIso ? 'today' : ''}">
+        <div class="content-cal-date">${CONTENT_DAY_NAMES[i]} ${day.getDate()}.${day.getMonth() + 1}.</div>
+        ${chips}
+      </div>`;
+  }
+  cal.innerHTML = html;
+
+  cal.querySelectorAll('.content-cal-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const p = contentPosts.find(x => String(x.id) === String(chip.dataset.id));
+      if (p) openPostEditModal(p);
+    });
+  });
+}
+
+// ── Pripomočki ─────────────────────────────────────────────────
+function contentFullText({ hook, caption, hashtags }) {
+  const tags = (hashtags || []).map(h => `#${h}`).join(' ');
+  return [hook, '', caption, '', tags].join('\n').trim();
+}
+
+async function contentCopy(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(ta);
+  }
+  if (btn) {
+    const prev = btn.textContent;
+    btn.textContent = 'Kopirano ✓';
+    setTimeout(() => { btn.textContent = prev; }, 1400);
+  }
+}
+
+function setContentLoading(btn, loading, label) {
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span> ${label}` : label;
+}
+
+function showContentError(el, msg) {
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function contentFormatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  if (isNaN(date)) return d;
+  return date.toLocaleDateString('sl-SI', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function contentIsoDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function contentStartOfWeek(date) {
+  const d = new Date(date);
+  const day = (d.getDay() + 6) % 7; // ponedeljek = 0
+  d.setDate(d.getDate() - day);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function contentAddDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
 }

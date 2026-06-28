@@ -23,8 +23,10 @@ A production-ready personal portfolio website using HTML/CSS/Vanilla JS + Supaba
 │   └── functions/
 │       ├── send-contact-email/
 │       │   └── index.ts          ← Edge Function for email notifications
-│       └── chat/
-│           └── index.ts          ← Edge Function: AI chat (Claude API)
+│       ├── chat/
+│       │   └── index.ts          ← Edge Function: AI chat (Claude API)
+│       └── generate/
+│           └── index.ts          ← Edge Function: AI generator vsebin (Claude API)
 └── README.md
 ```
 
@@ -148,6 +150,44 @@ constant in `supabase/functions/chat/index.ts`. Edit it there and re-deploy
 
 ---
 
+## Step 6c — (Optional) Enable the Content Generator (Objave)
+
+The admin panel includes an **Objave** section that prepares social-media content
+for EPO.SI (Instagram / Facebook): it generates a single post (hook, caption,
+hashtags and a visual idea) or a 7-day content plan, then lets you save, edit,
+schedule and browse posts in a list or weekly calendar. It is powered by the
+Claude API through a Supabase Edge Function, so the API key stays on the server.
+
+### Deploy the Edge Function
+
+```bash
+supabase functions deploy generate
+```
+
+### Add the Edge Function Secret
+
+In Supabase Dashboard → **Edge Functions → generate → Secrets**, add:
+
+| Key                 | Value                                                        |
+|---------------------|-------------------------------------------------------------|
+| `ANTHROPIC_API_KEY` | Your Claude API key from [platform.claude.com](https://platform.claude.com) |
+
+> **How it works:** `js/admin.js` calls `POST {SUPABASE_URL}/functions/v1/generate`
+> with `{ mode: 'post' | 'week', pillar, topic }`. The function injects a fixed
+> brand prompt (defined in `supabase/functions/generate/index.ts`) and calls Claude
+> (`claude-sonnet-4-6`), returning structured JSON. Saved posts are stored in the
+> `posts` table (created by `schema.sql`, protected by RLS — only the authenticated
+> admin can read/write them).
+
+### Editing the brand voice or content pillars
+
+The brand context, content pillars and prompts live in
+`supabase/functions/generate/index.ts`. The pillar list is mirrored in
+`js/admin.js` (`CONTENT_PILLARS`) for the UI — keep the two in sync if you change
+them. After editing the function, re-deploy with `supabase functions deploy generate`.
+
+---
+
 ## A note on cookies (piškotki)
 
 The site shows a small consent banner (`js/widgets.js`) on first visit. It uses
@@ -186,6 +226,7 @@ a choice is made.
    - **Services** — add/edit/delete service cards
    - **Projects** — upload images, add/edit/delete projects
    - **Messages** — view contact form submissions
+   - **Objave** — generate social-media posts & a 7-day plan, save/edit/schedule them
    - **Settings** — site name, contact info, social links, SEO
 
 ---
