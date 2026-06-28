@@ -156,8 +156,8 @@ The admin panel includes an **Objave** section that prepares social-media conten
 for EPO.SI (Instagram / Facebook): it generates a single post (hook, caption,
 hashtags and a visual idea) or a 7-day content plan, then lets you save, edit,
 schedule and browse posts in a list or weekly calendar. It is powered by the
-**Google Gemini API** (free tier) through a Supabase Edge Function, so the API key
-stays on the server.
+**Groq API** (free tier, no credit card) through a Supabase Edge Function, so the
+API key stays on the server.
 
 ### Deploy the Edge Function
 
@@ -170,21 +170,22 @@ name it `generate` and paste the contents of `supabase/functions/generate/index.
 
 ### Add the Edge Function Secret
 
-Get a **free** API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-(no credit card required). Then in Supabase Dashboard → **Edge Functions → generate → Secrets**, add:
+Get a **free** API key at [console.groq.com/keys](https://console.groq.com/keys)
+(no credit card required, works in the EU). Then in Supabase Dashboard →
+**Edge Functions → generate → Secrets**, add:
 
-| Key              | Value                                                                        |
-|------------------|------------------------------------------------------------------------------|
-| `GEMINI_API_KEY` | Your free Gemini key from [aistudio.google.com](https://aistudio.google.com/apikey) |
+| Key            | Value                                                            |
+|----------------|-----------------------------------------------------------------|
+| `GROQ_API_KEY` | Your free Groq key from [console.groq.com/keys](https://console.groq.com/keys) |
 
 > **How it works:** `js/admin.js` calls `POST {SUPABASE_URL}/functions/v1/generate`
 > with `{ mode: 'post' | 'week', pillar, topic }`. The function injects a fixed
-> brand prompt (defined in `supabase/functions/generate/index.ts`) and calls Gemini
-> (`gemini-2.0-flash`) in JSON response mode, returning structured JSON. Saved posts
-> are stored in the `posts` table (created by `schema.sql`, protected by RLS — only
-> the authenticated admin can read/write them).
+> brand prompt (defined in `supabase/functions/generate/index.ts`) and calls Groq
+> (`llama-3.3-70b-versatile`) in JSON response mode, returning structured JSON. Saved
+> posts are stored in the `posts` table (created by `schema.sql`, protected by RLS —
+> only the authenticated admin can read/write them).
 >
-> **Switching provider:** to use a different model/provider, edit `callGemini()` and
+> **Switching provider:** to use a different model/provider, edit `callGroq()` and
 > the `MODEL` constant in `supabase/functions/generate/index.ts` and re-deploy.
 
 ### Editing the brand voice or content pillars
