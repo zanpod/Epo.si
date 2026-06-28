@@ -1492,15 +1492,81 @@ function renderContentResult(d) {
       <div class="content-result-label">Ideja za vizual</div>
       <div class="content-result-text">${escHtml(d.imageBrief)}</div>
     </div>
+    <div class="content-result-block">
+      <div class="content-result-label" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
+        <span>Slika</span>
+        <span style="display:flex;gap:0.4rem">
+          <button class="btn btn-sm btn-ghost" id="contentImgRegen" type="button">Druga slika</button>
+          <button class="btn btn-sm btn-ghost" id="contentImgDownload" type="button">Prenesi sliko</button>
+        </span>
+      </div>
+      <div id="contentImgWrap" class="content-img-wrap"></div>
+    </div>
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
       <button class="btn btn-primary" id="contentSaveBtn" type="button">Shrani objavo</button>
-      <button class="btn btn-ghost" id="contentCopyAllBtn" type="button">Kopiraj vse</button>
+      <button class="btn btn-ghost" id="contentCopyAllBtn" type="button">Kopiraj besedilo</button>
     </div>`;
   el.style.display = 'block';
 
   document.getElementById('contentSaveBtn')?.addEventListener('click', openPostSaveModal);
   document.getElementById('contentCopyAllBtn')?.addEventListener('click', (e) =>
     contentCopy(contentFullText(contentResult), e.currentTarget));
+  document.getElementById('contentImgRegen')?.addEventListener('click', () => {
+    contentResult.imageSeed = Math.floor(Math.random() * 1e6);
+    loadContentImage();
+  });
+  document.getElementById('contentImgDownload')?.addEventListener('click', (e) =>
+    downloadContentImage(contentResult.imageUrl, e.currentTarget));
+
+  // Samodejno ustvari sliko ob izrisu rezultata.
+  loadContentImage();
+}
+
+// Sestavi URL za brezplačno generiranje slike (Pollinations.ai — brez ključa).
+function buildImageUrl(prompt, seed) {
+  const styled = `${prompt}. Modern clean professional social media visual, high quality, vibrant, photographic, no text, no watermark`;
+  const enc = encodeURIComponent(styled.slice(0, 800));
+  return `https://image.pollinations.ai/prompt/${enc}?width=1080&height=1080&nologo=true&model=flux&seed=${seed}`;
+}
+
+function loadContentImage() {
+  const wrap = document.getElementById('contentImgWrap');
+  if (!wrap || !contentResult) return;
+  const topic = document.getElementById('contentTopic')?.value || '';
+  const prompt = (contentResult.imagePrompt || contentResult.imageBrief ||
+    `${contentResult.hook || ''} ${topic}`).trim();
+  if (!contentResult.imageSeed) contentResult.imageSeed = Math.floor(Math.random() * 1e6);
+  const url = buildImageUrl(prompt, contentResult.imageSeed);
+  contentResult.imageUrl = url;
+
+  wrap.innerHTML = `<div class="content-img-loading"><span class="spinner"></span> Ustvarjam sliko…</div>`;
+  const img = new Image();
+  img.onload = () => { wrap.innerHTML = ''; img.className = 'content-img'; wrap.appendChild(img); };
+  img.onerror = () => {
+    wrap.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">Slike ni bilo mogoče ustvariti. Poskusi »Druga slika«.</div>';
+  };
+  img.src = url;
+}
+
+async function downloadContentImage(url, btn) {
+  if (!url) return;
+  const prev = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = 'Prenašam…'; btn.disabled = true; }
+  try {
+    const r = await fetch(url);
+    const b = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'epo-objava.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  } catch (_) {
+    window.open(url, '_blank');
+  } finally {
+    if (btn) { btn.textContent = prev; btn.disabled = false; }
+  }
 }
 
 // ── Shranjevanje generirane objave ─────────────────────────────
@@ -1522,6 +1588,7 @@ async function submitPostSave(e) {
     caption: contentResult.caption,
     hashtags: contentResult.hashtags || [],
     image_brief: contentResult.imageBrief || '',
+    image_url: contentResult.imageUrl || '',
     status,
     scheduled_for: getVal('postSaveDate') || null,
     posted_at: status === 'posted' ? new Date().toISOString() : null,
@@ -1640,11 +1707,13 @@ function renderContentPost(p) {
         <span class="content-badge ${escAttr(p.status)}">${escHtml(CONTENT_STATUS_LABELS[p.status] || p.status)}</span>
         <span style="color:var(--text-muted);font-size:0.82rem">${dateLine}</span>
       </div>
+      ${p.image_url ? `<img src="${escAttr(p.image_url)}" alt="Vizual objave" class="content-post-img" loading="lazy">` : ''}
       <div class="content-post-hook">${escHtml(p.hook)}</div>
       <div class="content-post-caption">${escHtml(p.caption)}</div>
       ${tags ? `<div style="color:var(--text-muted);font-size:0.82rem;margin-top:0.5rem">${tags}</div>` : ''}
       <div class="content-post-actions">
-        <button class="btn btn-sm btn-ghost" data-act="copy">Kopiraj vse</button>
+        <button class="btn btn-sm btn-ghost" data-act="copy">Kopiraj besedilo</button>
+        ${p.image_url ? `<button class="btn btn-sm btn-ghost" data-act="image">Prenesi sliko</button>` : ''}
         <button class="btn btn-sm btn-ghost" data-act="edit">Uredi</button>
         ${p.status !== 'posted' ? `<button class="btn btn-sm btn-ghost" data-act="posted">Označi objavljeno</button>` : ''}
         <button class="btn btn-sm btn-danger" data-act="delete">Izbriši</button>
@@ -1655,6 +1724,8 @@ function renderContentPost(p) {
 async function handleContentAction(act, p, btn) {
   if (act === 'copy') {
     contentCopy(contentFullText({ hook: p.hook, caption: p.caption, hashtags: p.hashtags }), btn);
+  } else if (act === 'image') {
+    downloadContentImage(p.image_url, btn);
   } else if (act === 'edit') {
     openPostEditModal(p);
   } else if (act === 'posted') {

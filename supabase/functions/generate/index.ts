@@ -122,10 +122,11 @@ Zahteve:
 - "hook": kratka, udarna kljuka (prva vrstica objave), ki ustavi drsenje. Brez emojijev na začetku.
 - "caption": celotno besedilo objave, 4–7 vrstic, ločenih z znaki \\n. Naj se konča s konkretnim pozivom k akciji (CTA).
 - "hashtags": 5–10 relevantnih hashtagov BREZ znaka # (samo besede), primernih za slovensko gostinsko/podjetniško publiko.
-- "imageBrief": kratek opis ideje za vizual (kaj naj bo na sliki/posnetku), 1–2 stavka.
+- "imageBrief": kratek opis ideje za vizual v slovenščini (kaj naj bo na sliki), 1–2 stavka.
+- "imagePrompt": NATANČEN prompt V ANGLEŠČINI za generator slik (npr. Flux/Stable Diffusion), ki opiše privlačen vizual za to objavo. Naj bo konkreten glede motiva, sloga in razpoloženja (npr. "modern minimalist photo of ..., soft natural light, professional, vibrant"). NE vključuj besedila/napisov na sliki. 1–2 stavka.
 
 Odgovori IZKLJUČNO z veljavnim JSON v točno tej obliki, brez dodatnega besedila in brez ograj:
-{"hook":"...","caption":"...","hashtags":["...","..."],"imageBrief":"..."}`;
+{"hook":"...","caption":"...","hashtags":["...","..."],"imageBrief":"...","imagePrompt":"..."}`;
 }
 
 function weekPrompt(): string {
@@ -191,6 +192,7 @@ serve(async (req: Request) => {
           ? parsed.hashtags.map((h: unknown) => String(h).replace(/^#/, '').trim()).filter(Boolean)
           : [],
         imageBrief: typeof parsed.imageBrief === 'string' ? parsed.imageBrief : '',
+        imagePrompt: typeof parsed.imagePrompt === 'string' ? parsed.imagePrompt : '',
       });
     }
 
