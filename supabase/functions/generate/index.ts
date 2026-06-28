@@ -1,13 +1,14 @@
 // Supabase Edge Function — generate
 // Generator vsebin za družbena omrežja znamke EPO.SI. Ustvari posamezno objavo
 // (kljuka + besedilo + hashtagi + ideja za vizual) ali 7-dnevni načrt vsebin.
-// Kliče Claude API; ključ ostane na strežniku in ni izpostavljen v brskalniku.
+// Kliče Google Gemini API (brezplačni nivo); ključ ostane na strežniku in ni
+// izpostavljen v brskalniku.
 //
 // Deploy:
 //   supabase functions deploy generate
 //
 // Zahtevane skrivnosti (Supabase Dashboard → Edge Functions → generate → Secrets):
-//   ANTHROPIC_API_KEY — vaš API ključ za Claude (platform.claude.com)
+//   GEMINI_API_KEY — vaš brezplačni API ključ z https://aistudio.google.com/apikey
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -17,7 +18,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const MODEL = 'claude-sonnet-4-6';
+const MODEL = 'gemini-2.0-flash';
 
 // --- Kontekst znamke (vgrajen v vsak prompt) ---------------------------------
 const BRAND = `Si pomočnik za ustvarjanje vsebin za družbena omrežja za znamko EPO.SI.
@@ -72,33 +73,37 @@ function parseModelJson(text: string): any {
   return JSON.parse(t);
 }
 
-// Pokliči Anthropic Messages API.
-async function callAnthropic(apiKey: string, system: string, userPrompt: string): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+// Pokliči Google Gemini API (generateContent).
+async function callGemini(apiKey: string, system: string, userPrompt: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
+      'x-goog-api-key': apiKey,
     },
     body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 1024,
-      system,
-      messages: [{ role: 'user', content: userPrompt }],
+      system_instruction: { parts: [{ text: system }] },
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      generationConfig: {
+        maxOutputTokens: 1024,
+        temperature: 0.9,
+        responseMimeType: 'application/json',
+      },
     }),
   });
 
   if (!res.ok) {
     const detail = await res.text();
-    throw new Error(`Anthropic API ${res.status}: ${detail}`);
+    throw new Error(`Gemini API ${res.status}: ${detail}`);
   }
 
   const data = await res.json();
-  return (data.content || [])
-    .filter((b: { type: string }) => b.type === 'text')
-    .map((b: { text: string }) => b.text)
-    .join('');
+  const parts = data?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) {
+    throw new Error('Gemini ni vrnil vsebine.');
+  }
+  return parts.map((p: { text?: string }) => p.text || '').join('');
 }
 
 // --- Prompti za posamezne načine --------------------------------------------
@@ -148,9 +153,9 @@ serve(async (req: Request) => {
     return json({ error: 'Uporabi metodo POST.' }, 405);
   }
 
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
   if (!apiKey) {
-    return json({ error: 'Strežnik ni nastavljen: manjka ANTHROPIC_API_KEY.' }, 500);
+    return json({ error: 'Strežnik ni nastavljen: manjka GEMINI_API_KEY.' }, 500);
   }
 
   const payload = await req.json().catch(() => null);
@@ -162,7 +167,7 @@ serve(async (req: Request) => {
 
   try {
     if (mode === 'week') {
-      const text = await callAnthropic(apiKey, BRAND, weekPrompt());
+      const text = await callGemini(apiKey, BRAND, weekPrompt());
       const parsed = parseModelJson(text);
       if (!parsed || !Array.isArray(parsed.days)) {
         throw new Error('Model ni vrnil pričakovane oblike (days).');
@@ -174,7 +179,7 @@ serve(async (req: Request) => {
       if (!pillar || !PILLARS.includes(pillar)) {
         return json({ error: 'Neveljaven ali manjkajoč tip vsebine (pillar).' }, 400);
       }
-      const text = await callAnthropic(apiKey, BRAND, postPrompt(pillar, topic || ''));
+      const text = await callGemini(apiKey, BRAND, postPrompt(pillar, topic || ''));
       const parsed = parseModelJson(text);
       if (!parsed || typeof parsed.hook !== 'string' || typeof parsed.caption !== 'string') {
         throw new Error('Model ni vrnil pričakovane oblike (hook/caption).');

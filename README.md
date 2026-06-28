@@ -156,7 +156,8 @@ The admin panel includes an **Objave** section that prepares social-media conten
 for EPO.SI (Instagram / Facebook): it generates a single post (hook, caption,
 hashtags and a visual idea) or a 7-day content plan, then lets you save, edit,
 schedule and browse posts in a list or weekly calendar. It is powered by the
-Claude API through a Supabase Edge Function, so the API key stays on the server.
+**Google Gemini API** (free tier) through a Supabase Edge Function, so the API key
+stays on the server.
 
 ### Deploy the Edge Function
 
@@ -164,20 +165,27 @@ Claude API through a Supabase Edge Function, so the API key stays on the server.
 supabase functions deploy generate
 ```
 
+*(Or deploy via the Supabase Dashboard → Edge Functions → Deploy a new function →
+name it `generate` and paste the contents of `supabase/functions/generate/index.ts`.)*
+
 ### Add the Edge Function Secret
 
-In Supabase Dashboard → **Edge Functions → generate → Secrets**, add:
+Get a **free** API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+(no credit card required). Then in Supabase Dashboard → **Edge Functions → generate → Secrets**, add:
 
-| Key                 | Value                                                        |
-|---------------------|-------------------------------------------------------------|
-| `ANTHROPIC_API_KEY` | Your Claude API key from [platform.claude.com](https://platform.claude.com) |
+| Key              | Value                                                                        |
+|------------------|------------------------------------------------------------------------------|
+| `GEMINI_API_KEY` | Your free Gemini key from [aistudio.google.com](https://aistudio.google.com/apikey) |
 
 > **How it works:** `js/admin.js` calls `POST {SUPABASE_URL}/functions/v1/generate`
 > with `{ mode: 'post' | 'week', pillar, topic }`. The function injects a fixed
-> brand prompt (defined in `supabase/functions/generate/index.ts`) and calls Claude
-> (`claude-sonnet-4-6`), returning structured JSON. Saved posts are stored in the
-> `posts` table (created by `schema.sql`, protected by RLS — only the authenticated
-> admin can read/write them).
+> brand prompt (defined in `supabase/functions/generate/index.ts`) and calls Gemini
+> (`gemini-2.0-flash`) in JSON response mode, returning structured JSON. Saved posts
+> are stored in the `posts` table (created by `schema.sql`, protected by RLS — only
+> the authenticated admin can read/write them).
+>
+> **Switching provider:** to use a different model/provider, edit `callGemini()` and
+> the `MODEL` constant in `supabase/functions/generate/index.ts` and re-deploy.
 
 ### Editing the brand voice or content pillars
 
