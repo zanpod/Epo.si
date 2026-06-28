@@ -128,7 +128,10 @@ function applySettings(s) {
   if (heroSub && s.hero_subheading) heroSub.textContent = s.hero_subheading;
   if (ctaPrimary) {
     if (s.cta_primary_text) ctaPrimary.textContent = s.cta_primary_text;
-    if (s.cta_primary_link) ctaPrimary.href = s.cta_primary_link;
+    if (s.cta_primary_link) {
+      // Sekcija s projekti je zaenkrat skrita — preusmeri na storitve.
+      ctaPrimary.href = s.cta_primary_link === '#projects' ? '#services' : s.cta_primary_link;
+    }
   }
   if (ctaSecondary) {
     if (s.cta_secondary_text) ctaSecondary.textContent = s.cta_secondary_text;
@@ -178,18 +181,35 @@ function applySettings(s) {
     contactPhone.href = `tel:${s.contact_phone.replace(/\s/g, '')}`;
   }
 
-  // Social links
+  // Social links (kontakt + noga)
   const socials = {
-    facebookLink:  s.facebook_url,
-    linkedinLink:  s.linkedin_url,
-    instagramLink: s.instagram_url,
+    facebook:  s.facebook_url,
+    linkedin:  s.linkedin_url,
+    instagram: s.instagram_url,
   };
-  Object.entries(socials).forEach(([id, url]) => {
-    const el = document.getElementById(id);
-    if (el && url) el.href = url;
+  Object.entries(socials).forEach(([key, url]) => {
+    if (!url) return;
+    document.querySelectorAll(`[data-social="${key}"]`).forEach(el => { el.href = url; });
   });
 
-  // Footer
+  // Footer — podatki o podjetju (prikaži samo, kar je izpolnjeno)
+  const setCompany = (sel, val) => {
+    document.querySelectorAll(sel).forEach(el => {
+      if (val) { el.textContent = val; el.hidden = false; }
+      else { el.hidden = true; }
+    });
+  };
+  setCompany('[data-company-name]', s.company_name || s.site_name || 'EPO.SI');
+  setCompany('[data-company-address]', s.company_address);
+  setCompany('[data-company-tax]', s.company_tax ? `Davčna št.: ${s.company_tax}` : '');
+  if (s.contact_email) {
+    document.querySelectorAll('[data-company-email]').forEach(el => {
+      el.textContent = s.contact_email;
+      el.href = `mailto:${s.contact_email}`;
+    });
+  }
+
+  // Footer copyright
   document.querySelectorAll('[data-copyright]').forEach(el => {
     el.textContent = `© ${new Date().getFullYear()} ${s.site_name || 'EPO.SI'}. Vse pravice pridržane.`;
   });
