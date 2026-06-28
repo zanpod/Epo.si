@@ -2412,3 +2412,140 @@ body::before {
 .legal-back {
   margin-top: 3rem;
 }
+
+/* ================================================================
+   Objave — priprava vsebin za družbena omrežja (admin)
+   ================================================================ */
+.content-hint { color: var(--text-muted); font-size: 0.88rem; margin: -0.25rem 0 1rem; }
+
+.content-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; }
+.content-pill {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.content-pill:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.content-pill.active { background: var(--gradient); border-color: transparent; color: #fff; }
+
+.content-error {
+  margin-top: 1rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.30);
+  color: #fca5a5;
+  border-radius: var(--radius);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.86rem;
+}
+
+/* Rezultat generiranja */
+.content-result-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.85rem 0.95rem;
+  margin-top: 0.75rem;
+}
+.content-result-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+.content-result-text { font-size: 0.9rem; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); }
+
+.content-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.content-tag {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+/* 7-dnevni načrt */
+.content-week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.75rem;
+}
+.content-day-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.content-day-name {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.content-day-pillar { font-weight: 600; font-size: 0.86rem; color: var(--text-primary); }
+.content-day-idea { font-size: 0.86rem; color: var(--text-secondary); flex: 1; }
+
+/* Knjižnica — seznam */
+.content-post {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.95rem;
+}
+.content-post + .content-post { margin-top: 0.75rem; }
+.content-post-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.content-post-pillar { font-weight: 600; font-size: 0.86rem; color: var(--text-primary); }
+.content-post-hook { font-weight: 600; margin-bottom: 0.35rem; color: var(--text-primary); }
+.content-post-caption { font-size: 0.86rem; white-space: pre-wrap; color: var(--text-secondary); }
+.content-post-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+
+.content-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.content-badge.idea { color: #c7cdf0; background: rgba(255, 255, 255, 0.05); }
+.content-badge.scheduled { color: #bcd0ff; background: rgba(59, 130, 246, 0.16); border-color: rgba(59, 130, 246, 0.30); }
+.content-badge.posted { color: #b6f0c8; background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.30); }
+
+/* Knjižnica — koledar */
+.content-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
+.content-cal-day {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.16);
+  min-height: 110px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.content-cal-day.today { border-color: var(--blue); }
+.content-cal-date { font-size: 0.72rem; color: var(--text-muted); }
+.content-cal-chip {
+  font-size: 0.72rem;
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  border-radius: 8px;
+  padding: 0.25rem 0.4rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.content-cal-chip.posted { background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.28); }
+
+@media (max-width: 760px) {
+  .content-calendar { grid-template-columns: 1fr; }
+  .content-cal-day { min-height: auto; }
+}

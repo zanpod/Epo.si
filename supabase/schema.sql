@@ -220,6 +220,26 @@ alter table quotes add column if not exists customer_address text default '';
 alter table quotes add column if not exists status           text not null default 'sent';
 alter table quotes add column if not exists status_changed_at timestamptz;
 
+-- ── posts (priprava vsebin za družbena omrežja) ───────────
+create table if not exists posts (
+  id            uuid primary key default uuid_generate_v4(),
+  pillar        text not null,                 -- tip vsebine (vsebinski steber)
+  topic         text default '',               -- neobvezna tema
+  hook          text not null default '',      -- kljuka (prva vrstica)
+  caption       text not null default '',      -- besedilo objave
+  hashtags      text[] not null default '{}',
+  image_brief   text not null default '',      -- ideja za vizual
+  image_url     text default '',
+  status        text not null default 'idea' check (status in ('idea', 'scheduled', 'posted')),
+  scheduled_for date,                           -- načrtovan datum objave
+  posted_at     timestamptz,
+  created_at    timestamptz default now()
+);
+
+-- Pohitri pogled koledarja in seznama.
+create index if not exists posts_scheduled_idx on posts (scheduled_for);
+create index if not exists posts_status_idx    on posts (status);
+
 -- ── page_views (analitika obiskov) ────────────────────────
 create table if not exists page_views (
   id uuid primary key default uuid_generate_v4(),
@@ -240,6 +260,7 @@ alter table projects enable row level security;
 alter table contacts enable row level security;
 alter table customers enable row level security;
 alter table quotes enable row level security;
+alter table posts enable row level security;
 alter table page_views enable row level security;
 
 -- settings: public read, authenticated write
@@ -301,6 +322,13 @@ create policy "Authenticated can manage customers"
 drop policy if exists "Authenticated can manage quotes" on quotes;
 create policy "Authenticated can manage quotes"
   on quotes for all
+  to authenticated
+  using (auth.role() = 'authenticated');
+
+-- posts: only authenticated (admin) can read/manage
+drop policy if exists "Authenticated can manage posts" on posts;
+create policy "Authenticated can manage posts"
+  on posts for all
   to authenticated
   using (auth.role() = 'authenticated');
 
