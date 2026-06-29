@@ -1551,11 +1551,18 @@ function renderContentResult(d) {
   loadContentImage();
 }
 
-// Sestavi URL za brezplačno generiranje slike (Pollinations.ai — brez ključa).
-function buildImageUrl(prompt, seed, fmt) {
-  const styled = `${prompt}. Modern clean professional social media visual, high quality, vibrant, photographic, no text, no watermark`;
-  const enc = encodeURIComponent(styled.slice(0, 800));
-  return `https://image.pollinations.ai/prompt/${enc}?width=${fmt.w}&height=${fmt.h}&nologo=true&model=flux&seed=${seed}`;
+// Sestavi seznam možnih URL-jev za brezplačno generiranje slike
+// (Pollinations.ai — brez ključa). Poskušamo po vrsti, dokler ena ne uspe.
+function buildImageCandidates(prompt, seed, fmt) {
+  const styled = `${prompt}. Professional social media visual, modern, high quality, no text`;
+  const enc = encodeURIComponent(styled.slice(0, 300));
+  const base = `https://image.pollinations.ai/prompt/${enc}`;
+  const dims = `width=${fmt.w}&height=${fmt.h}`;
+  return [
+    `${base}?${dims}&seed=${seed}&model=flux`,
+    `${base}?${dims}&seed=${seed}`,
+    `${base}?${dims}&seed=${seed}&model=turbo`,
+  ];
 }
 
 function loadContentImage() {
@@ -1568,16 +1575,30 @@ function loadContentImage() {
   const prompt = (contentResult.imagePrompt || contentResult.imageBrief ||
     `${contentResult.hook || ''} ${topic}`).trim();
   if (!contentResult.imageSeed) contentResult.imageSeed = Math.floor(Math.random() * 1e6);
-  const url = buildImageUrl(prompt, contentResult.imageSeed, fmt);
-  contentResult.imageUrl = url;
 
-  wrap.innerHTML = `<div class="content-img-loading"><span class="spinner"></span> Ustvarjam sliko…</div>`;
-  const img = new Image();
-  img.onload = () => { wrap.innerHTML = ''; img.className = 'content-img'; wrap.appendChild(img); };
-  img.onerror = () => {
-    wrap.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">Slike ni bilo mogoče ustvariti. Poskusi »Druga slika«.</div>';
+  const candidates = buildImageCandidates(prompt, contentResult.imageSeed, fmt);
+  contentResult.imageUrl = candidates[0];
+
+  wrap.innerHTML = `<div class="content-img-loading"><span class="spinner"></span> Ustvarjam sliko… (lahko traja 10–20 s)</div>`;
+
+  let i = 0;
+  const tryNext = () => {
+    if (i >= candidates.length) {
+      wrap.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">Slike trenutno ni bilo mogoče ustvariti (storitev je morda zasedena). Poskusi znova z »Druga slika«.</div>';
+      return;
+    }
+    const url = candidates[i++];
+    const img = new Image();
+    img.onload = () => {
+      contentResult.imageUrl = url;
+      wrap.innerHTML = '';
+      img.className = 'content-img';
+      wrap.appendChild(img);
+    };
+    img.onerror = tryNext;
+    img.src = url;
   };
-  img.src = url;
+  tryNext();
 }
 
 async function downloadContentImage(url, btn) {
