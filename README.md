@@ -25,8 +25,10 @@ A production-ready personal portfolio website using HTML/CSS/Vanilla JS + Supaba
 │       │   └── index.ts          ← Edge Function for email notifications
 │       ├── chat/
 │       │   └── index.ts          ← Edge Function: AI chat (Claude API)
-│       └── generate/
-│           └── index.ts          ← Edge Function: AI generator vsebin (Claude API)
+│       ├── generate/
+│       │   └── index.ts          ← Edge Function: AI generator vsebin (Groq API)
+│       └── canva/
+│           └── index.ts          ← Edge Function: Canva Connect (OAuth + izvoz slike)
 └── README.md
 ```
 
@@ -196,6 +198,54 @@ The brand context, content pillars and prompts live in
 `supabase/functions/generate/index.ts`. The pillar list is mirrored in
 `js/admin.js` (`CONTENT_PILLARS`) for the UI — keep the two in sync if you change
 them. After editing the function, re-deploy with `supabase functions deploy generate`.
+
+---
+
+## Step 6d — (Optional) Send generated images straight to Canva
+
+The **Objave** section can push a generated image directly into a new Canva design
+(in the chosen format) via the **Canva Connect API**. The button **»Pošlji v Canvo«**
+uploads the image and opens a ready-to-edit Canva design. (There is also a manual
+fallback, **»Uredi v Canvi«**, that just opens Canva and copies the text — this needs
+no setup.)
+
+This requires a **one-time, free** Canva developer app:
+
+### 1. Create a Canva integration
+
+1. Go to [canva.com/developers](https://www.canva.com/developers/) → **Your integrations → Create an integration** (type: *Public* or *Private* for your own use).
+2. Under **Scopes**, enable: `asset:write`, `design:content:write`, `design:meta:read`.
+3. Under **Authentication / Redirect URLs**, add your admin URL exactly, e.g.
+   `https://epo.si/admin/` (and `http://localhost:8888/admin/` for local testing).
+4. Copy the **Client ID** and generate/copy the **Client Secret**.
+
+### 2. Deploy the Edge Function & add secrets
+
+```bash
+supabase functions deploy canva
+```
+
+In Supabase Dashboard → **Edge Functions → canva → Secrets**, add:
+
+| Key                   | Value                                   |
+|-----------------------|-----------------------------------------|
+| `CANVA_CLIENT_ID`     | Client ID of your Canva integration     |
+| `CANVA_CLIENT_SECRET` | Client Secret of your Canva integration |
+
+### 3. Connect once
+
+The first time you click **»Pošlji v Canvo«** you're redirected to Canva to authorize.
+After that, the token is stored locally and reused (auto-refreshed).
+
+> **How it works:** `js/admin.js` runs the OAuth 2.0 + PKCE flow; the `canva` Edge
+> Function holds the Client Secret and handles the token exchange, then (action
+> `export`) downloads the generated image server-side, uploads it as a Canva asset
+> (`/v1/asset-uploads`) and creates a design from it (`/v1/designs`, custom size
+> matching the chosen format). The Client Secret never reaches the browser.
+>
+> **Cost:** creating a design from an uploaded asset works with a normal Canva
+> account. (Brand-template *autofill* would require a paid Canva plan, but this
+> integration does not use it.)
 
 ---
 

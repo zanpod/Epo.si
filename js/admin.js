@@ -63,6 +63,8 @@ function initAdmin() {
   initSidebar();
   initSidebarToggle();
   navigateTo('dashboard');
+  // Če smo se vrnili z OAuth prijave v Canvo (?code=...), dokončaj povezavo.
+  handleCanvaRedirect();
 }
 
 // ── Sidebar ───────────────────────────────────────────────────
@@ -1365,11 +1367,19 @@ function getContentFormat() {
   return CONTENT_FORMATS.find(f => f.key === contentFormat) || CONTENT_FORMATS[0];
 }
 
-// Endpoint Edge funkcije za generiranje (ANTHROPIC ključ ostane na strežniku).
+// Endpoint Edge funkcije za generiranje (API ključ ostane na strežniku).
 const GENERATE_ENDPOINT =
   (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL)
     ? `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/generate`
     : '';
+
+// Canva (Connect API) — endpoint Edge funkcije + nastavitve OAuth.
+const CANVA_ENDPOINT =
+  (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL)
+    ? `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/canva`
+    : '';
+const CANVA_TOKEN_KEY = 'epo_canva_tokens';
+const CANVA_SCOPES = 'asset:write design:content:write design:meta:read';
 
 // Stanje razdelka
 let contentInited     = false;
@@ -1531,7 +1541,8 @@ function renderContentResult(d) {
     </div>
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
       <button class="btn btn-primary" id="contentSaveBtn" type="button">Shrani objavo</button>
-      <button class="btn btn-ghost" id="contentCanvaBtn" type="button">Uredi v Canvi</button>
+      <button class="btn btn-ghost" id="contentCanvaExportBtn" type="button">Pošlji v Canvo</button>
+      <button class="btn btn-ghost" id="contentCanvaBtn" type="button">Uredi v Canvi (ročno)</button>
       <button class="btn btn-ghost" id="contentCopyAllBtn" type="button">Kopiraj besedilo</button>
     </div>`;
   el.style.display = 'block';
@@ -1539,6 +1550,7 @@ function renderContentResult(d) {
   document.getElementById('contentSaveBtn')?.addEventListener('click', openPostSaveModal);
   document.getElementById('contentCopyAllBtn')?.addEventListener('click', (e) =>
     contentCopy(contentFullText(contentResult), e.currentTarget));
+  document.getElementById('contentCanvaExportBtn')?.addEventListener('click', (e) => exportToCanva(e.currentTarget));
   document.getElementById('contentCanvaBtn')?.addEventListener('click', editInCanva);
   document.getElementById('contentImgRegen')?.addEventListener('click', () => {
     contentResult.imageSeed = Math.floor(Math.random() * 1e6);
@@ -1619,6 +1631,154 @@ async function downloadContentImage(url, btn) {
     window.open(url, '_blank');
   } finally {
     if (btn) { btn.textContent = prev; btn.disabled = false; }
+  }
+}
+
+// ── Canva (Connect API) ────────────────────────────────────────
+async function callCanva(payload) {
+  if (!CANVA_ENDPOINT) throw new Error('Canva ni nastavljena (manjka SUPABASE_URL).');
+  const res = await fetch(CANVA_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY
+        ? { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Napaka pri komunikaciji s Canvo.');
+  return data;
+}
+
+// PKCE pripomočki
+function canvaB64url(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function canvaRandom(len) {
+  const a = new Uint8Array(len);
+  crypto.getRandomValues(a);
+  return Array.from(a, (b) => ('0' + b.toString(16)).slice(-2)).join('').slice(0, len);
+}
+async function canvaSha256(str) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+}
+function canvaRedirectUri() {
+  return `${location.origin}${location.pathname}`;
+}
+
+function getCanvaTokens() {
+  try { return JSON.parse(localStorage.getItem(CANVA_TOKEN_KEY) || 'null'); } catch (_) { return null; }
+}
+function storeCanvaTokens(data) {
+  const prev = getCanvaTokens() || {};
+  const tokens = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token || prev.refresh_token,
+    expires_at: Date.now() + ((Number(data.expires_in) || 3600) * 1000) - 60000,
+  };
+  localStorage.setItem(CANVA_TOKEN_KEY, JSON.stringify(tokens));
+}
+function isCanvaConnected() {
+  const t = getCanvaTokens();
+  return !!(t && t.refresh_token);
+}
+
+// Začni OAuth povezavo s Canvo (preusmeritev na Canva avtorizacijo).
+async function connectCanva() {
+  const cfg = await callCanva({ action: 'config' });
+  if (!cfg.clientId) throw new Error('Manjka Canva Client ID na strežniku.');
+  const verifier = canvaRandom(96);
+  const challenge = canvaB64url(await canvaSha256(verifier));
+  const state = canvaRandom(24);
+  const redirect = canvaRedirectUri();
+  sessionStorage.setItem('canva_pkce', JSON.stringify({ verifier, state, redirect }));
+
+  const url = new URL('https://www.canva.com/api/oauth/authorize');
+  url.searchParams.set('response_type', 'code');
+  url.searchParams.set('client_id', cfg.clientId);
+  url.searchParams.set('scope', CANVA_SCOPES);
+  url.searchParams.set('code_challenge_method', 'S256');
+  url.searchParams.set('code_challenge', challenge);
+  url.searchParams.set('state', state);
+  url.searchParams.set('redirect_uri', redirect);
+  window.location.href = url.toString();
+}
+
+// Ob vrnitvi s Canve (?code=...) zamenjaj kodo za žetone.
+async function handleCanvaRedirect() {
+  const params = new URLSearchParams(location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if (!code) return;
+
+  const saved = (() => {
+    try { return JSON.parse(sessionStorage.getItem('canva_pkce') || 'null'); } catch (_) { return null; }
+  })();
+  history.replaceState({}, '', location.pathname); // počisti URL
+
+  if (!saved || saved.state !== state) {
+    toast('Canva: neveljavna prijavna seja, poskusi znova.', 'error');
+    return;
+  }
+  try {
+    const data = await callCanva({
+      action: 'token', code, code_verifier: saved.verifier, redirect_uri: saved.redirect,
+    });
+    storeCanvaTokens(data);
+    sessionStorage.removeItem('canva_pkce');
+    toast('Canva je povezana ✓', 'success');
+    navigateTo('content');
+  } catch (e) {
+    toast('Canva prijava ni uspela: ' + e.message, 'error');
+  }
+}
+
+// Vrni veljaven dostopni žeton (po potrebi ga osveži). null = ni povezave.
+async function ensureCanvaToken() {
+  const t = getCanvaTokens();
+  if (!t || !t.refresh_token) return null;
+  if (t.access_token && Date.now() < t.expires_at) return t.access_token;
+  const data = await callCanva({ action: 'refresh', refresh_token: t.refresh_token });
+  storeCanvaTokens(data);
+  return getCanvaTokens().access_token;
+}
+
+// Samodejno pošlji generirano sliko v Canvo (ustvari nov osnutek).
+async function exportToCanva(btn) {
+  if (!contentResult || !contentResult.imageUrl) {
+    toast('Najprej generiraj objavo s sliko.', 'error');
+    return;
+  }
+  if (!isCanvaConnected()) {
+    toast('Najprej poveži Canvo — preusmerjam na prijavo …', 'success');
+    try { await connectCanva(); } catch (e) { toast('Canva: ' + e.message, 'error'); }
+    return;
+  }
+  const fmt = getContentFormat();
+  // Odpri zavihek takoj (znotraj geste), da ga brskalnik ne blokira.
+  const win = window.open('about:blank', '_blank');
+  setContentLoading(btn, true, 'Pošiljam v Canvo…');
+  try {
+    const token = await ensureCanvaToken();
+    if (!token) { win && win.close(); toast('Canva ni povezana.', 'error'); return; }
+    const data = await callCanva({
+      action: 'export', access_token: token, image_url: contentResult.imageUrl, width: fmt.w, height: fmt.h,
+    });
+    if (data.edit_url) {
+      if (win) win.location.href = data.edit_url; else window.open(data.edit_url, '_blank', 'noopener');
+      toast('Osnutek s sliko je ustvarjen v Canvi ✓', 'success');
+    } else {
+      win && win.close();
+      toast('Canva ni vrnila povezave do osnutka.', 'error');
+    }
+  } catch (e) {
+    win && win.close();
+    toast('Prenos v Canvo ni uspel: ' + e.message, 'error');
+  } finally {
+    setContentLoading(btn, false, 'Pošlji v Canvo');
   }
 }
 
