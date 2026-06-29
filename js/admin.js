@@ -1355,6 +1355,16 @@ const CONTENT_PILLARS = [
 const CONTENT_STATUS_LABELS = { idea: 'Ideja', scheduled: 'Načrtovano', posted: 'Objavljeno' };
 const CONTENT_DAY_NAMES = ['Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob', 'Ned'];
 
+// Formati slik + ustrezne povezave za odpiranje v Canvi (pravi format).
+const CONTENT_FORMATS = [
+  { key: 'ig_post', label: 'IG objava (1:1)',  w: 1080, h: 1080, canva: 'https://www.canva.com/instagram-posts/templates/' },
+  { key: 'story',   label: 'Zgodba (9:16)',    w: 1080, h: 1920, canva: 'https://www.canva.com/instagram-stories/templates/' },
+  { key: 'fb_post', label: 'FB objava (1.91:1)', w: 1200, h: 630, canva: 'https://www.canva.com/facebook-posts/templates/' },
+];
+function getContentFormat() {
+  return CONTENT_FORMATS.find(f => f.key === contentFormat) || CONTENT_FORMATS[0];
+}
+
 // Endpoint Edge funkcije za generiranje (ANTHROPIC ključ ostane na strežniku).
 const GENERATE_ENDPOINT =
   (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL)
@@ -1364,6 +1374,7 @@ const GENERATE_ENDPOINT =
 // Stanje razdelka
 let contentInited     = false;
 let contentPillar     = null;
+let contentFormat     = 'ig_post';
 let contentResult     = null;   // { hook, caption, hashtags, imageBrief }
 let contentPosts      = [];
 let contentFilter     = 'all';
@@ -1392,6 +1403,22 @@ function initContent() {
       contentPillar = btn.dataset.pillar;
       pillarsEl.querySelectorAll('.content-pill')
         .forEach(p => p.classList.toggle('active', p === btn));
+    });
+  }
+
+  // Formati slik
+  const formatsEl = document.getElementById('contentFormats');
+  if (formatsEl) {
+    formatsEl.innerHTML = CONTENT_FORMATS
+      .map(f => `<button type="button" class="content-pill${f.key === contentFormat ? ' active' : ''}" data-format="${f.key}">${escHtml(f.label)}</button>`)
+      .join('');
+    formatsEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.content-pill');
+      if (!btn) return;
+      contentFormat = btn.dataset.format;
+      formatsEl.querySelectorAll('.content-pill').forEach(p => p.classList.toggle('active', p === btn));
+      // Če rezultat že obstaja, osveži sliko v novem formatu.
+      if (contentResult) { contentResult.imageSeed = contentResult.imageSeed || Math.floor(Math.random() * 1e6); loadContentImage(); }
     });
   }
 
@@ -1494,7 +1521,7 @@ function renderContentResult(d) {
     </div>
     <div class="content-result-block">
       <div class="content-result-label" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
-        <span>Slika</span>
+        <span>Slika · <span id="contentImgFormat"></span></span>
         <span style="display:flex;gap:0.4rem">
           <button class="btn btn-sm btn-ghost" id="contentImgRegen" type="button">Druga slika</button>
           <button class="btn btn-sm btn-ghost" id="contentImgDownload" type="button">Prenesi sliko</button>
@@ -1504,6 +1531,7 @@ function renderContentResult(d) {
     </div>
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem">
       <button class="btn btn-primary" id="contentSaveBtn" type="button">Shrani objavo</button>
+      <button class="btn btn-ghost" id="contentCanvaBtn" type="button">Uredi v Canvi</button>
       <button class="btn btn-ghost" id="contentCopyAllBtn" type="button">Kopiraj besedilo</button>
     </div>`;
   el.style.display = 'block';
@@ -1511,6 +1539,7 @@ function renderContentResult(d) {
   document.getElementById('contentSaveBtn')?.addEventListener('click', openPostSaveModal);
   document.getElementById('contentCopyAllBtn')?.addEventListener('click', (e) =>
     contentCopy(contentFullText(contentResult), e.currentTarget));
+  document.getElementById('contentCanvaBtn')?.addEventListener('click', editInCanva);
   document.getElementById('contentImgRegen')?.addEventListener('click', () => {
     contentResult.imageSeed = Math.floor(Math.random() * 1e6);
     loadContentImage();
@@ -1523,20 +1552,23 @@ function renderContentResult(d) {
 }
 
 // Sestavi URL za brezplačno generiranje slike (Pollinations.ai — brez ključa).
-function buildImageUrl(prompt, seed) {
+function buildImageUrl(prompt, seed, fmt) {
   const styled = `${prompt}. Modern clean professional social media visual, high quality, vibrant, photographic, no text, no watermark`;
   const enc = encodeURIComponent(styled.slice(0, 800));
-  return `https://image.pollinations.ai/prompt/${enc}?width=1080&height=1080&nologo=true&model=flux&seed=${seed}`;
+  return `https://image.pollinations.ai/prompt/${enc}?width=${fmt.w}&height=${fmt.h}&nologo=true&model=flux&seed=${seed}`;
 }
 
 function loadContentImage() {
   const wrap = document.getElementById('contentImgWrap');
   if (!wrap || !contentResult) return;
+  const fmt = getContentFormat();
+  const fmtLabel = document.getElementById('contentImgFormat');
+  if (fmtLabel) fmtLabel.textContent = `${fmt.label} (${fmt.w}×${fmt.h})`;
   const topic = document.getElementById('contentTopic')?.value || '';
   const prompt = (contentResult.imagePrompt || contentResult.imageBrief ||
     `${contentResult.hook || ''} ${topic}`).trim();
   if (!contentResult.imageSeed) contentResult.imageSeed = Math.floor(Math.random() * 1e6);
-  const url = buildImageUrl(prompt, contentResult.imageSeed);
+  const url = buildImageUrl(prompt, contentResult.imageSeed, fmt);
   contentResult.imageUrl = url;
 
   wrap.innerHTML = `<div class="content-img-loading"><span class="spinner"></span> Ustvarjam sliko…</div>`;
@@ -1567,6 +1599,17 @@ async function downloadContentImage(url, btn) {
   } finally {
     if (btn) { btn.textContent = prev; btn.disabled = false; }
   }
+}
+
+// Odpri Canvo v pravem formatu + samodejno kopiraj besedilo in prenesi sliko.
+function editInCanva() {
+  if (!contentResult) return;
+  const fmt = getContentFormat();
+  // Najprej odpri zavihek (znotraj uporabnikove geste), da ga brskalnik ne blokira.
+  window.open(fmt.canva, '_blank', 'noopener');
+  contentCopy(contentFullText(contentResult), null);
+  if (contentResult.imageUrl) downloadContentImage(contentResult.imageUrl, null);
+  toast('Besedilo kopirano in slika prenesena — v Canvi prilepi besedilo in naloži sliko.', 'success');
 }
 
 // ── Shranjevanje generirane objave ─────────────────────────────
