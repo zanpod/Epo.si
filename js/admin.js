@@ -5,6 +5,7 @@
 let currentSection = 'dashboard';
 let skillsList = [];
 let statsList  = [];
+let adminInitialized = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
@@ -19,9 +20,16 @@ async function checkAuth() {
     showLogin();
   }
 
+  // Supabase sproži ta dogodek tudi ob vsakem osvežitvi žetona (npr. ko
+  // zavihek spet postane viden), ne le ob dejanski prijavi/odjavi — zato
+  // adminInitialized poskrbi, da se postavitev ne ponastavi vsakič znova.
   supabaseClient.auth.onAuthStateChange((_event, session) => {
-    if (session) showDashboard();
-    else         showLogin();
+    if (session) {
+      showDashboard();
+    } else {
+      adminInitialized = false;
+      showLogin();
+    }
   });
 }
 
@@ -33,7 +41,10 @@ function showLogin() {
 function showDashboard() {
   document.getElementById('loginScreen').style.display  = 'none';
   document.getElementById('adminLayout').style.display  = 'flex';
-  initAdmin();
+  if (!adminInitialized) {
+    adminInitialized = true;
+    initAdmin();
+  }
 }
 
 // ── Login ─────────────────────────────────────────────────────
