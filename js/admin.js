@@ -91,8 +91,19 @@ function initSidebar() {
 }
 
 function initSidebarToggle() {
+  const sidebar = document.getElementById('sidebar');
   document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-    document.getElementById('sidebar')?.classList.toggle('open');
+    sidebar?.classList.toggle('open');
+  });
+  document.getElementById('sidebarClose')?.addEventListener('click', () => {
+    sidebar?.classList.remove('open');
+  });
+  // Zapri meni tudi ob kliku izven njega (mobilni/tablični pogled).
+  document.addEventListener('click', (e) => {
+    if (!sidebar?.classList.contains('open')) return;
+    const toggle = document.getElementById('sidebarToggle');
+    if (sidebar.contains(e.target) || toggle?.contains(e.target)) return;
+    sidebar.classList.remove('open');
   });
 }
 
@@ -591,15 +602,15 @@ async function loadMessages() {
 
   tbody.innerHTML = data.map(m => `
     <tr class="${m.is_read ? '' : 'unread'}">
-      <td>${new Date(m.created_at).toLocaleDateString()}</td>
-      <td>${escHtml(m.name)}</td>
-      <td>${escHtml(m.email)}</td>
-      <td>${escHtml(m.subject || '—')}</td>
-      <td>
+      <td data-label="Datum">${new Date(m.created_at).toLocaleDateString()}</td>
+      <td data-label="Ime">${escHtml(m.name)}</td>
+      <td data-label="E-pošta">${escHtml(m.email)}</td>
+      <td data-label="Zadeva">${escHtml(m.subject || '—')}</td>
+      <td data-label="Stanje">
         <span class="msg-badge ${m.is_read ? 'read' : 'unread'}">${m.is_read ? 'Prebrano' : 'Novo'}</span>
       </td>
-      <td>
-        <div style="display:flex;gap:0.4rem">
+      <td data-label="Dejanja">
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:flex-end">
           <button class="btn btn-sm btn-ghost" onclick="viewMessage('${m.id}')">Poglej</button>
           <button class="btn btn-sm btn-primary" onclick="createQuote('${m.id}')">Ponudba</button>
           <button class="btn btn-sm btn-danger" onclick="deleteMessage('${m.id}')">✕</button>
