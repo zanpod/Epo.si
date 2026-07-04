@@ -121,7 +121,7 @@ function navigateTo(section) {
   const title = document.getElementById('topbarTitle');
   const labels = {
     dashboard: 'Nadzorna plošča', hero: 'Naslovna stran', about: 'O nas',
-    services: 'Storitve', projects: 'Projekti', customers: 'Stranke',
+    services: 'Storitve', projects: 'Projekti', blog: 'Blog', customers: 'Stranke',
     messages: 'Sporočila', content: 'Objave', settings: 'Nastavitve',
   };
   if (title) title.textContent = labels[section] || section;
@@ -141,6 +141,7 @@ async function loadSection(section) {
     case 'about':     return loadAbout();
     case 'services':  return loadServices();
     case 'projects':  return loadProjects();
+    case 'blog':      return loadBlogPosts();
     case 'customers': return loadCustomers();
     case 'messages':  return loadMessages();
     case 'content':   return loadContent();
@@ -587,6 +588,316 @@ async function deleteProject(id) {
   if (error) { toast('Napaka pri brisanju projekta', 'error'); return; }
   toast('Projekt izbrisan', 'success');
   loadProjects();
+}
+
+// ── Blog ──────────────────────────────────────────────────────
+let blogPostsList = [];
+let blogTagsList = [];
+let blogStatusFilter = 'all';
+let blogSlugManuallyEdited = false;
+let quillEditor = null;
+
+function ensureQuill() {
+  if (quillEditor) return quillEditor;
+  const container = document.getElementById('blogQuillEditor');
+  if (!container || typeof Quill === 'undefined') return null;
+  quillEditor = new Quill(container, {
+    theme: 'snow',
+    placeholder: 'Napišite vsebino novice…',
+    modules: {
+      toolbar: {
+        container: [
+          [{ header: [2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'image'],
+          ['clean'],
+        ],
+        handlers: { image: quillImageHandler },
+      },
+    },
+  });
+  return quillEditor;
+}
+
+function quillImageHandler() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const url = await uploadFile(file, `blog/content-${Date.now()}-${file.name}`);
+    if (!url) return;
+    const range = quillEditor.getSelection(true);
+    quillEditor.insertEmbed(range.index, 'image', url, 'user');
+    quillEditor.setSelection(range.index + 1);
+  };
+  input.click();
+}
+
+async function loadBlogPosts() {
+  ensureQuill();
+  const { data } = await supabaseClient.from('blog_posts').select('*').order('created_at', { ascending: false });
+  blogPostsList = data || [];
+  renderBlogCategoryOptions();
+  renderBlogAdminList();
+}
+
+function renderBlogCategoryOptions() {
+  const list = document.getElementById('blogCategoryList');
+  if (!list) return;
+  const categories = [...new Set(blogPostsList.map(p => p.category).filter(Boolean))];
+  list.innerHTML = categories.map(c => `<option value="${escAttr(c)}"></option>`).join('');
+}
+
+document.querySelectorAll('#blogAdminFilters [data-status-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    blogStatusFilter = btn.dataset.statusFilter;
+    document.querySelectorAll('#blogAdminFilters .content-pill').forEach(b => b.classList.toggle('active', b === btn));
+    renderBlogAdminList();
+  });
+});
+
+function renderBlogAdminList() {
+  const wrap = document.getElementById('adminBlogList');
+  if (!wrap) return;
+
+  const filtered = blogStatusFilter === 'all'
+    ? blogPostsList
+    : blogPostsList.filter(p => p.status === blogStatusFilter);
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1.5rem">Še ni objav.</p>';
+    return;
+  }
+
+  wrap.innerHTML = filtered.map(p => `
+    <div class="admin-blog-item">
+      ${p.cover_image_url
+        ? `<img src="${p.cover_image_url}" alt="${escAttr(p.title)}" class="admin-blog-thumb">`
+        : `<div class="admin-blog-thumb-placeholder">📝</div>`}
+      <div class="admin-blog-body">
+        <div class="admin-blog-title">${escHtml(p.title || '(brez naslova)')}</div>
+        <div class="admin-blog-meta">
+          <span class="badge-status ${p.status}">${p.status === 'published' ? 'Objavljeno' : 'Osnutek'}</span>
+          ${p.is_featured ? '<span class="badge-featured">★ Izpostavljeno</span>' : ''}
+          ${p.category ? `<span>${escHtml(p.category)}</span>` : ''}
+          <span>${p.published_at ? new Date(p.published_at).toLocaleDateString('sl-SI') : '—'}</span>
+        </div>
+      </div>
+      <div class="admin-blog-actions">
+        ${p.status === 'published' ? `<a class="btn btn-sm btn-ghost" href="/blog-post.html?slug=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Poglej</a>` : ''}
+        <button class="btn btn-sm btn-ghost" onclick="editBlogPost('${p.id}')">Uredi</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteBlogPost('${p.id}')">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('addBlogBtn')?.addEventListener('click', () => openBlogModal(null));
+
+async function editBlogPost(id) {
+  const post = blogPostsList.find(p => p.id === id);
+  if (post) openBlogModal(post);
+}
+
+function openBlogModal(post) {
+  blogSlugManuallyEdited = !!post;
+
+  setVal('blogId', post?.id ?? '');
+  setVal('blogTitle', post?.title ?? '');
+  setVal('blogSlug', post?.slug ?? '');
+  setVal('blogExcerpt', post?.excerpt ?? '');
+  setVal('blogCategory', post?.category ?? '');
+  setVal('blogAuthor', post?.author_name ?? 'EPO.SI');
+  setVal('blogSeoTitle', post?.seo_title ?? '');
+  setVal('blogSeoDesc', post?.seo_description ?? '');
+  setVal('blogCoverUrl', post?.cover_image_url ?? '');
+
+  updateExcerptCounter();
+
+  const statusSel = document.getElementById('blogStatus');
+  if (statusSel) statusSel.value = post?.status ?? 'draft';
+
+  const featuredToggle = document.getElementById('blogFeatured');
+  if (featuredToggle) featuredToggle.checked = post?.is_featured ?? false;
+
+  setVal('blogPublishedAt', toDatetimeLocal(post?.published_at));
+
+  const preview = document.getElementById('blogCoverPreview');
+  if (preview) {
+    if (post?.cover_image_url) { preview.src = post.cover_image_url; preview.style.display = 'block'; }
+    else preview.style.display = 'none';
+  }
+
+  blogTagsList = post?.tags ? [...post.tags] : [];
+  renderBlogTagChips();
+
+  const quill = ensureQuill();
+  if (quill) quill.root.innerHTML = post?.content ?? '';
+
+  document.getElementById('blogModalTitle').textContent = post ? 'Uredi objavo' : 'Nova objava';
+  openModal('blogModal');
+}
+
+function toDatetimeLocal(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Naslov -> samodejni slug (dokler uporabnik ročno ne uredi polja slug)
+document.getElementById('blogTitle')?.addEventListener('input', (e) => {
+  if (blogSlugManuallyEdited) return;
+  setVal('blogSlug', slugify(e.target.value));
+});
+document.getElementById('blogSlug')?.addEventListener('input', () => { blogSlugManuallyEdited = true; });
+
+document.getElementById('blogExcerpt')?.addEventListener('input', updateExcerptCounter);
+function updateExcerptCounter() {
+  const el = document.getElementById('blogExcerpt');
+  const counter = document.getElementById('blogExcerptCounter');
+  if (!el || !counter) return;
+  const len = el.value.length;
+  counter.textContent = `${len} / 220`;
+  counter.classList.toggle('warn', len > 200);
+}
+
+// Oznake (tags)
+document.getElementById('blogTagInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const val = e.target.value.trim();
+    if (val && !blogTagsList.includes(val)) {
+      blogTagsList.push(val);
+      renderBlogTagChips();
+      e.target.value = '';
+    }
+  }
+});
+
+function renderBlogTagChips() {
+  const wrap  = document.getElementById('blogTagsWrap');
+  const input = document.getElementById('blogTagInput');
+  if (!wrap || !input) return;
+
+  wrap.querySelectorAll('.tag-item').forEach(el => el.remove());
+
+  const html = blogTagsList.map((t, i) => `
+    <span class="tag-item">
+      ${escHtml(t)}
+      <button class="tag-remove" onclick="removeBlogTag(${i})" type="button">×</button>
+    </span>
+  `).join('');
+
+  input.insertAdjacentHTML('beforebegin', html);
+}
+
+function removeBlogTag(i) {
+  blogTagsList.splice(i, 1);
+  renderBlogTagChips();
+}
+
+// Naslovna slika
+document.getElementById('blogCoverFile')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = await uploadFile(file, `blog/${Date.now()}-${file.name}`);
+  if (!url) return;
+  setVal('blogCoverUrl', url);
+  const preview = document.getElementById('blogCoverPreview');
+  if (preview) { preview.src = url; preview.style.display = 'block'; }
+});
+
+document.getElementById('blogForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type="submit"]');
+  const id = getVal('blogId');
+  const quill = ensureQuill();
+  const content = quill ? quill.root.innerHTML : '';
+  const plainText = quill ? quill.getText() : '';
+
+  const title = getVal('blogTitle').trim();
+  if (!title) { toast('Vnesite naslov', 'error'); return; }
+
+  let slug = slugify(getVal('blogSlug') || title);
+  if (!slug) { toast('Neveljavna povezava (slug)', 'error'); return; }
+
+  const status = document.getElementById('blogStatus')?.value || 'draft';
+  const publishedAtRaw = getVal('blogPublishedAt');
+  let publishedAt = publishedAtRaw ? new Date(publishedAtRaw).toISOString() : null;
+  if (status === 'published' && !publishedAt) publishedAt = new Date().toISOString();
+
+  const wordCount = plainText.trim().split(/\s+/).filter(Boolean).length;
+  const readingMinutes = Math.max(1, Math.round(wordCount / 200));
+
+  setLoading(btn, true);
+  slug = await ensureUniqueSlug(slug, id);
+
+  const payload = {
+    title,
+    slug,
+    excerpt:         getVal('blogExcerpt'),
+    content,
+    cover_image_url: getVal('blogCoverUrl'),
+    category:        getVal('blogCategory').trim(),
+    tags:            blogTagsList,
+    author_name:     getVal('blogAuthor').trim() || 'EPO.SI',
+    status,
+    is_featured:     document.getElementById('blogFeatured')?.checked ?? false,
+    reading_minutes: readingMinutes,
+    seo_title:       getVal('blogSeoTitle'),
+    seo_description: getVal('blogSeoDesc'),
+    published_at:    publishedAt,
+    updated_at:      new Date().toISOString(),
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await supabaseClient.from('blog_posts').update(payload).eq('id', id));
+  } else {
+    ({ error } = await supabaseClient.from('blog_posts').insert([payload]));
+  }
+  setLoading(btn, false);
+
+  if (error) { toast('Napaka pri shranjevanju objave: ' + error.message, 'error'); return; }
+  toast('Objava shranjena', 'success');
+  closeModal('blogModal');
+  loadBlogPosts();
+});
+
+async function ensureUniqueSlug(slug, excludeId) {
+  let candidate = slug;
+  let n = 2;
+  for (;;) {
+    let query = supabaseClient.from('blog_posts').select('id').eq('slug', candidate);
+    if (excludeId) query = query.neq('id', excludeId);
+    const { data } = await query;
+    if (!data || !data.length) return candidate;
+    candidate = `${slug}-${n++}`;
+  }
+}
+
+async function deleteBlogPost(id) {
+  if (!confirm('Trajno izbrišete to objavo?')) return;
+  const { error } = await supabaseClient.from('blog_posts').delete().eq('id', id);
+  if (error) { toast('Napaka pri brisanju objave', 'error'); return; }
+  toast('Objava izbrisana', 'success');
+  loadBlogPosts();
+}
+
+function slugify(str) {
+  const map = { č: 'c', ć: 'c', š: 's', ž: 'z', đ: 'd', Č: 'c', Ć: 'c', Š: 's', Ž: 'z', Đ: 'd' };
+  return String(str || '')
+    .split('').map(ch => map[ch] ?? ch).join('')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
 }
 
 // ── Messages ──────────────────────────────────────────────────

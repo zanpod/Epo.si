@@ -9,6 +9,8 @@ A production-ready personal portfolio website using HTML/CSS/Vanilla JS + Supaba
 ```
 /
 ├── index.html                    ← Public website
+├── blog.html                     ← Public blog listing (Novice)
+├── blog-post.html                ← Public single article page
 ├── admin/
 │   └── index.html                ← Admin panel (protected by Supabase Auth)
 ├── css/
@@ -16,6 +18,7 @@ A production-ready personal portfolio website using HTML/CSS/Vanilla JS + Supaba
 ├── js/
 │   ├── supabase-config.js        ← ⚠️  Fill in your keys here
 │   ├── main.js                   ← Public site JS
+│   ├── blog.js                   ← Public blog JS (listing + article + homepage preview)
 │   ├── widgets.js                ← Cookie consent + AI chat widget
 │   └── admin.js                  ← Admin panel JS
 ├── supabase/
@@ -249,6 +252,46 @@ After that, the token is stored locally and reused (auto-refreshed).
 
 ---
 
+## Blog (Novice)
+
+The site includes a full blog: a public listing page (`blog.html`), a single
+article template (`blog-post.html`), a "latest posts" preview section on the
+homepage, and a **Blog** section in the admin panel to write and manage posts.
+
+Posts live in the `blog_posts` table (created by `schema.sql`) with:
+
+- `title`, `slug`, `excerpt`, `content` (HTML from the rich-text editor)
+- `cover_image_url`, `category`, `tags[]`, `author_name`
+- `status` (`draft` | `published`), `is_featured`, `reading_minutes` (auto-computed)
+- `seo_title` / `seo_description` (optional overrides for social/search previews)
+- `published_at` — set automatically on publish; can be set in the future to
+  **schedule** a post (it only appears publicly once `published_at` has passed)
+
+### Writing a post
+
+In the admin panel → **Blog** → **+ Nova objava**:
+
+1. Type a title — the URL slug is generated automatically (editable).
+2. Upload a cover image, write a short excerpt, pick a category and tags.
+3. Write the body in the rich-text editor (headings, bold/italic, lists,
+   quotes, links, and inline images — images upload straight to Supabase
+   Storage, same bucket as the rest of the site).
+4. Optionally set an SEO title/description (otherwise the title/excerpt are
+   used), mark it as **Featured** to pin it at the top of the blog, and set
+   status to **Objavljeno** (published) — or leave as **Osnutek** (draft).
+
+Public visitors only ever see posts with `status = 'published'` and a
+`published_at` in the past — RLS enforces this at the database level, same
+pattern as the rest of the site (`Public can read published blog posts` /
+`Authenticated can manage blog posts` policies in `schema.sql`).
+
+### A note on rich content
+
+The article body is stored and rendered as HTML from the admin's own
+rich-text editor. Since only the authenticated admin can write to
+`blog_posts` (enforced by RLS), this is safe — the same trust model already
+used for `about_bio`, service descriptions, etc.
+
 ## A note on cookies (piškotki)
 
 The site shows a small consent banner (`js/widgets.js`) on first visit. It uses
@@ -286,6 +329,7 @@ a choice is made.
    - **About** — profile photo, bio, skills, stats
    - **Services** — add/edit/delete service cards
    - **Projects** — upload images, add/edit/delete projects
+   - **Blog** — write, edit and publish blog posts with a rich-text (Quill) editor
    - **Messages** — view contact form submissions
    - **Objave** — generate social-media posts & a 7-day plan, save/edit/schedule them
    - **Settings** — site name, contact info, social links, SEO

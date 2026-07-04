@@ -111,11 +111,6 @@ async function loadSiteData() {
 }
 
 function applySettings(s) {
-  // Meta
-  document.title = s.meta_title || document.title;
-  const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc && s.meta_description) metaDesc.content = s.meta_description;
-
   // Logo
   document.querySelectorAll('[data-logo]').forEach(el => el.textContent = s.logo_text || 'EPO.SI');
 
@@ -124,6 +119,14 @@ function applySettings(s) {
   const heroSub     = document.getElementById('heroSub');
   const ctaPrimary  = document.getElementById('ctaPrimary');
   const ctaSecondary = document.getElementById('ctaSecondary');
+
+  // Meta — samo na naslovnici; ostale strani (npr. blog) imajo lasten naslov/opis.
+  if (heroHeading) {
+    document.title = s.meta_title || document.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && s.meta_description) metaDesc.content = s.meta_description;
+  }
+
   if (heroHeading && s.hero_heading) heroHeading.textContent = s.hero_heading;
   if (heroSub && s.hero_subheading) heroSub.textContent = s.hero_subheading;
   if (ctaPrimary) {

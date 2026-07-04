@@ -8,6 +8,7 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -76,6 +77,9 @@
       </button>
       <button class="sidebar-link" data-section="projects" role="listitem">
         <span class="icon">💼</span> Projekti
+      </button>
+      <button class="sidebar-link" data-section="blog" role="listitem">
+        <span class="icon">📝</span> Blog
       </button>
       <button class="sidebar-link" data-section="customers" role="listitem">
         <span class="icon">👥</span> Stranke
@@ -307,6 +311,26 @@
             <button class="btn btn-sm btn-primary" id="addProjectBtn">+ Dodaj projekt</button>
           </div>
           <div class="admin-projects-grid" id="adminProjectsGrid"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           RAZDELEK: Blog
+           ============================================================ -->
+      <div class="admin-section" id="section-blog">
+        <div class="admin-card glass">
+          <div class="admin-card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+            Blog objave
+            <button class="btn btn-sm btn-primary" id="addBlogBtn">+ Nova objava</button>
+          </div>
+
+          <div class="content-pills" id="blogAdminFilters" style="margin-bottom:1rem">
+            <button class="content-pill active" data-status-filter="all" type="button">Vse</button>
+            <button class="content-pill" data-status-filter="published" type="button">Objavljeno</button>
+            <button class="content-pill" data-status-filter="draft" type="button">Osnutki</button>
+          </div>
+
+          <div class="admin-blog-list" id="adminBlogList"></div>
         </div>
       </div>
 
@@ -624,6 +648,119 @@
   </div>
 </div>
 
+<!-- Modal za blog objavo -->
+<div class="modal-overlay" id="blogModal" role="dialog" aria-modal="true" aria-labelledby="blogModalTitle">
+  <div class="modal glass blog-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="blogModalTitle">Nova objava</h2>
+      <button class="modal-close" onclick="closeModal('blogModal')" aria-label="Zapri">✕</button>
+    </div>
+    <form class="admin-form" id="blogForm">
+      <input type="hidden" id="blogId">
+      <input type="hidden" id="blogCoverUrl">
+
+      <div class="form-group">
+        <label class="form-label" for="blogTitle">Naslov *</label>
+        <input class="form-input" type="text" id="blogTitle" placeholder="Naslov novice…" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="blogSlug">Povezava (slug)</label>
+        <div class="slug-field-wrap">
+          <span class="slug-field-prefix">/blog-post.html?slug=</span>
+          <input type="text" id="blogSlug" placeholder="naslov-novice" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Naslovna slika</label>
+        <div class="image-upload-area">
+          <input type="file" id="blogCoverFile" accept="image/*" aria-label="Naloži naslovno sliko">
+          <div class="image-upload-text">
+            <strong>Kliknite za nalaganje</strong> ali povlecite datoteko<br>
+            <small>PNG, JPG, WebP — maks. 5 MB</small>
+          </div>
+        </div>
+        <img id="blogCoverPreview" class="image-preview" src="" alt="Predogled naslovne slike" style="display:none">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="blogExcerpt">Kratek opis (izvleček)</label>
+        <textarea class="form-textarea" id="blogExcerpt" placeholder="Kratek povzetek, ki se prikaže na kartici in v iskalnikih…" style="height:80px" maxlength="220"></textarea>
+        <div class="char-counter" id="blogExcerptCounter">0 / 220</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="blogCategory">Kategorija</label>
+          <input class="form-input" type="text" id="blogCategory" list="blogCategoryList" placeholder="npr. Spletni razvoj">
+          <datalist id="blogCategoryList"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="blogAuthor">Avtor</label>
+          <input class="form-input" type="text" id="blogAuthor" placeholder="EPO.SI">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Oznake (pritisnite Enter za dodajanje)</label>
+        <div class="tags-input-wrap" id="blogTagsWrap">
+          <input class="tags-input" type="text" id="blogTagInput" placeholder="Dodajte oznako…" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Vsebina</label>
+        <div class="quill-wrap">
+          <div id="blogQuillEditor"></div>
+        </div>
+      </div>
+
+      <hr style="border-color:var(--border);margin:0.5rem 0">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="blogSeoTitle">SEO naslov (neobvezno)</label>
+          <input class="form-input" type="text" id="blogSeoTitle" placeholder="Privzeto: naslov novice">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="blogSeoDesc">SEO opis (neobvezno)</label>
+          <input class="form-input" type="text" id="blogSeoDesc" placeholder="Privzeto: kratek opis">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="blogStatus">Status</label>
+          <select class="form-input" id="blogStatus">
+            <option value="draft">Osnutek</option>
+            <option value="published">Objavljeno</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="blogPublishedAt">Datum objave</label>
+          <input class="form-input" type="datetime-local" id="blogPublishedAt">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-wrap">
+          <label class="toggle" for="blogFeatured" aria-label="Izpostavljena novica">
+            <input type="checkbox" id="blogFeatured">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="form-label" style="margin:0">Izpostavljena novica (prikaz na vrhu bloga)</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('blogModal')">Prekliči</button>
+        <button type="submit" class="btn btn-primary">Shrani objavo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal za ogled sporočila -->
 <div class="modal-overlay" id="messageModal" role="dialog" aria-modal="true" aria-label="Ogled sporočila">
   <div class="modal glass">
@@ -870,6 +1007,7 @@
      ================================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script src="/js/supabase-config.js"></script>
 <script src="/js/admin.js"></script>
 

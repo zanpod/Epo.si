@@ -240,6 +240,37 @@ create table if not exists posts (
 create index if not exists posts_scheduled_idx on posts (scheduled_for);
 create index if not exists posts_status_idx    on posts (status);
 
+-- ── blog_posts (blog / novice) ─────────────────────────────
+create table if not exists blog_posts (
+  id               uuid primary key default uuid_generate_v4(),
+
+  title            text not null default '',
+  slug             text not null default '',
+  excerpt          text not null default '',
+  content          text not null default '',   -- HTML iz urejevalnika (Quill)
+
+  cover_image_url  text default '',
+  category         text default '',
+  tags             text[] not null default '{}',
+  author_name      text default 'EPO.SI',
+
+  status           text not null default 'draft' check (status in ('draft', 'published')),
+  is_featured      boolean not null default false,
+  reading_minutes  integer not null default 1,
+
+  seo_title        text default '',
+  seo_description  text default '',
+
+  published_at     timestamptz,
+  created_at       timestamptz default now(),
+  updated_at       timestamptz default now()
+);
+
+create unique index if not exists blog_posts_slug_key         on blog_posts (slug);
+create index if not exists blog_posts_status_idx              on blog_posts (status);
+create index if not exists blog_posts_published_at_idx        on blog_posts (published_at desc);
+create index if not exists blog_posts_category_idx             on blog_posts (category);
+
 -- ── page_views (analitika obiskov) ────────────────────────
 create table if not exists page_views (
   id uuid primary key default uuid_generate_v4(),
@@ -261,6 +292,7 @@ alter table contacts enable row level security;
 alter table customers enable row level security;
 alter table quotes enable row level security;
 alter table posts enable row level security;
+alter table blog_posts enable row level security;
 alter table page_views enable row level security;
 
 -- settings: public read, authenticated write
@@ -329,6 +361,18 @@ create policy "Authenticated can manage quotes"
 drop policy if exists "Authenticated can manage posts" on posts;
 create policy "Authenticated can manage posts"
   on posts for all
+  to authenticated
+  using (auth.role() = 'authenticated');
+
+-- blog_posts: public read only published, authenticated (admin) manages all
+drop policy if exists "Public can read published blog posts" on blog_posts;
+create policy "Public can read published blog posts"
+  on blog_posts for select
+  using (status = 'published');
+
+drop policy if exists "Authenticated can manage blog posts" on blog_posts;
+create policy "Authenticated can manage blog posts"
+  on blog_posts for all
   to authenticated
   using (auth.role() = 'authenticated');
 
