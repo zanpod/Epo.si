@@ -1173,6 +1173,31 @@ body::before {
   border-bottom: 1px solid var(--border);
 }
 
+.sidebar-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sidebar-close-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sidebar-close-btn:hover { color: var(--text-primary); border-color: var(--border-hover); }
+
 .sidebar-logo {
   font-size: 1.15rem;
   font-weight: 900;
@@ -1429,7 +1454,7 @@ body::before {
 
 .admin-list-item-icon { font-size: 1.5rem; }
 
-.admin-list-item-body { flex: 1; }
+.admin-list-item-body { flex: 1; min-width: 0; }
 
 .admin-list-item-title { font-size: 0.95rem; font-weight: 600; }
 
@@ -1712,6 +1737,7 @@ body::before {
   }
   .sidebar.open { transform: translateX(0); }
   .sidebar-toggle-btn { display: flex; align-items: center; }
+  .sidebar-close-btn { display: flex; }
 }
 
 @media (max-width: 768px) {
@@ -1735,7 +1761,51 @@ body::before {
 
   .stats-row-item { grid-template-columns: 1fr; }
 
-  .messages-table { font-size: 0.8rem; }
+  /* Sporočila: tabela postane seznam kartic, brez vodoravnega drsenja */
+  .messages-table-wrap { overflow-x: visible; }
+  .messages-table thead { display: none; }
+  .messages-table, .messages-table tbody, .messages-table tr, .messages-table td {
+    display: block;
+    width: 100%;
+  }
+  .messages-table tr {
+    margin-bottom: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.4rem 1rem;
+  }
+  .messages-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: right;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .messages-table td:last-child { border-bottom: none; }
+  .messages-table td::before {
+    content: attr(data-label);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .messages-table td[colspan] { display: block; text-align: center; }
+  .messages-table td[colspan]::before { content: none; }
+
+  /* Storitve/seznami: dejanja se prelomijo v svojo vrstico namesto stiskanja */
+  .admin-list-item { flex-wrap: wrap; row-gap: 0.6rem; }
+  .admin-list-item-desc {
+    max-width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .admin-list-item-actions { flex: 1 0 100%; justify-content: flex-end; }
 }
 
 @media (max-width: 480px) {
