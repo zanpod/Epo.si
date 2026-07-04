@@ -145,7 +145,7 @@ function applySettings(s) {
   const aboutImg = document.getElementById('aboutImage');
   if (aboutImg) {
     if (s.about_image_url) {
-      aboutImg.innerHTML = `<img src="${s.about_image_url}" alt="Profilna slika" class="about-image">`;
+      aboutImg.innerHTML = `<img src="${s.about_image_url}" alt="Žan Podhraški, ustanovitelj EPO.SI" class="about-image" loading="lazy">`;
     }
   }
 
@@ -301,13 +301,22 @@ function initContactForm() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn    = form.querySelector('[type="submit"]');
-    const status = document.getElementById('formStatus');
-    const data   = Object.fromEntries(new FormData(form));
+    const btn     = form.querySelector('[type="submit"]');
+    const status  = document.getElementById('formStatus');
+    const consent = document.getElementById('fieldConsent');
+    const data    = Object.fromEntries(new FormData(form));
 
-    setLoading(btn, true);
     status.className = 'form-status';
     status.textContent = '';
+
+    if (consent && !consent.checked) {
+      status.className = 'form-status error';
+      status.textContent = '✗ Prosimo, potrdite strinjanje z obdelavo osebnih podatkov.';
+      consent.focus();
+      return;
+    }
+
+    setLoading(btn, true);
 
     try {
       const { error } = await supabaseClient.from('contacts').insert([{
