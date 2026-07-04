@@ -362,3 +362,11 @@ create policy "Authenticated can read page views"
 --   on storage.objects for delete using (
 --     bucket_id = 'portfolio' and auth.role() = 'authenticated'
 --   );
+--
+-- -- Brez te politike ponovno nalaganje iste poti (npr. profilna slika,
+-- -- "about/profile.*") pade z "new row violates row-level security policy",
+-- -- ker upsert ob obstoječi datoteki poskusi UPDATE, ne INSERT.
+-- create policy "Authenticated can update images"
+--   on storage.objects for update using (
+--     bucket_id = 'portfolio' and auth.role() = 'authenticated'
+--   );

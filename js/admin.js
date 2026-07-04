@@ -1300,6 +1300,13 @@ async function uploadFile(file, path) {
   const ext  = file.name.split('.').pop();
   const full = `${path}.${ext}`;
 
+  // Najprej odstrani morebitno obstoječo datoteko na isti poti (npr. profilna
+  // slika ima vedno pot "about/profile.*"). Brez tega bi "upsert" ob ponovnem
+  // nalaganju poskusil UPDATE obstoječe vrstice v storage.objects, kar pade na
+  // "new row violates row-level security policy", če projekt nima ločenega
+  // UPDATE pravila (le INSERT/DELETE).
+  await supabaseClient.storage.from('portfolio').remove([full]);
+
   const { error } = await supabaseClient.storage.from('portfolio').upload(full, file, { upsert: true });
   if (error) { toast('Nalaganje ni uspelo: ' + error.message, 'error'); return null; }
 
