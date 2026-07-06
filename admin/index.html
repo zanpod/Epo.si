@@ -454,6 +454,20 @@
            ============================================================ -->
       <div class="admin-section" id="section-settings">
         <div class="admin-card glass">
+          <div class="admin-card-title">Logotip</div>
+          <p class="content-hint">Naloži sliko logotipa (PNG ali SVG s prosojnim ozadjem priporočeno). Če slike ni, se namesto nje prikaže besedilno ime spodaj.</p>
+          <div class="image-upload-area">
+            <input type="file" id="logoImageFile" accept="image/*" aria-label="Naloži logotip">
+            <div class="image-upload-text">
+              <strong>Kliknite za nalaganje</strong> ali povlecite datoteko<br>
+              <small>PNG, SVG, WebP — maks. 5 MB</small>
+            </div>
+          </div>
+          <img id="logoImagePreview" class="image-preview logo-preview" src="" alt="Predogled logotipa" style="display:none">
+          <button type="button" class="btn btn-sm btn-ghost" id="removeLogoBtn" style="display:none;margin-top:0.75rem">Odstrani sliko (uporabi besedilo)</button>
+        </div>
+
+        <div class="admin-card glass">
           <div class="admin-card-title">Nastavitve strani</div>
           <form class="admin-form" id="settingsForm">
             <div class="form-row">

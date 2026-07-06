@@ -1567,7 +1567,44 @@ async function loadSettings() {
   setVal('setCompanyAddress', data.company_address);
   setVal('setCompanyTax',     data.company_tax);
   setVal('setCompanyIban',    data.company_iban);
+
+  const logoPreview = document.getElementById('logoImagePreview');
+  const removeLogoBtn = document.getElementById('removeLogoBtn');
+  if (logoPreview) {
+    if (data.logo_image_url) {
+      logoPreview.src = data.logo_image_url;
+      logoPreview.style.display = 'block';
+      if (removeLogoBtn) removeLogoBtn.style.display = 'inline-flex';
+    } else {
+      logoPreview.style.display = 'none';
+      if (removeLogoBtn) removeLogoBtn.style.display = 'none';
+    }
+  }
 }
+
+document.getElementById('logoImageFile')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = await uploadFile(file, 'branding/logo');
+  if (!url) return;
+
+  await updateSettings({ logo_image_url: url });
+
+  const preview = document.getElementById('logoImagePreview');
+  if (preview) { preview.src = url; preview.style.display = 'block'; }
+  const removeLogoBtn = document.getElementById('removeLogoBtn');
+  if (removeLogoBtn) removeLogoBtn.style.display = 'inline-flex';
+});
+
+document.getElementById('removeLogoBtn')?.addEventListener('click', async () => {
+  if (!confirm('Odstranite logotip in uporabite besedilni naslov?')) return;
+  await updateSettings({ logo_image_url: '' });
+
+  const preview = document.getElementById('logoImagePreview');
+  if (preview) preview.style.display = 'none';
+  const removeLogoBtn = document.getElementById('removeLogoBtn');
+  if (removeLogoBtn) removeLogoBtn.style.display = 'none';
+});
 
 document.getElementById('settingsForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();

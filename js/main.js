@@ -112,7 +112,13 @@ async function loadSiteData() {
 
 function applySettings(s) {
   // Logo
-  document.querySelectorAll('[data-logo]').forEach(el => el.textContent = s.logo_text || 'EPO.SI');
+  document.querySelectorAll('[data-logo]').forEach(el => {
+    if (s.logo_image_url) {
+      el.innerHTML = `<img src="${s.logo_image_url}" alt="${escHtml(s.logo_text || s.site_name || 'EPO.SI')}" loading="lazy">`;
+    } else {
+      el.textContent = s.logo_text || 'EPO.SI';
+    }
+  });
 
   // Hero
   const heroHeading = document.getElementById('heroHeading');

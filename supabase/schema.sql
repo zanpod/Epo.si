@@ -12,6 +12,7 @@ create table if not exists settings (
 
   site_name text not null default 'EPO.SI',
   logo_text text not null default 'EPO.SI',
+  logo_image_url text default '',
 
   contact_email text default 'hello@example.com',
   contact_phone text default '+1 (555) 000-0000',
@@ -74,6 +75,7 @@ select uuid_generate_v4()
 where not exists (select 1 from settings);
 
 -- Upgrade existing settings tables with the company / agency columns.
+alter table settings add column if not exists logo_image_url  text default '';
 alter table settings add column if not exists company_name    text default '';
 alter table settings add column if not exists company_address text default '';
 alter table settings add column if not exists company_tax     text default '';
