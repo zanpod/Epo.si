@@ -168,7 +168,7 @@ function applySettings(s) {
 
   // Stats
   const statsWrap = document.getElementById('statsWrap');
-  if (statsWrap && Array.isArray(s.stats)) {
+  if (statsWrap && Array.isArray(s.stats) && s.stats.length) {
     statsWrap.innerHTML = s.stats.map(stat => `
       <div class="stat-card glass reveal">
         <div class="stat-number">${escHtml(stat.number)}</div>

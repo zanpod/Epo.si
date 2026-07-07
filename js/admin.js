@@ -7,6 +7,19 @@ let skillsList = [];
 let statsList  = [];
 let adminInitialized = false;
 
+// Ujema se s statičnim privzetkom v index.html (#skillsWrap / #statsWrap),
+// ki se prikaže na javni strani, dokler polji "skills"/"stats" v bazi nista
+// nastavljeni. Če ju admin editor ob praznem stanju pusti prazna, izgleda,
+// kot da vsebine sploh ni mogoče urejati — zato ju tu predizpolnimo z enako
+// vsebino, da urednik vidi in lahko spremeni to, kar je dejansko objavljeno.
+const DEFAULT_SKILLS = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Supabase', 'CSS', 'HTML', 'Git', 'REST API'];
+const DEFAULT_STATS = [
+  { number: '5+',  label: 'Let izkušenj' },
+  { number: '50+', label: 'Zaključenih projektov' },
+  { number: '30+', label: 'Zadovoljnih strank' },
+  { number: '99%', label: 'Zadovoljstvo strank' },
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
 });
@@ -294,10 +307,10 @@ async function loadAbout() {
 
   setVal('aboutBioInput', data.about_bio);
 
-  skillsList = data.skills?.items ?? [];
+  skillsList = data.skills?.items?.length ? data.skills.items.slice() : DEFAULT_SKILLS.slice();
   renderSkillTags();
 
-  statsList = Array.isArray(data.stats) ? data.stats : [];
+  statsList = Array.isArray(data.stats) && data.stats.length ? data.stats.slice() : DEFAULT_STATS.slice();
   renderStatRows();
 
   if (data.about_image_url) {
