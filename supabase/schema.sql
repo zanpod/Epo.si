@@ -43,7 +43,6 @@ create table if not exists settings (
   company_tax text default '',     -- davčna / ID za DDV
   company_iban text default '',
 
-  -- FIXED: valid JSON for the whole default value
   skills jsonb default '{
     "items": [
       "JavaScript",
