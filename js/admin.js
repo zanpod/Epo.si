@@ -12,7 +12,7 @@ let adminInitialized = false;
 // nastavljeni. Če ju admin editor ob praznem stanju pusti prazna, izgleda,
 // kot da vsebine sploh ni mogoče urejati — zato ju tu predizpolnimo z enako
 // vsebino, da urednik vidi in lahko spremeni to, kar je dejansko objavljeno.
-const DEFAULT_SKILLS = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Supabase', 'CSS', 'HTML', 'Git', 'REST API'];
+const DEFAULT_SKILLS = ['Hitro nalaganje', 'Varno gostovanje (SSL)', 'Prilagojeno mobilnim napravam', 'Enostavno urejanje vsebine', 'Slovenska podpora', 'Brez skritih stroškov', 'Redne posodobitve', 'SEO prijazno'];
 const DEFAULT_STATS = [
   { number: '5+',  label: 'Let izkušenj' },
   { number: '50+', label: 'Zaključenih projektov' },
