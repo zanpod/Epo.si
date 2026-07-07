@@ -222,6 +222,42 @@ function applySettings(s) {
   document.querySelectorAll('[data-copyright]').forEach(el => {
     el.textContent = `© ${new Date().getFullYear()} ${s.site_name || 'EPO.SI'}. Vse pravice pridržane.`;
   });
+
+  applyStructuredData(s);
+}
+
+// Structured data (JSON-LD) za Google — izpolni samo s podatki, ki niso
+// še vedno neizpolnjeni privzetki iz sheme (npr. placeholder telefon/email).
+const PLACEHOLDER_VALUES = new Set([
+  'hello@example.com',
+  '+1 (555) 000-0000',
+  'https://facebook.com',
+  'https://linkedin.com',
+  'https://instagram.com',
+]);
+
+function applyStructuredData(s) {
+  const ld = document.getElementById('ldJson');
+  if (!ld) return;
+
+  const real = (v) => v && !PLACEHOLDER_VALUES.has(v) ? v : undefined;
+
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: s.company_name || s.site_name || 'EPO.SI',
+    url: 'https://agencijaepo.si/',
+    logo: real(s.logo_image_url) || 'https://agencijaepo.si/favicon.svg',
+    description: s.meta_description || undefined,
+    email: real(s.contact_email),
+    telephone: real(s.contact_phone),
+  };
+
+  const sameAs = [real(s.facebook_url), real(s.linkedin_url), real(s.instagram_url)].filter(Boolean);
+  if (sameAs.length) data.sameAs = sameAs;
+
+  Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
+  ld.textContent = JSON.stringify(data);
 }
 
 // ── Services ──────────────────────────────────────────────────
