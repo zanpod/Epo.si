@@ -219,7 +219,7 @@ This requires a **one-time, free** Canva developer app:
 1. Go to [canva.com/developers](https://www.canva.com/developers/) → **Your integrations → Create an integration** (type: *Public* or *Private* for your own use).
 2. Under **Scopes**, enable: `asset:write`, `design:content:write`, `design:meta:read`.
 3. Under **Authentication / Redirect URLs**, add your admin URL exactly, e.g.
-   `https://epo.si/admin/` (and `http://localhost:8888/admin/` for local testing).
+   `https://agencijaepo.si/admin/` (and `http://localhost:8888/admin/` for local testing).
 4. Copy the **Client ID** and generate/copy the **Client Secret**.
 
 ### 2. Deploy the Edge Function & add secrets

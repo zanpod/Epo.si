@@ -7,6 +7,19 @@ let skillsList = [];
 let statsList  = [];
 let adminInitialized = false;
 
+// Ujema se s statičnim privzetkom v index.html (#skillsWrap / #statsWrap),
+// ki se prikaže na javni strani, dokler polji "skills"/"stats" v bazi nista
+// nastavljeni. Če ju admin editor ob praznem stanju pusti prazna, izgleda,
+// kot da vsebine sploh ni mogoče urejati — zato ju tu predizpolnimo z enako
+// vsebino, da urednik vidi in lahko spremeni to, kar je dejansko objavljeno.
+const DEFAULT_SKILLS = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Supabase', 'CSS', 'HTML', 'Git', 'REST API'];
+const DEFAULT_STATS = [
+  { number: '5+',  label: 'Let izkušenj' },
+  { number: '50+', label: 'Zaključenih projektov' },
+  { number: '30+', label: 'Zadovoljnih strank' },
+  { number: '99%', label: 'Zadovoljstvo strank' },
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
 });
@@ -294,10 +307,10 @@ async function loadAbout() {
 
   setVal('aboutBioInput', data.about_bio);
 
-  skillsList = data.skills?.items ?? [];
+  skillsList = data.skills?.items?.length ? data.skills.items.slice() : DEFAULT_SKILLS.slice();
   renderSkillTags();
 
-  statsList = Array.isArray(data.stats) ? data.stats : [];
+  statsList = Array.isArray(data.stats) && data.stats.length ? data.stats.slice() : DEFAULT_STATS.slice();
   renderStatRows();
 
   if (data.about_image_url) {
@@ -1659,7 +1672,11 @@ async function uploadFile(file, path) {
   if (error) { toast('Nalaganje ni uspelo: ' + error.message, 'error'); return null; }
 
   const { data } = supabaseClient.storage.from('portfolio').getPublicUrl(full);
-  return data.publicUrl;
+  // Pot v storage (npr. "branding/logo.png") je pri logotipu/profilni sliki
+  // vedno enaka, zato brskalnik/CDN po ponovnem nalaganju še vedno postreže
+  // staro, predpomnjeno sliko na isti URL. Dodamo "?v=timestamp", da je URL
+  // ob vsakem nalaganju unikaten in se slika vedno znova naloži.
+  return `${data.publicUrl}?v=${Date.now()}`;
 }
 
 // ── Modal helpers ─────────────────────────────────────────────
