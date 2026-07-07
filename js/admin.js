@@ -1659,7 +1659,11 @@ async function uploadFile(file, path) {
   if (error) { toast('Nalaganje ni uspelo: ' + error.message, 'error'); return null; }
 
   const { data } = supabaseClient.storage.from('portfolio').getPublicUrl(full);
-  return data.publicUrl;
+  // Pot v storage (npr. "branding/logo.png") je pri logotipu/profilni sliki
+  // vedno enaka, zato brskalnik/CDN po ponovnem nalaganju še vedno postreže
+  // staro, predpomnjeno sliko na isti URL. Dodamo "?v=timestamp", da je URL
+  // ob vsakem nalaganju unikaten in se slika vedno znova naloži.
+  return `${data.publicUrl}?v=${Date.now()}`;
 }
 
 // ── Modal helpers ─────────────────────────────────────────────
