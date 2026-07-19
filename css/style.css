@@ -2287,6 +2287,19 @@ body::before {
   color: var(--cyan);
 }
 
+.pricing-setup-notice {
+  display: inline-flex;
+  margin-top: 1.25rem;
+  padding: 0.5rem 1.1rem;
+  max-width: 640px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
 .pricing-after {
   margin-top: -1.1rem;
   margin-bottom: 1.5rem;
