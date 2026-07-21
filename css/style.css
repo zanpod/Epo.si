@@ -1754,8 +1754,11 @@ body::before {
   .nav-links { display: none; }
   .nav-toggle { display: flex; }
 
-  .hero-heading { font-size: clamp(2rem, 8vw, 3rem); }
-  .hero-ctas { flex-direction: column; align-items: flex-start; }
+  .hero { min-height: auto; }
+  .hero-content { padding: 3rem 0 4rem; text-align: center; }
+  .hero-heading { font-size: clamp(2rem, 8vw, 3rem); margin-inline: auto; }
+  .hero-sub { margin-inline: auto; }
+  .hero-ctas { flex-direction: column; align-items: center; }
 
   .form-row { grid-template-columns: 1fr; }
   .admin-form .form-row { grid-template-columns: 1fr; }
