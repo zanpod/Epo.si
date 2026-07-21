@@ -1760,6 +1760,8 @@ body::before {
   .hero-sub { margin-inline: auto; }
   .hero-ctas { flex-direction: column; align-items: center; }
 
+  .about, .services, .projects, .pricing, .contact, .faq { padding: 4rem 0; }
+
   .form-row { grid-template-columns: 1fr; }
   .admin-form .form-row { grid-template-columns: 1fr; }
 
