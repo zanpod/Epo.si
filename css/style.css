@@ -1823,7 +1823,7 @@ body::before {
 
 @media (max-width: 480px) {
   .container { --_pad: 1rem; }
-  .about-stats { grid-template-columns: 1fr 1fr; }
+  .about-stats { grid-template-columns: 1fr; }
   .services-grid { grid-template-columns: 1fr; }
 }
 
