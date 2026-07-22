@@ -89,7 +89,8 @@
   --admin-red-light: #fca5a5;
 
   /* ── Tipografija ─────────────────────────────────────────────── */
-  --font-heading: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  /* En sam font povsod — brez posebne naslovne pisave */
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
   --font-body:    'Inter', system-ui, -apple-system, sans-serif;
 
   --weight-regular:  400;
