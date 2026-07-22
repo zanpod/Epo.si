@@ -32,8 +32,10 @@
   <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
 
   <!-- Styles -->
+  <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/style.css">
 
   <!-- Structured data (polni main.js iz nastavitev) -->
@@ -41,6 +43,9 @@
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Brez JS: pokaži vsebino takoj, saj IntersectionObserver ne bo nikoli sprožil .visible -->
+  <noscript><style>.reveal{opacity:1!important;transform:none!important;}</style></noscript>
 </head>
 <body>
 
@@ -104,8 +109,8 @@
     <div class="hero-content">
       <div class="hero-badge">Kmalu odpiramo</div>
 
-      <h1 class="hero-heading gradient-text" id="heroHeading">
-        Digitalna orodja, ki poganjajo vaš posel
+      <h1 class="hero-heading" id="heroHeading">
+        Digitalna orodja, ki poganjajo vaš <span class="gradient-text">posel</span>
       </h1>
 
       <p class="hero-sub" id="heroSub">
@@ -137,7 +142,9 @@
     <div class="about-grid">
       <!-- Slika -->
       <div class="about-image-wrap reveal" id="aboutImage">
-        <div class="about-image-placeholder">👨‍💻</div>
+        <div class="about-image-placeholder">
+          <svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
       </div>
 
       <!-- Besedilo -->
@@ -203,22 +210,30 @@
     <div class="services-grid" id="servicesGrid">
       <!-- Napolni JS; privzete kartice -->
       <div class="service-card glass reveal">
-        <span class="service-icon">🎨</span>
+        <span class="service-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </span>
         <h3 class="service-title">UI / UX Oblikovanje</h3>
         <p class="service-desc">Ustvarjamo intuitivne in estetske vmesnike, ki jih uporabniki obožujejo. Pikselsko natančne dizajne pretvorimo v odzivno kodo.</p>
       </div>
       <div class="service-card glass reveal">
-        <span class="service-icon">⚡</span>
+        <span class="service-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 6 3 12 8 18"/><polyline points="16 6 21 12 16 18"/></svg>
+        </span>
         <h3 class="service-title">Spletni razvoj</h3>
         <p class="service-desc">Gradimo hitre, moderne spletne aplikacije s čisto kodo in dobrimi praksami. Od MVP-jev do velikih platform.</p>
       </div>
       <div class="service-card glass reveal">
-        <span class="service-icon">📱</span>
+        <span class="service-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        </span>
         <h3 class="service-title">Mobile-First pristop</h3>
         <p class="service-desc">Vsak projekt gradimo z mobilnim pristopom in testiramo na vseh zaslonih za brezhibno izkušnjo na vsakem naprave.</p>
       </div>
       <div class="service-card glass reveal">
-        <span class="service-icon">🔒</span>
+        <span class="service-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
         <h3 class="service-title">Hitrost &amp; SEO</h3>
         <p class="service-desc">Optimiziramo Core Web Vitals, dostopnost in iskalnike, da vaša stran ne le lepo izgleda, ampak tudi dobro rangira.</p>
       </div>
@@ -436,7 +451,9 @@
       <!-- Kontaktni podatki -->
       <div class="contact-info reveal">
         <div class="contact-info-item">
-          <div class="contact-info-icon">📧</div>
+          <div class="contact-info-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 7 12 13 22 7"/></svg>
+          </div>
           <div>
             <div class="contact-info-label">E-pošta</div>
             <a href="mailto:info@agencijaepo.si" class="contact-info-value" id="contactEmail">info@agencijaepo.si</a>
@@ -444,7 +461,9 @@
         </div>
 
         <div class="contact-info-item">
-          <div class="contact-info-icon">📱</div>
+          <div class="contact-info-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
           <div>
             <div class="contact-info-label">Telefon</div>
             <a href="tel:+15550000000" class="contact-info-value" id="contactPhone">+1 (555) 000-0000</a>

@@ -24,7 +24,7 @@ function initCookieConsent() {
   banner.setAttribute('aria-live', 'polite');
   banner.setAttribute('aria-label', 'Obvestilo o piškotkih');
   banner.innerHTML = `
-    <div class="cookie-title">🍪 Piškotki</div>
+    <div class="cookie-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg> Piškotki</div>
     <p class="cookie-text">
       Spletna stran uporablja le nujne piškotke za delovanje (shranjevanje vaše izbire) in
       anonimno štetje obiskov za lastno statistiko. Brez sledilnikov in deljenja s tretjimi.
@@ -66,7 +66,7 @@ function initChat() {
   panel.setAttribute('aria-label', 'Klepet z EPO.SI');
   panel.innerHTML = `
     <div class="chat-header">
-      <div class="chat-header-avatar">🤖</div>
+      <div class="chat-header-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
       <div class="chat-header-info">
         <div class="chat-header-name">EPO.SI pomočnik</div>
         <div class="chat-header-status">Na voljo</div>
@@ -89,6 +89,7 @@ function initChat() {
 
   document.body.appendChild(fab);
   document.body.appendChild(panel);
+  document.body.classList.add('has-chat-fab');
 
   const body        = panel.querySelector('#chatBody');
   const input       = panel.querySelector('#chatInput');
