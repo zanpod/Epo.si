@@ -566,7 +566,7 @@ body::before {
   border-radius: var(--radius-full);
   font-size: 0.82rem;
   font-weight: var(--weight-medium);
-  color: var(--accent);
+  color: var(--accent-text-on-tint);
   transition: all var(--duration-base) var(--ease);
 }
 
@@ -759,7 +759,7 @@ body::before {
   border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: var(--weight-medium);
-  color: var(--accent);
+  color: var(--accent-text-on-tint);
 }
 
 .project-footer {
@@ -970,8 +970,12 @@ body::before {
   font-family: var(--font-heading);
   font-size: 1.1rem;
   font-weight: var(--weight-bold);
-  color: var(--accent);
+  color: var(--text);
 }
+
+/* Logotip: znak v akcentni barvi, pripona enobarvna — brez preliva */
+.logo-mark { color: var(--accent); }
+.logo-suffix { color: inherit; }
 
 .footer-copy {
   color: var(--text-subtle);
@@ -2278,9 +2282,8 @@ body.has-chat-fab {
   margin-top: 0.9rem;
   margin-inline: auto;
   max-width: 640px;
-  font-style: italic;
-  font-weight: var(--weight-medium);
-  color: var(--accent);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
 }
 
 .pricing-setup-notice {

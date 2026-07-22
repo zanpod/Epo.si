@@ -38,6 +38,10 @@
   --accent-30: color-mix(in srgb, var(--accent) 30%, transparent);
   --accent-45: color-mix(in srgb, var(--accent) 45%, transparent);
 
+  /* Svetlejši odtenek akcenta — za besedilo na temno modro tonirani
+     podlagi (značke), kjer bi polni --accent padel pod 4.5:1. */
+  --accent-text-on-tint: #7eb0ff; /* ~8:1 na --accent-08/-20 podlagi */
+
   /* Bele prosojnosti — samo za nevtralne prekrivke/vnosna polja */
   --overlay-02: rgba(255, 255, 255, 0.02);
   --overlay-04: rgba(255, 255, 255, 0.04);
