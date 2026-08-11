@@ -7,27 +7,31 @@
 
 :root {
   /* ── Barve — nevtralna lestvica ─────────────────────────────── */
-  --bg:             #0a0a0f;
-  --surface:        #131318;
-  --surface-raised: #1b1b23;
-  --border:         rgba(255, 255, 255, 0.06);
-  --border-strong:  rgba(255, 255, 255, 0.14);
+  /* Topel, skoraj črn odtenek (ne hladno-modri "SaaS" navy) —
+     občutek papirja/lesa v temi, ne zaslona. */
+  --bg:             #17130f;
+  --surface:        #1f1a14;
+  --surface-raised: #29221a;
+  --border:         rgba(255, 244, 230, 0.07);
+  --border-strong:  rgba(255, 244, 230, 0.16);
 
-  --text:           #f4f4f7;
-  --text-muted:     #a0a0ac;  /* ~6.8:1 na --bg */
-  --text-subtle:    #7c7c89;  /* ~4.6:1 na --bg — samo za drobne oznake */
+  --text:           #f6f0e6;
+  --text-muted:     #b3a696;  /* ~7.7:1 na --bg */
+  --text-subtle:    #8a7d6d;  /* ~4.6:1 na --bg — samo za drobne oznake */
 
   /* ── Barve — edini akcent ───────────────────────────────────── */
-  --accent:         #2f7bff;  /* 5.08:1 na --bg */
-  --accent-strong:  #1e63e0;  /* hover/pressed, isti odtenek, temnejši */
-  --accent-soft:    rgba(47, 123, 255, 0.12);
-  --accent-softer:  rgba(47, 123, 255, 0.06);
-  --on-accent:      #ffffff;  /* besedilo na polni akcentni podlagi */
+  /* Žgana terakota namesto tipične "AI-generirane" modre/vijolične —
+     topla, ročno izbrana barva, ne privzeta paleta ogrodja. */
+  --accent:         #c66432;  /* 4.6:1 na --bg */
+  --accent-strong:  #9c4d24;  /* hover/pressed, isti odtenek, temnejši */
+  --accent-soft:    rgba(198, 100, 50, 0.12);
+  --accent-softer:  rgba(198, 100, 50, 0.06);
+  --on-accent:      #fff8f0;  /* besedilo na polni akcentni podlagi */
 
   /* Gradient — dovoljen SAMO na primarnem gumbu in ambientnem sijaju.
      Dve postaji, isti odtenek (0° razlika), le svetlostna stopnja. */
-  --gradient-accent:  linear-gradient(135deg, #2f7bff 0%, #5b9bff 100%);
-  --gradient-ambient: radial-gradient(circle, rgba(47, 123, 255, 0.16) 0%, transparent 70%);
+  --gradient-accent:  linear-gradient(135deg, #c66432 0%, #dd8a4e 100%);
+  --gradient-ambient: radial-gradient(circle, rgba(198, 100, 50, 0.16) 0%, transparent 70%);
 
   /* Lestvica prosojnosti akcenta — 6 stopenj, izpeljanih iz ENE barve.
      Uporabljaj te namesto poljubnih rgba() vrednosti v komponentah. */
@@ -38,29 +42,29 @@
   --accent-30: color-mix(in srgb, var(--accent) 30%, transparent);
   --accent-45: color-mix(in srgb, var(--accent) 45%, transparent);
 
-  /* Svetlejši odtenek akcenta — za besedilo na temno modro tonirani
+  /* Svetlejši odtenek akcenta — za besedilo na temno toporni
      podlagi (značke), kjer bi polni --accent padel pod 4.5:1. */
-  --accent-text-on-tint: #7eb0ff; /* ~8:1 na --accent-08/-20 podlagi */
+  --accent-text-on-tint: #eea36e; /* ~7:1 na --accent-08/-20 podlagi */
 
-  /* Bele prosojnosti — samo za nevtralne prekrivke/vnosna polja */
-  --overlay-02: rgba(255, 255, 255, 0.02);
-  --overlay-04: rgba(255, 255, 255, 0.04);
-  --overlay-08: rgba(255, 255, 255, 0.08);
-  --overlay-12: rgba(255, 255, 255, 0.12);
+  /* Toplo-bele prosojnosti — samo za nevtralne prekrivke/vnosna polja */
+  --overlay-02: rgba(255, 247, 238, 0.02);
+  --overlay-04: rgba(255, 247, 238, 0.04);
+  --overlay-08: rgba(255, 247, 238, 0.08);
+  --overlay-12: rgba(255, 247, 238, 0.12);
 
   /* Temne prekrivke */
   --scrim:        color-mix(in srgb, var(--bg) 85%, transparent); /* zamegljena glava/meni */
-  --modal-scrim:  rgba(0, 0, 0, 0.70);                            /* zaslon za modalom */
-  --surface-inset:        rgba(0, 0, 0, 0.18);                    /* vdolbljeni paneli (koda, rezultati) */
-  --surface-inset-strong: rgba(0, 0, 0, 0.35);
+  --modal-scrim:  rgba(13, 9, 6, 0.72);                           /* zaslon za modalom */
+  --surface-inset:        rgba(13, 9, 6, 0.20);                   /* vdolbljeni paneli (koda, rezultati) */
+  --surface-inset-strong: rgba(13, 9, 6, 0.38);
   --white:        #ffffff;
 
   /* Nevtralna lestvica na svetlobni podlagi (uporabljena redko, npr. presledki med sekcijami) */
   --surface-wash: color-mix(in srgb, var(--surface) 55%, transparent);
 
   /* Sistemske barve stanja (obrazci, opozorila, admin značke) — niso znamka */
-  --success: #34d399;
-  --error:   #f87171;
+  --success: #8bab6f;  /* topel žajbelj namesto neonske mentol-zelene */
+  --error:   #e0544a;  /* topla, a jasno "rdeča" opozorilna barva */
   --success-04: color-mix(in srgb, var(--success) 4%, transparent);
   --success-08: color-mix(in srgb, var(--success) 8%, transparent);
   --success-12: color-mix(in srgb, var(--success) 12%, transparent);
@@ -89,8 +93,9 @@
   --admin-red-light: #fca5a5;
 
   /* ── Tipografija ─────────────────────────────────────────────── */
-  /* En sam font povsod — brez posebne naslovne pisave */
-  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Naslovna pisava z značajem (serif, ne privzeti "SaaS grotesque"),
+     ločena od telesa — pariranje daje strani rokopisni, ne predložni videz. */
+  --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-body:    'Inter', system-ui, -apple-system, sans-serif;
 
   --weight-regular:  400;
@@ -98,12 +103,12 @@
   --weight-semibold: 600;
   --weight-bold:     700;
 
-  --leading-tight:   1.1;   /* naslovi */
+  --leading-tight:   1.15;  /* naslovi */
   --leading-snug:    1.3;
   --leading-normal:  1.6;   /* telo */
   --leading-relaxed: 1.75;
 
-  --tracking-tight: -0.02em; /* naslovi */
+  --tracking-tight: -0.01em; /* naslovi — serif potrebuje manj stiskanja kot grotesque */
   --tracking-normal: 0;
   --tracking-wide:  0.06em;
   --tracking-wider: 0.12em;  /* eyebrow / label */
@@ -136,10 +141,10 @@
   --radius-lg:   20px;  /* kartice, paneli, modali */
   --radius-full: 999px; /* pilule, avatarji */
 
-  --shadow-sm:       0 2px 8px rgba(0, 0, 0, 0.24);
-  --shadow-md:       0 8px 24px rgba(0, 0, 0, 0.32);
-  --shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.40);
-  --shadow-glow:     0 0 32px rgba(47, 123, 255, 0.22);
+  --shadow-sm:       0 2px 8px rgba(13, 9, 6, 0.28);
+  --shadow-md:       0 8px 24px rgba(13, 9, 6, 0.36);
+  --shadow-elevated: 0 12px 32px rgba(13, 9, 6, 0.44);
+  --shadow-glow:     0 0 32px rgba(198, 100, 50, 0.22);
 
   /* ── Gibanje ─────────────────────────────────────────────────── */
   --ease: cubic-bezier(0.2, 0, 0, 1);

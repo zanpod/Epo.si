@@ -323,93 +323,34 @@ body::before {
 .hero-bg::before {
   content: '';
   position: absolute;
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, var(--accent-12) 0%, transparent 70%);
-  top: -200px;
-  right: -200px;
-  animation: float1 12s ease-in-out infinite;
+  width: 760px;
+  height: 760px;
+  background: radial-gradient(circle, var(--accent-08) 0%, transparent 70%);
+  top: -220px;
+  right: -220px;
+  animation: float1 22s ease-in-out infinite;
 }
 
 .hero-bg::after {
   content: '';
   position: absolute;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, var(--accent-12) 0%, transparent 70%);
-  bottom: -100px;
-  left: -100px;
-  animation: float2 15s ease-in-out infinite;
-}
-
-/* Floating shapes */
-.hero-shapes {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid var(--overlay-04);
-}
-
-.shape-1 {
-  width: 300px;
-  height: 300px;
-  top: 15%;
-  right: 10%;
-  animation: rotate 25s linear infinite;
-}
-
-.shape-2 {
-  width: 150px;
-  height: 150px;
-  top: 60%;
-  right: 25%;
-  border-color: var(--accent-08);
-  animation: rotate 18s linear infinite reverse;
-}
-
-.shape-3 {
-  width: 80px;
-  height: 80px;
-  top: 30%;
-  left: 8%;
-  border-color: var(--accent-12);
-  animation: float3 8s ease-in-out infinite;
-}
-
-.shape-4 {
-  width: 500px;
-  height: 500px;
-  bottom: -100px;
-  right: -100px;
-  border-color: var(--accent-04);
-  animation: rotate 40s linear infinite;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, var(--accent-08) 0%, transparent 70%);
+  bottom: -140px;
+  left: -140px;
+  animation: float2 26s ease-in-out infinite;
 }
 
 @keyframes float1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(-40px, 40px) scale(1.05); }
-  66%       { transform: translate(30px, -30px) scale(0.95); }
+  33%       { transform: translate(-30px, 30px) scale(1.04); }
+  66%       { transform: translate(20px, -20px) scale(0.97); }
 }
 
 @keyframes float2 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%       { transform: translate(50px, -60px) scale(1.08); }
-}
-
-@keyframes float3 {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-20px); }
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  50%       { transform: translate(35px, -40px) scale(1.05); }
 }
 
 .hero-content {
@@ -435,17 +376,10 @@ body::before {
 
 .hero-badge::before {
   content: '';
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
 }
 
 .hero-heading {
