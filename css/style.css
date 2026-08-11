@@ -387,7 +387,7 @@ body::before {
   line-height: var(--leading-tight);
   margin-bottom: var(--space-5);
   padding-bottom: 0.12em;
-  max-width: 800px;
+  max-width: 900px;
 }
 
 .hero-sub {

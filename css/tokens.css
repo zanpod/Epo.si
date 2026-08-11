@@ -94,9 +94,9 @@
   --admin-red-light: #fca5a5;
 
   /* ── Tipografija ─────────────────────────────────────────────── */
-  /* Naslovna pisava z značajem (serif, ne privzeti "SaaS grotesque"),
-     ločena od telesa — pariranje daje strani rokopisni, ne predložni videz. */
-  --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
+  /* Naslovna pisava z zaobljenimi potezami — prijazna, topla, še vedno
+     ločena od telesa (Inter), da stran ni "en font povsod". */
+  --font-heading: 'Quicksand', system-ui, -apple-system, sans-serif;
   --font-body:    'Inter', system-ui, -apple-system, sans-serif;
 
   --weight-regular:  400;
@@ -104,12 +104,12 @@
   --weight-semibold: 600;
   --weight-bold:     700;
 
-  --leading-tight:   1.15;  /* naslovi */
+  --leading-tight:   1.2;   /* naslovi — Quicksand potrebuje malo več zraka kot serif */
   --leading-snug:    1.3;
   --leading-normal:  1.6;   /* telo */
   --leading-relaxed: 1.75;
 
-  --tracking-tight: -0.01em; /* naslovi — serif potrebuje manj stiskanja kot grotesque */
+  --tracking-tight: 0em;    /* naslovi — zaobljena pisava se ne stiska kot grotesque/serif */
   --tracking-normal: 0;
   --tracking-wide:  0.06em;
   --tracking-wider: 0.12em;  /* eyebrow / label */
