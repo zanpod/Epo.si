@@ -1143,9 +1143,9 @@ function buildQuoteHtml(q) {
 
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;background:#fff;width:794px;box-sizing:border-box;padding:56px 48px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c66432;padding-bottom:20px;margin-bottom:28px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #6178dd;padding-bottom:20px;margin-bottom:28px">
       <div>
-        <div style="font-size:26px;font-weight:800;color:#c66432;letter-spacing:0.5px">${escHtml(company)}</div>
+        <div style="font-size:26px;font-weight:800;color:#6178dd;letter-spacing:0.5px">${escHtml(company)}</div>
         <div style="font-size:12px;color:#555;margin-top:8px;line-height:1.7">${agencyLines}</div>
       </div>
       <div style="text-align:right">

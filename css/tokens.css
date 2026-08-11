@@ -20,18 +20,19 @@
   --text-subtle:    #8a7d6d;  /* ~4.6:1 na --bg — samo za drobne oznake */
 
   /* ── Barve — edini akcent ───────────────────────────────────── */
-  /* Žgana terakota namesto tipične "AI-generirane" modre/vijolične —
-     topla, ročno izbrana barva, ne privzeta paleta ogrodja. */
-  --accent:         #c66432;  /* 4.6:1 na --bg */
-  --accent-strong:  #9c4d24;  /* hover/pressed, isti odtenek, temnejši */
-  --accent-soft:    rgba(198, 100, 50, 0.12);
-  --accent-softer:  rgba(198, 100, 50, 0.06);
+  /* Periwinkle-indigo + lavender iz uradnega logotipa EPO.si — znamki
+     lastna barva, ne naključna "AI" modra. Topla nevtralna lestvica
+     zgoraj (namesto hladnega SaaS navyja) jo drži na tleh. */
+  --accent:         #6178dd;  /* 4.6:1 na --bg */
+  --accent-strong:  #4a5cc0;  /* hover/pressed, isti odtenek, temnejši */
+  --accent-soft:    rgba(97, 120, 221, 0.12);
+  --accent-softer:  rgba(97, 120, 221, 0.06);
   --on-accent:      #fff8f0;  /* besedilo na polni akcentni podlagi */
 
   /* Gradient — dovoljen SAMO na primarnem gumbu in ambientnem sijaju.
-     Dve postaji, isti odtenek (0° razlika), le svetlostna stopnja. */
-  --gradient-accent:  linear-gradient(135deg, #c66432 0%, #dd8a4e 100%);
-  --gradient-ambient: radial-gradient(circle, rgba(198, 100, 50, 0.16) 0%, transparent 70%);
+     Ista dva odtenka kot v logotipu (periwinkle → lavendel). */
+  --gradient-accent:  linear-gradient(135deg, #6178dd 0%, #9b87e8 100%);
+  --gradient-ambient: radial-gradient(circle, rgba(97, 120, 221, 0.16) 0%, transparent 70%);
 
   /* Lestvica prosojnosti akcenta — 6 stopenj, izpeljanih iz ENE barve.
      Uporabljaj te namesto poljubnih rgba() vrednosti v komponentah. */
@@ -42,9 +43,10 @@
   --accent-30: color-mix(in srgb, var(--accent) 30%, transparent);
   --accent-45: color-mix(in srgb, var(--accent) 45%, transparent);
 
-  /* Svetlejši odtenek akcenta — za besedilo na temno toporni
-     podlagi (značke), kjer bi polni --accent padel pod 4.5:1. */
-  --accent-text-on-tint: #eea36e; /* ~7:1 na --accent-08/-20 podlagi */
+  /* Svetlejši, lavendel odtenek akcenta (drugi postaji v logotipu) — za
+     besedilo na temno tonirani podlagi (značke), kjer bi poln --accent
+     padel pod 4.5:1. */
+  --accent-text-on-tint: #b6a8ef; /* ~7:1 na --accent-08/-20 podlagi */
 
   /* Toplo-bele prosojnosti — samo za nevtralne prekrivke/vnosna polja */
   --overlay-02: rgba(255, 247, 238, 0.02);
@@ -144,7 +146,7 @@
   --shadow-sm:       0 2px 8px rgba(13, 9, 6, 0.28);
   --shadow-md:       0 8px 24px rgba(13, 9, 6, 0.36);
   --shadow-elevated: 0 12px 32px rgba(13, 9, 6, 0.44);
-  --shadow-glow:     0 0 32px rgba(198, 100, 50, 0.22);
+  --shadow-glow:     0 0 32px rgba(97, 120, 221, 0.22);
 
   /* ── Gibanje ─────────────────────────────────────────────────── */
   --ease: cubic-bezier(0.2, 0, 0, 1);
