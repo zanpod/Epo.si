@@ -338,19 +338,33 @@ a choice is made.
 
 ## Demo Overview (`/demo`)
 
-`https://your-site/demo` lists all sales demo e-menus created with the
-`scripts/demo/provision.js` tool that lives in the separate **`cenik`**
-repository (the multi-tenant digital menu product this agency sells). It is
+`https://your-site/demo` lists all sales demo e-menus for the **`cenik`**
+product (the multi-tenant digital menu system this agency sells) and lets you
+create new ones entirely from the browser — no terminal needed. It is
 protected by the **same login** as `/admin` (same Supabase Auth project), so
-only you can see the list of prospects; from there you copy or QR-share one
-specific client's demo link.
+only you can see the list of prospects; from there you create, copy/QR-share,
+or delete one specific client's demo.
 
-Because the demo tenants live in `cenik`'s own Supabase project (not this
-site's database), `js/demo.js` connects to it directly with its **public
-anon key** — the same key `cenik` already exposes client-side to render the
-menu for guests, so this adds no new secret. Defaults are hard-coded in
-`js/demo.js`; override them without editing code via (e.g. Netlify snippet
-injection):
+- **"+ Nov demo"** opens a form (name, colors, logo, table count, and a
+  dynamic categories/items builder) and POSTs it to the `provision-demo` Edge
+  Function in the `cenik` Supabase project, which does the actual writes with
+  its service-role key.
+- **"🗑 Izbriši"** on a card calls the `delete-demo` Edge Function the same
+  way.
+- Both functions live in `cenik`'s repo (`supabase/functions/provision-demo`
+  and `delete-demo`) and are deployed once via the Supabase Dashboard's
+  "Deploy a new function" (paste-and-deploy, no CLI) — see the comment at the
+  top of each file. They authorize the caller by checking the request's
+  EPO.SI session token directly against *this* project's Auth (cross-project
+  check), since the two systems use separate Supabase projects.
+- Reading the list itself (`js/demo.js`) connects to `cenik`'s Supabase
+  project directly with its **public anon key** — the same key `cenik`
+  already exposes client-side to render the menu for guests, so this adds no
+  new secret. A local Node CLI (`scripts/demo/provision.js` in `cenik`) also
+  still exists as an alternative for anyone who prefers a terminal.
+
+Defaults are hard-coded in `js/demo.js`; override them without editing code
+via (e.g. Netlify snippet injection):
 
 ```js
 window.EPO_DEMO_SUPABASE_URL = 'https://xxxxxxxxxxxx.supabase.co';

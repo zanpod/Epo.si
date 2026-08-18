@@ -3342,3 +3342,45 @@ body.has-chat-fab {
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
 }
+
+/* Nov demo — obrazec za kategorije/izdelke */
+.cat-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.cat-builder-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  background: var(--overlay-02);
+}
+
+.cat-builder-head {
+  display: grid;
+  grid-template-columns: 1fr 70px 40px;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.item-builder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.item-builder-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 40px;
+  gap: 0.5rem;
+}
+
+.cat-builder-row .form-input,
+.item-builder-row .form-input {
+  min-height: 38px;
+  padding: 0.5rem 0.7rem;
+  font-size: var(--text-sm);
+}

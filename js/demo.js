@@ -21,6 +21,12 @@ const DEMO_APP_DOMAIN = (window.EPO_DEMO_APP_DOMAIN || 'https://agencijaepo.si')
 
 const demoClient = window.supabase.createClient(DEMO_SUPABASE_URL, DEMO_SUPABASE_ANON_KEY);
 
+// Edge Functions (cenik projekt) — glej supabase/functions/provision-demo in
+// delete-demo v repozitoriju cenik. Pišejo v bazo s service role, mimo RLS;
+// avtorizirajo klicatelja proti TEJ (epo.si) prijavi prek X-Epo-Auth glave.
+const PROVISION_URL = `${DEMO_SUPABASE_URL}/functions/v1/provision-demo`;
+const DELETE_URL = `${DEMO_SUPABASE_URL}/functions/v1/delete-demo`;
+
 let demoTenants = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -162,9 +168,14 @@ function renderGrid(list) {
             <button class="btn btn-sm btn-ghost" data-copy="${escHtml(link)}">📋 Kopiraj</button>
             <a class="btn btn-sm btn-ghost" href="${escHtml(link)}" target="_blank" rel="noopener">Odpri ↗</a>
             <button class="btn btn-sm btn-ghost" data-qr="${escHtml(t.slug)}">▦ QR</button>
+            <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
           </div>
           <div class="demo-qr-wrap hidden" id="qr-${escHtml(t.slug)}"></div>
-        ` : `<div class="demo-card-meta" style="color:var(--error)">Ni miz — poženite provision.js znova.</div>`}
+        ` : `
+          <div class="demo-card-meta" style="color:var(--error)">Ni miz.</div>
+          <div class="demo-card-actions">
+            <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
+          </div>`}
       </div>`;
   }).join('');
 
@@ -174,6 +185,40 @@ function renderGrid(list) {
   grid.querySelectorAll('[data-qr]').forEach((btn) => {
     btn.addEventListener('click', () => toggleQr(btn.dataset.qr));
   });
+  grid.querySelectorAll('[data-delete]').forEach((btn) => {
+    btn.addEventListener('click', () => deleteDemo(btn.dataset.delete, btn));
+  });
+}
+
+// ── Brisanje demota ──────────────────────────────────────────────
+async function deleteDemo(slug, btn) {
+  const tenant = demoTenants.find((t) => t.slug === slug);
+  if (!confirm(`Izbrišem demo "${tenant?.name || slug}" in VSE njegove podatke (kategorije, izdelki, mize, naročila)? Tega ni mogoče razveljaviti.`)) {
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Brišem…';
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const res = await fetch(DELETE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEMO_SUPABASE_ANON_KEY}`,
+        'apikey': DEMO_SUPABASE_ANON_KEY,
+        'X-Epo-Auth': session?.access_token || '',
+      },
+      body: JSON.stringify({ slug }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Napaka (${res.status})`);
+    toast(`Demo "${result.name}" izbrisan.`, 'success');
+    loadDemos();
+  } catch (err) {
+    toast(`Napaka pri brisanju: ${err.message}`, 'error');
+    btn.disabled = false;
+    btn.textContent = '🗑 Izbriši';
+  }
 }
 
 async function copyLink(link, btn) {
@@ -243,3 +288,121 @@ function toast(msg, type = 'success') {
   container.appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
+
+// ── Modal: Nov demo ──────────────────────────────────────────────
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach((overlay) => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+
+document.getElementById('newDemoBtn')?.addEventListener('click', () => {
+  document.getElementById('demoForm').reset();
+  document.getElementById('catBuilder').innerHTML = '';
+  document.getElementById('demoFormError').classList.remove('show');
+  addCategoryRow();
+  openModal('demoModal');
+});
+document.getElementById('demoModalClose')?.addEventListener('click', () => closeModal('demoModal'));
+
+// ── Obrazec: kategorije/izdelki (DOM je vir resnice) ──────────────
+function addCategoryRow() {
+  const wrap = document.createElement('div');
+  wrap.className = 'cat-builder-row';
+  wrap.innerHTML = `
+    <div class="cat-builder-head">
+      <input class="form-input cat-name" placeholder="Ime kategorije (npr. Tople pijače)">
+      <input class="form-input cat-icon" placeholder="☕" maxlength="8">
+      <button type="button" class="btn btn-sm btn-danger" data-remove-cat aria-label="Odstrani kategorijo">🗑</button>
+    </div>
+    <div class="item-builder-list"></div>
+    <button type="button" class="btn btn-ghost btn-sm" data-add-item>＋ Dodaj izdelek</button>`;
+  document.getElementById('catBuilder').appendChild(wrap);
+  wrap.querySelector('[data-remove-cat]').addEventListener('click', () => wrap.remove());
+  wrap.querySelector('[data-add-item]').addEventListener('click', () => addItemRow(wrap));
+  addItemRow(wrap);
+}
+
+function addItemRow(catWrap) {
+  const row = document.createElement('div');
+  row.className = 'item-builder-row';
+  row.innerHTML = `
+    <input class="form-input item-name" placeholder="Ime izdelka (npr. Cappuccino)">
+    <input class="form-input item-price" type="number" step="0.01" min="0" placeholder="Cena €">
+    <button type="button" class="btn btn-sm btn-danger" data-remove-item aria-label="Odstrani izdelek">✕</button>`;
+  catWrap.querySelector('.item-builder-list').appendChild(row);
+  row.querySelector('[data-remove-item]').addEventListener('click', () => row.remove());
+}
+
+document.getElementById('addCatBtn')?.addEventListener('click', addCategoryRow);
+
+function readFormCategories() {
+  return Array.from(document.querySelectorAll('.cat-builder-row')).map((wrap) => {
+    const name = wrap.querySelector('.cat-name').value.trim();
+    const icon = wrap.querySelector('.cat-icon').value.trim();
+    const items = Array.from(wrap.querySelectorAll('.item-builder-row'))
+      .map((row) => ({
+        name: row.querySelector('.item-name').value.trim(),
+        price: parseFloat(row.querySelector('.item-price').value),
+      }))
+      .filter((it) => it.name && !isNaN(it.price));
+    return { name, icon, items };
+  }).filter((c) => c.name);
+}
+
+// ── Oddaja obrazca → provision-demo Edge Function ─────────────────
+document.getElementById('demoForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('demoFormSubmit');
+  const errBox = document.getElementById('demoFormError');
+  errBox.classList.remove('show');
+
+  const payload = {
+    slug: document.getElementById('fSlug').value.trim(),
+    name: document.getElementById('fName').value.trim(),
+    primary_color: document.getElementById('fPrimary').value,
+    secondary_color: document.getElementById('fSecondary').value,
+    logo_url: document.getElementById('fLogo').value.trim(),
+    tables: parseInt(document.getElementById('fTables').value, 10) || 4,
+    categories: readFormCategories(),
+  };
+
+  if (!payload.slug || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload.slug)) {
+    errBox.textContent = 'Slug sme vsebovati le male črke, številke in vezaje (npr. "kavarna-vahtnca").';
+    errBox.classList.add('show');
+    return;
+  }
+
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Ustvarjam…';
+
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const res = await fetch(PROVISION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEMO_SUPABASE_ANON_KEY}`,
+        'apikey': DEMO_SUPABASE_ANON_KEY,
+        'X-Epo-Auth': session?.access_token || '',
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Napaka (${res.status})`);
+
+    closeModal('demoModal');
+    toast(`Demo "${payload.name}" pripravljen.`, 'success');
+    loadDemos();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+});

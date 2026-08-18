@@ -60,6 +60,7 @@
     <h1 class="demo-topbar-title">📋 Demo lokali</h1>
     <input class="form-input demo-search" id="demoSearch" type="search" placeholder="Išči po imenu ali slug-u…">
     <button class="btn btn-ghost btn-sm" id="refreshBtn" type="button">↻ Osveži</button>
+    <button class="btn btn-primary btn-sm" id="newDemoBtn" type="button">＋ Nov demo</button>
     <a href="/admin" class="btn btn-ghost btn-sm">Admin ↗</a>
     <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Odjava</button>
   </header>
@@ -80,6 +81,65 @@
 
     <div id="demoGrid" class="demo-grid"></div>
   </main>
+</div>
+
+<!-- ================================================================
+     MODAL: Nov demo
+     ================================================================ -->
+<div class="modal-overlay" id="demoModal" role="dialog" aria-modal="true" aria-labelledby="demoModalTitle">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2 class="modal-title" id="demoModalTitle">Nov demo lokal</h2>
+      <button class="modal-close" id="demoModalClose" type="button" aria-label="Zapri">✕</button>
+    </div>
+
+    <form id="demoForm" novalidate>
+      <div class="login-error" id="demoFormError"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fName">Ime lokala *</label>
+          <input class="form-input" id="fName" placeholder="Kavarna VAHTNCA" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fSlug">Slug (v povezavi) *</label>
+          <input class="form-input" id="fSlug" placeholder="kavarna-vahtnca" pattern="[a-z0-9]+(-[a-z0-9]+)*" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fPrimary">Primarna barva</label>
+          <input class="form-input" id="fPrimary" type="color" value="#6B3FA0">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fSecondary">Sekundarna barva</label>
+          <input class="form-input" id="fSecondary" type="color" value="#2E4A8B">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fLogo">Logo URL (neobvezno)</label>
+          <input class="form-input" id="fLogo" type="url" placeholder="https://…">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fTables">Število miz</label>
+          <input class="form-input" id="fTables" type="number" min="1" max="50" value="4">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Kategorije in izdelki</label>
+        <div id="catBuilder" class="cat-builder"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="addCatBtn">＋ Dodaj kategorijo</button>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="demoFormSubmit" style="width:100%;justify-content:center;margin-top:1rem">
+        Ustvari demo
+      </button>
+    </form>
+  </div>
 </div>
 
 <script src="/js/supabase-config.js"></script>
