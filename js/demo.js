@@ -17,7 +17,7 @@
 
 const DEMO_SUPABASE_URL = window.EPO_DEMO_SUPABASE_URL || 'https://mctepmjamozqlihbpmrs.supabase.co';
 const DEMO_SUPABASE_ANON_KEY = window.EPO_DEMO_SUPABASE_ANON_KEY || 'sb_publishable_PQQcL8a12OPY6_Zxgk3fJg_ULsSwJvZ';
-const DEMO_APP_DOMAIN = (window.EPO_DEMO_APP_DOMAIN || 'https://agencijaepo.si').replace(/\/+$/, '');
+const DEMO_APP_DOMAIN = (window.EPO_DEMO_APP_DOMAIN || 'https://demo.agencijaepo.si').replace(/\/+$/, '');
 
 const demoClient = window.supabase.createClient(DEMO_SUPABASE_URL, DEMO_SUPABASE_ANON_KEY);
 

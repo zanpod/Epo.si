@@ -369,15 +369,18 @@ via (e.g. Netlify snippet injection):
 ```js
 window.EPO_DEMO_SUPABASE_URL = 'https://xxxxxxxxxxxx.supabase.co';
 window.EPO_DEMO_SUPABASE_ANON_KEY = 'sb_publishable_...';
-window.EPO_DEMO_APP_DOMAIN = 'https://agencijaepo.si'; // where /menu/<slug> actually resolves
+window.EPO_DEMO_APP_DOMAIN = 'https://demo.agencijaepo.si'; // where /menu/<slug> actually resolves
 ```
 
-> **Caveat:** this repo currently has no `netlify.toml` / `_redirects` for a
-> `/menu/*` route. If `agencijaepo.si/menu/<slug>` is meant to be served by
-> the separate `cenik` site under the same domain, confirm that proxy/DNS
-> setup exists (e.g. a Netlify redirect to the `cenik` site, or a domain
-> alias) — otherwise the links this page generates will 404 until that's
-> wired up.
+> **Domain setup:** `cenik` is a separate Netlify site from this one (two
+> different repos/deploys), so `agencijaepo.si` itself cannot serve
+> `/menu/*` — it has no route for it. Guest-facing demo links resolve on
+> **`demo.agencijaepo.si`** instead: a custom domain added to the `cenik`
+> Netlify site (Domain settings → Add a domain, then a CNAME record at the
+> DNS provider for `agencijaepo.si`) — see the "Netlify" section of
+> `cenik`'s own README for exact steps. `js/demo.js`'s `DEMO_APP_DOMAIN`
+> default already points at `demo.agencijaepo.si`; only override it if you
+> pick a different subdomain.
 
 ---
 
