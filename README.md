@@ -336,6 +336,37 @@ a choice is made.
 
 ---
 
+## Demo Overview (`/demo`)
+
+`https://your-site/demo` lists all sales demo e-menus created with the
+`scripts/demo/provision.js` tool that lives in the separate **`cenik`**
+repository (the multi-tenant digital menu product this agency sells). It is
+protected by the **same login** as `/admin` (same Supabase Auth project), so
+only you can see the list of prospects; from there you copy or QR-share one
+specific client's demo link.
+
+Because the demo tenants live in `cenik`'s own Supabase project (not this
+site's database), `js/demo.js` connects to it directly with its **public
+anon key** — the same key `cenik` already exposes client-side to render the
+menu for guests, so this adds no new secret. Defaults are hard-coded in
+`js/demo.js`; override them without editing code via (e.g. Netlify snippet
+injection):
+
+```js
+window.EPO_DEMO_SUPABASE_URL = 'https://xxxxxxxxxxxx.supabase.co';
+window.EPO_DEMO_SUPABASE_ANON_KEY = 'sb_publishable_...';
+window.EPO_DEMO_APP_DOMAIN = 'https://agencijaepo.si'; // where /menu/<slug> actually resolves
+```
+
+> **Caveat:** this repo currently has no `netlify.toml` / `_redirects` for a
+> `/menu/*` route. If `agencijaepo.si/menu/<slug>` is meant to be served by
+> the separate `cenik` site under the same domain, confirm that proxy/DNS
+> setup exists (e.g. a Netlify redirect to the `cenik` site, or a domain
+> alias) — otherwise the links this page generates will 404 until that's
+> wired up.
+
+---
+
 ## Customisation Tips
 
 | What to change | Where |

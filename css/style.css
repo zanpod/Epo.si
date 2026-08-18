@@ -3197,3 +3197,148 @@ body.has-chat-fab {
   .admin-blog-item { flex-wrap: wrap; }
   .admin-blog-actions { flex: 1 0 100%; justify-content: flex-end; }
 }
+
+/* ================================================================
+   DEMO OVERVIEW (/demo) — pregled demo lokalov (cenik sistem)
+   ================================================================ */
+.demo-topbar {
+  min-height: 64px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 1rem 2rem;
+  gap: 1rem;
+  background: var(--scrim);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.demo-topbar-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
+}
+
+.demo-search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 360px;
+}
+
+.demo-content {
+  padding: 2rem;
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+.demo-intro {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  max-width: 720px;
+  margin-bottom: 1.75rem;
+}
+.demo-intro code {
+  background: var(--overlay-08);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.demo-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  padding: 2rem 0;
+}
+
+.demo-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+.demo-empty-sub { font-size: var(--text-sm); color: var(--text-subtle); margin-top: 0.5rem; }
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.demo-card {
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.demo-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.demo-card-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.demo-card-logo-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-accent);
+  font-weight: var(--weight-bold);
+  font-family: var(--font-heading);
+}
+
+.demo-card-name {
+  font-weight: var(--weight-bold);
+  font-size: var(--text-md);
+  line-height: 1.25;
+}
+
+.demo-card-slug {
+  color: var(--text-subtle);
+  font-size: var(--text-xs);
+}
+
+.demo-card-meta {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.demo-card-link {
+  color: var(--text-subtle);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--overlay-04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+}
+
+.demo-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.demo-qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
