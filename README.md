@@ -338,38 +338,53 @@ a choice is made.
 
 ## Demo Overview (`/demo`)
 
-`https://your-site/demo` lists all sales demo e-menus for the **`cenik`**
-product (the multi-tenant digital menu system this agency sells) and lets you
-create new ones entirely from the browser — no terminal needed. It is
-protected by the **same login** as `/admin` (same Supabase Auth project), so
-only you can see the list of prospects; from there you create, copy/QR-share,
-or delete one specific client's demo.
+`https://your-site/demo` is **public** (no login) and lists all sales demo
+e-menus for the **`cenik`** product (the multi-tenant digital menu system
+this agency sells). Logging in on the *same page* (same Supabase Auth
+project as `/admin`) additionally unlocks admin controls — it's one page
+with two modes, not two separate pages.
 
-- **"+ Nov demo"** opens a form (name, colors, logo, table count, and a
-  dynamic categories/items builder) and POSTs it to the `provision-demo` Edge
-  Function in the `cenik` Supabase project, which does the actual writes with
-  its service-role key — including creating a **demo admin account**
-  (`<slug>@demo.agencijaepo.si` + a generated password) so the prospect can
-  log into the full admin panel (tables/QR, live orders, menu editing,
-  settings), not just browse the guest menu. The password is shown **once**,
-  in a follow-up modal with a "copy for the client" button — Supabase doesn't
-  store it recoverably.
-- **"🔑 Ponastavi geslo"** on a card calls `reset-demo-password` to issue a
-  new one (e.g. if you lost it, or are reusing the demo for a new prospect).
-- **"🗑 Izbriši"** on a card calls `delete-demo`, which also removes that
-  demo's admin account.
-- All three functions live in `cenik`'s repo
-  (`supabase/functions/provision-demo`, `delete-demo`,
-  `reset-demo-password`) and are deployed once via the Supabase Dashboard's
-  "Deploy a new function" (paste-and-deploy, no CLI) — see the comment at the
-  top of each file. They authorize the caller by checking the request's
-  EPO.SI session token directly against *this* project's Auth (cross-project
-  check), since the two systems use separate Supabase projects.
-- Reading the list itself (`js/demo.js`) connects to `cenik`'s Supabase
-  project directly with its **public anon key** — the same key `cenik`
-  already exposes client-side to render the menu for guests, so this adds no
-  new secret. A local Node CLI (`scripts/demo/provision.js` in `cenik`) also
-  still exists as an alternative for anyone who prefers a terminal.
+**Public mode (default, no login):**
+- Browse existing demos, open/copy/QR their guest menu link.
+- **"+ Nov demo"** opens the creation form — name, colors, logo, table
+  count, a dynamic categories/items builder, and a **required email**. On
+  submit it POSTs to the `provision-demo` Edge Function in the `cenik`
+  Supabase project (with the service-role key it does the actual writes),
+  which creates a **demo admin account** (`<slug>@demo.agencijaepo.si` + a
+  generated password) so the prospect can log into the full admin panel
+  (tables/QR, live orders, menu editing, settings), not just browse the
+  guest menu — and **emails** the link + admin credentials to the address
+  they gave (via Resend). The password is never returned to the browser in
+  this mode; email is the only way to receive it. A simple rate limit
+  (`demo_signup_log`, migration `011`) caps attempts per email/IP.
+
+**Admin mode (after logging in on this page):**
+- Cards additionally show the demo's admin email, an "🔐 Admin ↗" login
+  link, "🔑 Ponastavi geslo" (calls `reset-demo-password`), and "🗑 Izbriši"
+  (calls `delete-demo`, which also removes the admin account).
+  Both require a valid EPO.SI session — enforced server-side, not just
+  hidden client-side.
+- **"+ Nov demo"** still works the same way, but email becomes optional and
+  the generated password is *also* shown on screen in a "copy for the
+  client" modal (in addition to being emailed, if you filled in an
+  address) — handy when you're preparing a demo yourself before pitching it.
+
+All three functions live in `cenik`'s repo
+(`supabase/functions/provision-demo`, `delete-demo`, `reset-demo-password`)
+and are deployed once via the Supabase Dashboard's "Deploy a new function"
+(paste-and-deploy, no CLI) — see the comment at the top of each file.
+`delete-demo`/`reset-demo-password` always require a valid EPO.SI session
+token (sent as `X-Epo-Auth`, checked directly against *this* project's Auth
+— cross-project, since the two systems use separate Supabase projects).
+`provision-demo` accepts that same header but doesn't require it — without
+it, it runs in the stricter public/email-only mode described above.
+
+Reading the list itself (`js/demo.js`) connects to `cenik`'s Supabase
+project directly with its **public anon key** — the same key `cenik`
+already exposes client-side to render the menu for guests, so this adds no
+new secret. A local Node CLI (`scripts/demo/provision.js` in `cenik`) also
+still exists as an alternative for anyone who prefers a terminal (creates
+the menu only, no admin account, no email).
 
 Defaults are hard-coded in `js/demo.js`; override them without editing code
 via (e.g. Netlify snippet injection):

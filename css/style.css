@@ -66,6 +66,8 @@ body::before {
   color: var(--accent);
 }
 
+.hidden { display: none !important; }
+
 .glass {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3383,4 +3385,10 @@ body.has-chat-fab {
   min-height: 38px;
   padding: 0.5rem 0.7rem;
   font-size: var(--text-sm);
+}
+
+.demo-field-hint {
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+  margin-top: 0.3rem;
 }

@@ -1,14 +1,17 @@
 // ================================================================
-// demo.js — /demo: pregled demo lokalov (cenik sistem)
+// demo.js — /demo: javni pregled demo lokalov (cenik sistem)
 // ----------------------------------------------------------------------------
-// Zaščiteno z isto Supabase Auth prijavo kot /admin (supabaseClient iz
-// supabase-config.js, epo.si projekt). Podatki o demo lokalih pa NE živijo v
-// epo.si bazi, ampak v LOČENEM Supabase projektu, ki ga uporablja "cenik"
-// sistem (glej repozitorij zanpod/cenik). Zato tu ustvarimo drug,
-// samostojen Supabase klient z JAVNIM (anon) ključem tistega projekta — enak
-// ključ, kot ga cenik sam uporablja v svojem js/supabase-config.js za
-// prikaz menija gostom. RLS na tenants dovoljuje javno branje aktivnih
-// lokalov, zato to ni nov varnostni izpostavljen podatek.
+// Stran je JAVNA — brez prijave vidite in ustvarjate demote (za ustvarjanje
+// je obvezen e-mail, na katerega gre dostop). Neobvezna prijava (isti
+// Supabase Auth kot /admin, supabaseClient iz supabase-config.js) odklene
+// skrbniške možnosti: geslo tudi na zaslonu, ponastavitev, brisanje.
+//
+// Podatki o demo lokalih NE živijo v epo.si bazi, ampak v LOČENEM Supabase
+// projektu, ki ga uporablja "cenik" sistem (repozitorij zanpod/cenik). Zato
+// tu ustvarimo drug, samostojen Supabase klient z JAVNIM (anon) ključem
+// tistega projekta — enak ključ, kot ga cenik sam uporablja v svojem
+// js/supabase-config.js za prikaz menija gostom. RLS na tenants dovoljuje
+// javno branje aktivnih lokalov, zato to ni nov varnostni izpostavljen podatek.
 //
 // Vrednosti lahko po potrebi preglasite (npr. Netlify snippet injection):
 //   window.EPO_DEMO_SUPABASE_URL, window.EPO_DEMO_SUPABASE_ANON_KEY,
@@ -21,16 +24,20 @@ const DEMO_APP_DOMAIN = (window.EPO_DEMO_APP_DOMAIN || 'https://demo.agencijaepo
 
 const demoClient = window.supabase.createClient(DEMO_SUPABASE_URL, DEMO_SUPABASE_ANON_KEY);
 
-// Edge Functions (cenik projekt) — glej supabase/functions/provision-demo in
-// delete-demo v repozitoriju cenik. Pišejo v bazo s service role, mimo RLS;
-// avtorizirajo klicatelja proti TEJ (epo.si) prijavi prek X-Epo-Auth glave.
+// Edge Functions (cenik projekt) — glej supabase/functions/{provision,delete,reset-demo-password}
+// v repozitoriju cenik. provision-demo deluje tudi brez prijave (javno
+// samopostrežno ustvarjanje); delete-demo in reset-demo-password zahtevata
+// veljavno EPO.SI prijavo (X-Epo-Auth). Ta glava nosi TA (epo.si) sejni
+// žeton, ker ga cenik-ove funkcije preverjajo neposredno proti epo.si
+// projektu (drug Supabase projekt).
 const PROVISION_URL = `${DEMO_SUPABASE_URL}/functions/v1/provision-demo`;
 const DELETE_URL = `${DEMO_SUPABASE_URL}/functions/v1/delete-demo`;
 const RESET_PASSWORD_URL = `${DEMO_SUPABASE_URL}/functions/v1/reset-demo-password`;
 
-// Klic ene od Edge Functions zgoraj: nosi TA (epo.si) sejni žeton v
-// X-Epo-Auth, ker ga cenik-ove funkcije preverjajo proti epo.si projektu
-// (glej komentar na vrhu provision-demo/index.ts).
+let demoTenants = [];
+let isAdmin = false;
+let currentFilter = '';
+
 async function callDemoFunction(url, payload) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   const res = await fetch(url, {
@@ -48,40 +55,45 @@ async function callDemoFunction(url, payload) {
   return result;
 }
 
-let demoTenants = [];
-
 document.addEventListener('DOMContentLoaded', () => {
+  loadDemos();
   checkAuth();
 });
 
-// ── Auth (enako kot /admin) ────────────────────────────────────
+// ── Auth (neobvezna — samo odklene skrbniške možnosti) ────────────
 async function checkAuth() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
-    showDemoPage();
-  } else {
-    showLogin();
-  }
+  setAdminMode(!!session);
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
-    if (session) {
-      showDemoPage();
-    } else {
-      showLogin();
-    }
+    setAdminMode(!!session);
   });
 }
 
-function showLogin() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('demoPage').style.display = 'none';
+function setAdminMode(on) {
+  isAdmin = on;
+  document.getElementById('loginBtn')?.classList.toggle('hidden', on);
+  document.getElementById('logoutBtn')?.classList.toggle('hidden', !on);
+  document.getElementById('adminLink')?.classList.toggle('hidden', !on);
+  document.getElementById('demoIntroPublic')?.classList.toggle('hidden', on);
+  document.getElementById('demoIntroAdmin')?.classList.toggle('hidden', !on);
+
+  const emailInput = document.getElementById('fEmail');
+  const emailLabel = document.getElementById('fEmailLabel');
+  const emailHint = document.getElementById('fEmailHint');
+  if (emailInput) emailInput.required = !on;
+  if (emailLabel) emailLabel.textContent = on ? 'E-poštni naslov (neobvezno)' : 'Vaš e-poštni naslov *';
+  if (emailHint) {
+    emailHint.textContent = on
+      ? 'Neobvezno — če ga vpišete, gre obvestilo tudi neposredno stranki.'
+      : 'Nanj vam pošljemo povezavo in admin dostop do demota.';
+  }
+
+  applyFilterAndRender();
 }
 
-function showDemoPage() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('demoPage').style.display = 'block';
-  loadDemos();
-}
+document.getElementById('loginBtn')?.addEventListener('click', () => openModal('loginModal'));
+document.getElementById('loginModalClose')?.addEventListener('click', () => closeModal('loginModal'));
 
 document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -96,19 +108,25 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
 
   const { error: authError } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
 
+  btn.disabled = false;
+  btn.textContent = 'Prijava';
+
   if (authError) {
     error.textContent = authError.message;
     error.classList.add('show');
-    btn.disabled = false;
-    btn.textContent = 'Prijava';
+  } else {
+    closeModal('loginModal');
+    document.getElementById('loginForm').reset();
+    toast('Prijavljeni ste kot skrbnik.', 'success');
   }
 });
 
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
+  toast('Odjavljeni ste.', 'success');
 });
 
-// ── Nalaganje demo lokalov ──────────────────────────────────────
+// ── Nalaganje demo lokalov (javno, brez prijave) ──────────────────
 async function loadDemos() {
   const loading = document.getElementById('demoLoading');
   const errorBox = document.getElementById('demoError');
@@ -131,17 +149,21 @@ async function loadDemos() {
   }
 
   demoTenants = data || [];
-  renderGrid(demoTenants);
+  applyFilterAndRender();
 }
 
 document.getElementById('refreshBtn')?.addEventListener('click', loadDemos);
 document.getElementById('demoSearch')?.addEventListener('input', (e) => {
-  const q = e.target.value.trim().toLowerCase();
-  const filtered = !q
-    ? demoTenants
-    : demoTenants.filter((t) => t.name.toLowerCase().includes(q) || t.slug.toLowerCase().includes(q));
-  renderGrid(filtered);
+  currentFilter = e.target.value.trim().toLowerCase();
+  applyFilterAndRender();
 });
+
+function applyFilterAndRender() {
+  const list = !currentFilter
+    ? demoTenants
+    : demoTenants.filter((t) => t.name.toLowerCase().includes(currentFilter) || t.slug.toLowerCase().includes(currentFilter));
+  renderGrid(list);
+}
 
 // ── Izris mreže kartic ──────────────────────────────────────────
 function mainTable(tenant) {
@@ -160,10 +182,10 @@ function renderGrid(list) {
 
   if (!list.length) {
     grid.innerHTML = '';
-    empty.style.display = 'block';
+    empty.classList.remove('hidden');
     return;
   }
-  empty.style.display = 'none';
+  empty.classList.add('hidden');
 
   grid.innerHTML = list.map((t) => {
     const table = mainTable(t);
@@ -172,6 +194,14 @@ function renderGrid(list) {
     const logo = t.logo_url
       ? `<img class="demo-card-logo" src="${escHtml(t.logo_url)}" alt="">`
       : `<span class="demo-card-logo demo-card-logo-dot" style="background:${escHtml(t.primary_color || '#4a7fe0')}">${escHtml((t.name || '?').charAt(0).toUpperCase())}</span>`;
+
+    const adminBlock = isAdmin ? `
+      <div class="demo-card-meta">Admin: ${escHtml(t.slug)}@demo.agencijaepo.si</div>
+      <div class="demo-card-actions">
+        <a class="btn btn-sm btn-ghost" href="${DEMO_APP_DOMAIN}/admin" target="_blank" rel="noopener">🔐 Admin ↗</a>
+        <button class="btn btn-sm btn-ghost" data-reset="${escHtml(t.slug)}">🔑 Ponastavi geslo</button>
+        <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
+      </div>` : '';
 
     return `
       <div class="demo-card glass" data-slug="${escHtml(t.slug)}">
@@ -192,12 +222,7 @@ function renderGrid(list) {
           </div>
           <div class="demo-qr-wrap hidden" id="qr-${escHtml(t.slug)}"></div>
         ` : `<div class="demo-card-meta" style="color:var(--error)">Ni miz.</div>`}
-        <div class="demo-card-meta">Admin: ${escHtml(t.slug)}@demo.agencijaepo.si</div>
-        <div class="demo-card-actions">
-          <a class="btn btn-sm btn-ghost" href="${DEMO_APP_DOMAIN}/admin" target="_blank" rel="noopener">🔐 Admin ↗</a>
-          <button class="btn btn-sm btn-ghost" data-reset="${escHtml(t.slug)}">🔑 Ponastavi geslo</button>
-          <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
-        </div>
+        ${adminBlock}
       </div>`;
   }).join('');
 
@@ -215,7 +240,7 @@ function renderGrid(list) {
   });
 }
 
-// ── Brisanje demota ──────────────────────────────────────────────
+// ── Brisanje demota (samo skrbniško — funkcija to tudi preveri) ──
 async function deleteDemo(slug, btn) {
   const tenant = demoTenants.find((t) => t.slug === slug);
   if (!confirm(`Izbrišem demo "${tenant?.name || slug}" in VSE njegove podatke (kategorije, izdelki, mize, naročila)? Tega ni mogoče razveljaviti.`)) {
@@ -234,7 +259,7 @@ async function deleteDemo(slug, btn) {
   }
 }
 
-// ── Ponastavitev admin gesla ─────────────────────────────────────
+// ── Ponastavitev admin gesla (samo skrbniško) ─────────────────────
 async function resetPassword(slug, btn) {
   const tenant = demoTenants.find((t) => t.slug === slug);
   if (!confirm(`Ponastavim admin geslo za "${tenant?.name || slug}"? Staro geslo bo prenehalo delovati.`)) return;
@@ -395,6 +420,7 @@ document.getElementById('demoForm')?.addEventListener('submit', async (e) => {
   errBox.classList.remove('show');
 
   const payload = {
+    email: document.getElementById('fEmail').value.trim(),
     slug: document.getElementById('fSlug').value.trim(),
     name: document.getElementById('fName').value.trim(),
     primary_color: document.getElementById('fPrimary').value,
@@ -409,6 +435,11 @@ document.getElementById('demoForm')?.addEventListener('submit', async (e) => {
     errBox.classList.add('show');
     return;
   }
+  if (!isAdmin && !payload.email) {
+    errBox.textContent = 'Vnesite e-poštni naslov — nanj bomo poslali dostop do demota.';
+    errBox.classList.add('show');
+    return;
+  }
 
   const origText = btn.textContent;
   btn.disabled = true;
@@ -418,16 +449,22 @@ document.getElementById('demoForm')?.addEventListener('submit', async (e) => {
     const result = await callDemoFunction(PROVISION_URL, payload);
 
     closeModal('demoModal');
-    toast(`Demo "${payload.name}" pripravljen.`, 'success');
     loadDemos();
 
     const table = (result.tables || [])[0];
-    showCreds({
-      demoName: payload.name,
-      link: table ? menuUrl(result.tenant, table) : null,
-      email: result.admin_email,
-      password: result.admin_password,
-    });
+    if (result.admin_password) {
+      toast(`Demo "${payload.name}" pripravljen.`, 'success');
+      showCreds({
+        demoName: payload.name,
+        link: table ? menuUrl(result.tenant, table) : null,
+        email: result.admin_email,
+        password: result.admin_password,
+      });
+    } else if (result.emailed) {
+      toast(`Demo "${payload.name}" pripravljen — preverite e-pošto (${payload.email}) za dostop.`, 'success');
+    } else {
+      toast(`Demo "${payload.name}" posodobljen.`, 'success');
+    }
   } catch (err) {
     errBox.textContent = err.message;
     errBox.classList.add('show');
@@ -437,7 +474,7 @@ document.getElementById('demoForm')?.addEventListener('submit', async (e) => {
   }
 });
 
-// ── Modal: Podatki za stranko (povezava + admin dostop) ───────────
+// ── Modal: Podatki za stranko (samo skrbniško) ────────────────────
 function showCreds({ demoName, link, email, password }) {
   const clipboardText = [
     `Demo: ${demoName}`,

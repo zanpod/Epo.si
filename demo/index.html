@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Demo lokali — EPO.SI</title>
+  <title>Demo — EPO.SI</title>
   <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Preizkusite EPO.SI — digitalni meni in naročanje za mizo. Ustvarite si lasten demo v nekaj minutah.">
 
   <!-- Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +14,7 @@
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/style.css">
 
-  <!-- Supabase (epo.si auth) + QRCode.js (za QR predogled/prenos) -->
+  <!-- Supabase (epo.si auth, neobvezna prijava skrbnika) + QRCode.js (QR predogled/prenos) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -23,64 +24,70 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ================================================================
-     PRIJAVNI ZASLON (ista prijava kot /admin)
+     SEZNAM DEMO LOKALOV — javno vidno, prijava ni potrebna
      ================================================================ -->
-<div id="loginScreen" style="display:none">
-  <main class="admin-login">
-    <div class="login-card glass">
-      <div class="login-logo">EPO.SI</div>
-      <h1 class="login-title">Demo lokali</h1>
-      <p class="login-sub">Prijavite se za dostop do seznama demo e-cenikov</p>
-
-      <div class="login-error" id="loginError"></div>
-
-      <form class="login-form" id="loginForm" novalidate>
-        <div class="form-group">
-          <label class="form-label" for="loginEmail">E-pošta</label>
-          <input class="form-input" type="email" id="loginEmail" placeholder="vi@primer.si" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="loginPassword">Geslo</label>
-          <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem">
-          Prijava
-        </button>
-      </form>
-    </div>
-  </main>
-</div>
-
-<!-- ================================================================
-     SEZNAM DEMO LOKALOV (prikazano po prijavi)
-     ================================================================ -->
-<div id="demoPage" style="display:none">
+<div id="demoPage">
 
   <header class="demo-topbar">
     <h1 class="demo-topbar-title">📋 Demo lokali</h1>
     <input class="form-input demo-search" id="demoSearch" type="search" placeholder="Išči po imenu ali slug-u…">
     <button class="btn btn-ghost btn-sm" id="refreshBtn" type="button">↻ Osveži</button>
     <button class="btn btn-primary btn-sm" id="newDemoBtn" type="button">＋ Nov demo</button>
-    <a href="/admin" class="btn btn-ghost btn-sm">Admin ↗</a>
-    <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Odjava</button>
+    <a href="/admin" class="btn btn-ghost btn-sm hidden" id="adminLink">Admin ↗</a>
+    <button class="btn btn-ghost btn-sm" id="loginBtn" type="button">🔒 Prijava</button>
+    <button class="btn btn-ghost btn-sm hidden" id="logoutBtn" type="button">Odjava</button>
   </header>
 
   <main class="demo-content">
-    <p class="demo-intro">
-      Vsi lokali, ustvarjeni z orodjem <code>scripts/demo/provision.js</code> (repozitorij
-      <code>cenik</code>). Izberite lokal, kopirajte njegovo povezavo ali QR kodo in jo
-      pošljite tisti stranki — ostali demoji je ne vidijo.
+    <p class="demo-intro" id="demoIntroPublic">
+      Tukaj so trenutni demo primeri EPO.SI digitalnega menija in naročanja za mizo.
+      Odprite katerega koli, da vidite, kako izgleda za gosta — ali ustvarite
+      svojega z gumbom "+ Nov demo" (dostop prejmete po e-pošti).
+    </p>
+    <p class="demo-intro hidden" id="demoIntroAdmin">
+      Skrbniški pogled: vidite tudi admin dostop za vsak demo, ga lahko ponastavite
+      ali izbrišete. Ustvarjanje novega demota v tem načinu ne zahteva e-pošte
+      (geslo se prikaže tudi na zaslonu) — jo pa lahko vseeno vpišete, če želite,
+      da gre obvestilo tudi neposredno stranki.
     </p>
 
     <div id="demoLoading" class="demo-loading"><span class="spinner"></span> Nalagam demo lokale…</div>
     <div id="demoError" class="form-status" style="margin-bottom:1.5rem"></div>
-    <div id="demoEmpty" class="demo-empty" style="display:none">
+    <div id="demoEmpty" class="demo-empty hidden">
       <p>Trenutno ni demo lokalov.</p>
-      <p class="demo-empty-sub">Ustvarite enega z <code>node scripts/demo/provision.js &lt;datoteka.json&gt;</code> v repozitoriju <code>cenik</code>.</p>
+      <p class="demo-empty-sub">Bodite prvi — ustvarite ga z gumbom "+ Nov demo" zgoraj.</p>
     </div>
 
     <div id="demoGrid" class="demo-grid"></div>
   </main>
+</div>
+
+<!-- ================================================================
+     MODAL: Prijava (neobvezna — odklene skrbniške možnosti)
+     ================================================================ -->
+<div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+  <div class="modal glass" style="width:min(420px,100%)">
+    <div class="modal-header">
+      <h2 class="modal-title" id="loginModalTitle">Skrbniška prijava</h2>
+      <button class="modal-close" id="loginModalClose" type="button" aria-label="Zapri">✕</button>
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+
+    <form class="login-form" id="loginForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">E-pošta</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="vi@primer.si" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Geslo</label>
+        <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem">
+        Prijava
+      </button>
+    </form>
+  </div>
 </div>
 
 <!-- ================================================================
@@ -95,6 +102,12 @@
 
     <form id="demoForm" novalidate>
       <div class="login-error" id="demoFormError"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="fEmail" id="fEmailLabel">Vaš e-poštni naslov *</label>
+        <input class="form-input" id="fEmail" type="email" placeholder="vi@primer.si" required>
+        <p class="demo-field-hint" id="fEmailHint">Nanj vam pošljemo povezavo in admin dostop do demota.</p>
+      </div>
 
       <div class="form-row">
         <div class="form-group">
@@ -143,7 +156,7 @@
 </div>
 
 <!-- ================================================================
-     MODAL: Podatki za stranko (povezava + admin dostop, geslo enkratno)
+     MODAL: Podatki za stranko (samo skrbniško — povezava + admin dostop)
      ================================================================ -->
 <div class="modal-overlay" id="credsModal" role="dialog" aria-modal="true" aria-labelledby="credsModalTitle">
   <div class="modal glass" style="width:min(480px,100%)">
