@@ -24,15 +24,16 @@ const DEMO_APP_DOMAIN = (window.EPO_DEMO_APP_DOMAIN || 'https://demo.agencijaepo
 
 const demoClient = window.supabase.createClient(DEMO_SUPABASE_URL, DEMO_SUPABASE_ANON_KEY);
 
-// Edge Functions (cenik projekt) — glej supabase/functions/{provision,delete,reset-demo-password}
+// Edge Functions (cenik projekt) — glej supabase/functions/{provision,delete,reset-demo-password,convert-demo}
 // v repozitoriju cenik. provision-demo deluje tudi brez prijave (javno
-// samopostrežno ustvarjanje); delete-demo in reset-demo-password zahtevata
-// veljavno EPO.SI prijavo (X-Epo-Auth). Ta glava nosi TA (epo.si) sejni
-// žeton, ker ga cenik-ove funkcije preverjajo neposredno proti epo.si
-// projektu (drug Supabase projekt).
+// samopostrežno ustvarjanje); delete-demo, reset-demo-password in
+// convert-demo zahtevajo veljavno EPO.SI prijavo (X-Epo-Auth). Ta glava nosi
+// TA (epo.si) sejni žeton, ker ga cenik-ove funkcije preverjajo neposredno
+// proti epo.si projektu (drug Supabase projekt).
 const PROVISION_URL = `${DEMO_SUPABASE_URL}/functions/v1/provision-demo`;
 const DELETE_URL = `${DEMO_SUPABASE_URL}/functions/v1/delete-demo`;
 const RESET_PASSWORD_URL = `${DEMO_SUPABASE_URL}/functions/v1/reset-demo-password`;
+const CONVERT_URL = `${DEMO_SUPABASE_URL}/functions/v1/convert-demo`;
 
 let demoTenants = [];
 let isAdmin = false;
@@ -200,6 +201,7 @@ function renderGrid(list) {
       <div class="demo-card-actions">
         <a class="btn btn-sm btn-ghost" href="${DEMO_APP_DOMAIN}/admin" target="_blank" rel="noopener">🔐 Admin ↗</a>
         <button class="btn btn-sm btn-ghost" data-reset="${escHtml(t.slug)}">🔑 Ponastavi geslo</button>
+        <button class="btn btn-sm btn-ghost" data-convert="${escHtml(t.slug)}">✅ Postane prava stranka</button>
         <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
       </div>` : '';
 
@@ -238,6 +240,32 @@ function renderGrid(list) {
   grid.querySelectorAll('[data-reset]').forEach((btn) => {
     btn.addEventListener('click', () => resetPassword(btn.dataset.reset, btn));
   });
+  grid.querySelectorAll('[data-convert]').forEach((btn) => {
+    btn.addEventListener('click', () => convertDemo(btn.dataset.convert, btn));
+  });
+}
+
+// ── Pretvorba demota v pravo (plačljivo) stranko (samo skrbniško) ─
+async function convertDemo(slug, btn) {
+  const tenant = demoTenants.find((t) => t.slug === slug);
+  if (!confirm(
+    `Pretvorim "${tenant?.name || slug}" v pravo (plačljivo) stranko? ` +
+    'Po tem izgine s tega seznama in ga gumbi "Ponastavi geslo"/"Izbriši" tukaj ne bodo več prizadeli — upravljate ga naprej prek cenik admin panela.'
+  )) return;
+  const newEmail = (prompt('Nov e-poštni naslov za admin prijavo (pustite prazno, da obdržite trenutnega):', '') || '').trim();
+
+  btn.disabled = true;
+  try {
+    const result = await callDemoFunction(CONVERT_URL, { slug, new_email: newEmail || undefined });
+    toast(
+      `"${result.name}" je zdaj prava stranka.` + (result.email_updated ? ` Nova prijava: ${result.admin_email}` : ''),
+      'success'
+    );
+    loadDemos();
+  } catch (err) {
+    toast(`Napaka: ${err.message}`, 'error');
+    btn.disabled = false;
+  }
 }
 
 // ── Brisanje demota (samo skrbniško — funkcija to tudi preveri) ──
