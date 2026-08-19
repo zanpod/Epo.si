@@ -142,6 +142,19 @@
   </div>
 </div>
 
+<!-- ================================================================
+     MODAL: Podatki za stranko (povezava + admin dostop, geslo enkratno)
+     ================================================================ -->
+<div class="modal-overlay" id="credsModal" role="dialog" aria-modal="true" aria-labelledby="credsModalTitle">
+  <div class="modal glass" style="width:min(480px,100%)">
+    <div class="modal-header">
+      <h2 class="modal-title" id="credsModalTitle">Podatki za stranko</h2>
+      <button class="modal-close" id="credsModalClose" type="button" aria-label="Zapri">✕</button>
+    </div>
+    <div id="credsBody"></div>
+  </div>
+</div>
+
 <script src="/js/supabase-config.js"></script>
 <script src="/js/demo.js"></script>
 </body>

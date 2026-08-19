@@ -26,6 +26,27 @@ const demoClient = window.supabase.createClient(DEMO_SUPABASE_URL, DEMO_SUPABASE
 // avtorizirajo klicatelja proti TEJ (epo.si) prijavi prek X-Epo-Auth glave.
 const PROVISION_URL = `${DEMO_SUPABASE_URL}/functions/v1/provision-demo`;
 const DELETE_URL = `${DEMO_SUPABASE_URL}/functions/v1/delete-demo`;
+const RESET_PASSWORD_URL = `${DEMO_SUPABASE_URL}/functions/v1/reset-demo-password`;
+
+// Klic ene od Edge Functions zgoraj: nosi TA (epo.si) sejni žeton v
+// X-Epo-Auth, ker ga cenik-ove funkcije preverjajo proti epo.si projektu
+// (glej komentar na vrhu provision-demo/index.ts).
+async function callDemoFunction(url, payload) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${DEMO_SUPABASE_ANON_KEY}`,
+      'apikey': DEMO_SUPABASE_ANON_KEY,
+      'X-Epo-Auth': session?.access_token || '',
+    },
+    body: JSON.stringify(payload),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || `Napaka (${res.status})`);
+  return result;
+}
 
 let demoTenants = [];
 
@@ -168,14 +189,15 @@ function renderGrid(list) {
             <button class="btn btn-sm btn-ghost" data-copy="${escHtml(link)}">📋 Kopiraj</button>
             <a class="btn btn-sm btn-ghost" href="${escHtml(link)}" target="_blank" rel="noopener">Odpri ↗</a>
             <button class="btn btn-sm btn-ghost" data-qr="${escHtml(t.slug)}">▦ QR</button>
-            <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
           </div>
           <div class="demo-qr-wrap hidden" id="qr-${escHtml(t.slug)}"></div>
-        ` : `
-          <div class="demo-card-meta" style="color:var(--error)">Ni miz.</div>
-          <div class="demo-card-actions">
-            <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
-          </div>`}
+        ` : `<div class="demo-card-meta" style="color:var(--error)">Ni miz.</div>`}
+        <div class="demo-card-meta">Admin: ${escHtml(t.slug)}@demo.agencijaepo.si</div>
+        <div class="demo-card-actions">
+          <a class="btn btn-sm btn-ghost" href="${DEMO_APP_DOMAIN}/admin" target="_blank" rel="noopener">🔐 Admin ↗</a>
+          <button class="btn btn-sm btn-ghost" data-reset="${escHtml(t.slug)}">🔑 Ponastavi geslo</button>
+          <button class="btn btn-sm btn-danger" data-delete="${escHtml(t.slug)}">🗑 Izbriši</button>
+        </div>
       </div>`;
   }).join('');
 
@@ -188,6 +210,9 @@ function renderGrid(list) {
   grid.querySelectorAll('[data-delete]').forEach((btn) => {
     btn.addEventListener('click', () => deleteDemo(btn.dataset.delete, btn));
   });
+  grid.querySelectorAll('[data-reset]').forEach((btn) => {
+    btn.addEventListener('click', () => resetPassword(btn.dataset.reset, btn));
+  });
 }
 
 // ── Brisanje demota ──────────────────────────────────────────────
@@ -199,25 +224,34 @@ async function deleteDemo(slug, btn) {
   btn.disabled = true;
   btn.textContent = 'Brišem…';
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const res = await fetch(DELETE_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEMO_SUPABASE_ANON_KEY}`,
-        'apikey': DEMO_SUPABASE_ANON_KEY,
-        'X-Epo-Auth': session?.access_token || '',
-      },
-      body: JSON.stringify({ slug }),
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || `Napaka (${res.status})`);
+    const result = await callDemoFunction(DELETE_URL, { slug });
     toast(`Demo "${result.name}" izbrisan.`, 'success');
     loadDemos();
   } catch (err) {
     toast(`Napaka pri brisanju: ${err.message}`, 'error');
     btn.disabled = false;
     btn.textContent = '🗑 Izbriši';
+  }
+}
+
+// ── Ponastavitev admin gesla ─────────────────────────────────────
+async function resetPassword(slug, btn) {
+  const tenant = demoTenants.find((t) => t.slug === slug);
+  if (!confirm(`Ponastavim admin geslo za "${tenant?.name || slug}"? Staro geslo bo prenehalo delovati.`)) return;
+  btn.disabled = true;
+  try {
+    const result = await callDemoFunction(RESET_PASSWORD_URL, { slug });
+    const table = tenant && mainTable(tenant);
+    showCreds({
+      demoName: tenant?.name || slug,
+      link: table ? menuUrl(tenant, table) : null,
+      email: result.admin_email,
+      password: result.admin_password,
+    });
+  } catch (err) {
+    toast(`Napaka: ${err.message}`, 'error');
+  } finally {
+    btn.disabled = false;
   }
 }
 
@@ -381,23 +415,19 @@ document.getElementById('demoForm')?.addEventListener('submit', async (e) => {
   btn.innerHTML = '<span class="spinner"></span> Ustvarjam…';
 
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const res = await fetch(PROVISION_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEMO_SUPABASE_ANON_KEY}`,
-        'apikey': DEMO_SUPABASE_ANON_KEY,
-        'X-Epo-Auth': session?.access_token || '',
-      },
-      body: JSON.stringify(payload),
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || `Napaka (${res.status})`);
+    const result = await callDemoFunction(PROVISION_URL, payload);
 
     closeModal('demoModal');
     toast(`Demo "${payload.name}" pripravljen.`, 'success');
     loadDemos();
+
+    const table = (result.tables || [])[0];
+    showCreds({
+      demoName: payload.name,
+      link: table ? menuUrl(result.tenant, table) : null,
+      email: result.admin_email,
+      password: result.admin_password,
+    });
   } catch (err) {
     errBox.textContent = err.message;
     errBox.classList.add('show');
@@ -406,3 +436,46 @@ document.getElementById('demoForm')?.addEventListener('submit', async (e) => {
     btn.textContent = origText;
   }
 });
+
+// ── Modal: Podatki za stranko (povezava + admin dostop) ───────────
+function showCreds({ demoName, link, email, password }) {
+  const clipboardText = [
+    `Demo: ${demoName}`,
+    link ? `Povezava: ${link}` : null,
+    `Admin prijava: ${DEMO_APP_DOMAIN}/admin`,
+    `E-pošta: ${email}`,
+    password ? `Geslo: ${password}` : null,
+  ].filter(Boolean).join('\n');
+
+  const body = document.getElementById('credsBody');
+  body.innerHTML = `
+    ${password ? `
+      <div class="login-error show" style="background:var(--success-08);border-color:var(--success-30);color:var(--success)">
+        ⚠️ Geslo je prikazano samo zdaj — shranite si ga ali ga takoj pošljite stranki.
+      </div>` : `
+      <div class="login-error show">Geslo je bilo prikazano samo ob prvem ustvarjanju. Za novo geslo uporabite "Ponastavi geslo".</div>`}
+    ${link ? `
+      <div class="form-group">
+        <label class="form-label">Povezava za stranko</label>
+        <div class="demo-card-link">${escHtml(link)}</div>
+      </div>` : ''}
+    <div class="form-group">
+      <label class="form-label">Admin dostop (za raziskovanje celotnega programa — mize, naročila, meni, nastavitve)</label>
+      <div class="demo-card-link">${escHtml(DEMO_APP_DOMAIN)}/admin</div>
+      <div class="demo-card-link">${escHtml(email)}</div>
+      ${password ? `<div class="demo-card-link" style="font-weight:700">${escHtml(password)}</div>` : ''}
+    </div>
+    <button type="button" class="btn btn-primary btn-block" id="credsCopyBtn" style="width:100%;justify-content:center;margin-top:0.5rem">📋 Kopiraj vse za stranko</button>`;
+
+  document.getElementById('credsCopyBtn').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(clipboardText);
+      toast('Kopirano.', 'success');
+    } catch {
+      toast('Kopiranje ni uspelo.', 'error');
+    }
+  });
+
+  openModal('credsModal');
+}
+document.getElementById('credsModalClose')?.addEventListener('click', () => closeModal('credsModal'));

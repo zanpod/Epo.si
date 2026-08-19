@@ -348,11 +348,19 @@ or delete one specific client's demo.
 - **"+ Nov demo"** opens a form (name, colors, logo, table count, and a
   dynamic categories/items builder) and POSTs it to the `provision-demo` Edge
   Function in the `cenik` Supabase project, which does the actual writes with
-  its service-role key.
-- **"🗑 Izbriši"** on a card calls the `delete-demo` Edge Function the same
-  way.
-- Both functions live in `cenik`'s repo (`supabase/functions/provision-demo`
-  and `delete-demo`) and are deployed once via the Supabase Dashboard's
+  its service-role key — including creating a **demo admin account**
+  (`<slug>@demo.agencijaepo.si` + a generated password) so the prospect can
+  log into the full admin panel (tables/QR, live orders, menu editing,
+  settings), not just browse the guest menu. The password is shown **once**,
+  in a follow-up modal with a "copy for the client" button — Supabase doesn't
+  store it recoverably.
+- **"🔑 Ponastavi geslo"** on a card calls `reset-demo-password` to issue a
+  new one (e.g. if you lost it, or are reusing the demo for a new prospect).
+- **"🗑 Izbriši"** on a card calls `delete-demo`, which also removes that
+  demo's admin account.
+- All three functions live in `cenik`'s repo
+  (`supabase/functions/provision-demo`, `delete-demo`,
+  `reset-demo-password`) and are deployed once via the Supabase Dashboard's
   "Deploy a new function" (paste-and-deploy, no CLI) — see the comment at the
   top of each file. They authorize the caller by checking the request's
   EPO.SI session token directly against *this* project's Auth (cross-project
