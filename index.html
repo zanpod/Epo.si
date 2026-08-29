@@ -96,25 +96,47 @@
 <section id="home" class="hero">
   <!-- Animirane barvne lise -->
   <div class="hero-bg" aria-hidden="true"></div>
+  <div class="hero-cursor-glow" id="heroCursorGlow" aria-hidden="true"></div>
 
   <div class="container">
-    <div class="hero-content">
-      <div class="hero-badge">Kmalu odpiramo</div>
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-badge">Kmalu odpiramo</div>
 
-      <h1 class="hero-heading" id="heroHeading">
-        Digitalna orodja, ki poganjajo vaš <span class="gradient-text">posel</span>
-      </h1>
+        <h1 class="hero-heading" id="heroHeading">
+          Digitalna orodja, ki poganjajo vaš <span class="gradient-text">posel</span>
+        </h1>
 
-      <p class="hero-sub" id="heroSub">
-        Pri EPO.SI gradimo spletne aplikacije in sisteme po meri — od digitalnih cenikov in rezervacijskih sistemov do internih admin panelov in CRM rešitev. Vse na ključ: razvoj, gostovanje, vzdrževanje.
-      </p>
+        <p class="hero-sub" id="heroSub">
+          Pri EPO.SI gradimo spletne aplikacije in sisteme po meri — od digitalnih cenikov in rezervacijskih sistemov do internih admin panelov in CRM rešitev. Vse na ključ: razvoj, gostovanje, vzdrževanje.
+        </p>
 
-      <div class="hero-ctas">
-        <a href="#services" class="btn btn-primary" id="ctaPrimary">
-          Poglej rešitve
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-        <a href="#contact" class="btn btn-ghost" id="ctaSecondary">Povprašajte za brezplačen posvet</a>
+        <div class="hero-ctas">
+          <a href="#services" class="btn btn-primary" id="ctaPrimary">
+            Poglej rešitve
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <span class="magnetic-wrap" id="magneticWrap">
+            <a href="#contact" class="btn btn-ghost" id="ctaSecondary">Povprašajte za brezplačen posvet</a>
+          </span>
+        </div>
+      </div>
+
+      <!-- Živ interaktiven e-cenik — demo naročila brez pošiljanja -->
+      <div class="hero-demo glass" id="heroDemo" aria-labelledby="heroDemoBadge">
+        <div class="hero-demo-badge" id="heroDemoBadge">Preizkusite v živo →</div>
+        <p class="hero-demo-lead">Tako gostje naročajo prek QR e-cenika. Dodajte kakšno postavko in poglejte, kako se seštevek posodobi v realnem času.</p>
+
+        <div class="hero-demo-items" id="heroDemoItems">
+          <!-- Napolni js/interactive.js -->
+        </div>
+
+        <div class="hero-demo-total">
+          <span class="hero-demo-total-label">Skupaj</span>
+          <span class="hero-demo-total-amount" id="heroDemoTotal">0,00 €</span>
+        </div>
+
+        <p class="hero-demo-hint">Samo demonstracija — brez pravega naročila.</p>
       </div>
     </div>
   </div>
@@ -333,6 +355,58 @@
         <summary>Izdelate tudi nekaj, kar ni v paketih?</summary>
         <p>Seveda. Za CRM sisteme, interne portale in spletne aplikacije po meri pripravimo individualno ponudbo po dogovoru.</p>
       </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     KALKULATOR PRIHRANKOV
+     ================================================================ -->
+<section id="savings" class="savings">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Kalkulator</p>
+      <h2 class="section-title">Koliko <span class="gradient-text">prihranite</span>?</h2>
+      <p class="section-desc">Vnesite svoje številke in ocenite, koliko vas letno stane tiskanje menijev — in koliko časa prihranite z digitalnim e-cenikom.</p>
+    </div>
+
+    <div class="savings-card glass reveal">
+      <div class="savings-inputs">
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsPrintCount">Kolikokrat na leto natisnete/zamenjate menije</label>
+            <input class="savings-num" type="number" id="savingsPrintCountNum" min="1" max="24" step="1" value="4" inputmode="numeric" aria-label="Kolikokrat na leto — število">
+          </div>
+          <input class="savings-range" type="range" id="savingsPrintCount" min="1" max="24" step="1" value="4">
+        </div>
+
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsCopies">Koliko kosov menijev natisnete naenkrat</label>
+            <input class="savings-num" type="number" id="savingsCopiesNum" min="1" max="300" step="1" value="20" inputmode="numeric" aria-label="Kosov naenkrat — število">
+          </div>
+          <input class="savings-range" type="range" id="savingsCopies" min="1" max="300" step="1" value="20">
+        </div>
+
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsCost">Ocena stroška tiska na kos (€)<span class="savings-field-note"> — uredljivo, približna ocena</span></label>
+            <input class="savings-num" type="number" id="savingsCostNum" min="0.10" max="3" step="0.05" value="0.50" inputmode="decimal" aria-label="Strošek tiska na kos v evrih">
+          </div>
+          <input class="savings-range" type="range" id="savingsCost" min="0.10" max="3" step="0.05" value="0.50">
+        </div>
+      </div>
+
+      <div class="savings-result">
+        <p class="savings-result-label">Ocenjen letni prihranek pri tisku</p>
+        <div class="savings-result-amount" id="savingsAmount">40,00 €</div>
+        <p class="savings-result-approx">≈ Ocena — dejanski prihranek je odvisen od vaših dobaviteljev in obsega tiska.</p>
+        <p class="savings-result-time">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Plus: brez čakanja na tiskarno ob vsaki spremembi cene — meni posodobite sami, v nekaj sekundah.
+        </p>
+        <a href="#contact" class="btn btn-primary savings-cta">Povprašaj za ponudbo</a>
+      </div>
     </div>
   </div>
 </section>
@@ -578,6 +652,7 @@
 <script src="js/main.js"></script>
 <script src="js/blog.js"></script>
 <script src="js/widgets.js"></script>
+<script src="js/interactive.js"></script>
 
 </body>
 </html>
