@@ -180,7 +180,7 @@ function applySettings(s) {
 
   // Social links
   const socials = {
-    githubLink:    s.github_url,
+    facebookLink:  s.facebook_url,
     linkedinLink:  s.linkedin_url,
     instagramLink: s.instagram_url,
   };
