@@ -96,25 +96,47 @@
 <section id="home" class="hero">
   <!-- Animirane barvne lise -->
   <div class="hero-bg" aria-hidden="true"></div>
+  <div class="hero-cursor-glow" id="heroCursorGlow" aria-hidden="true"></div>
 
   <div class="container">
-    <div class="hero-content">
-      <div class="hero-badge">Kmalu odpiramo</div>
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-badge">Kmalu odpiramo</div>
 
-      <h1 class="hero-heading" id="heroHeading">
-        Digitalna orodja, ki poganjajo vaš <span class="gradient-text">posel</span>
-      </h1>
+        <h1 class="hero-heading" id="heroHeading">
+          Digitalna orodja, ki poganjajo vaš <span class="gradient-text">posel</span>
+        </h1>
 
-      <p class="hero-sub" id="heroSub">
-        Pri EPO.SI gradimo spletne aplikacije in sisteme po meri — od digitalnih cenikov in rezervacijskih sistemov do internih admin panelov in CRM rešitev. Vse na ključ: razvoj, gostovanje, vzdrževanje.
-      </p>
+        <p class="hero-sub" id="heroSub">
+          Pri EPO.SI gradimo spletne aplikacije in sisteme po meri — od digitalnih cenikov in rezervacijskih sistemov do internih admin panelov in CRM rešitev. Vse na ključ: razvoj, gostovanje, vzdrževanje.
+        </p>
 
-      <div class="hero-ctas">
-        <a href="#services" class="btn btn-primary" id="ctaPrimary">
-          Poglej rešitve
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-        <a href="#contact" class="btn btn-ghost" id="ctaSecondary">Povprašajte za brezplačen posvet</a>
+        <div class="hero-ctas">
+          <a href="#services" class="btn btn-primary" id="ctaPrimary">
+            Poglej rešitve
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <span class="magnetic-wrap" id="magneticWrap">
+            <a href="#contact" class="btn btn-ghost" id="ctaSecondary">Povprašajte za brezplačen posvet</a>
+          </span>
+        </div>
+      </div>
+
+      <!-- Živ interaktiven e-cenik — demo naročila brez pošiljanja -->
+      <div class="hero-demo glass" id="heroDemo" aria-labelledby="heroDemoBadge">
+        <div class="hero-demo-badge" id="heroDemoBadge">Preizkusite v živo →</div>
+        <p class="hero-demo-lead">Tako gostje naročajo prek QR e-cenika. Dodajte kakšno postavko in poglejte, kako se seštevek posodobi v realnem času.</p>
+
+        <div class="hero-demo-items" id="heroDemoItems">
+          <!-- Napolni js/interactive.js -->
+        </div>
+
+        <div class="hero-demo-total">
+          <span class="hero-demo-total-label">Skupaj</span>
+          <span class="hero-demo-total-amount" id="heroDemoTotal">0,00 €</span>
+        </div>
+
+        <p class="hero-demo-hint">Samo demonstracija — brez pravega naročila.</p>
       </div>
     </div>
   </div>
@@ -123,6 +145,56 @@
   <div class="hero-scroll" aria-hidden="true">
     <span>Drsni</span>
     <div class="hero-scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ================================================================
+     PREJ / POTEM — papir proti QR e-ceniku
+     ================================================================ -->
+<section id="compare" class="compare">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Prej in potem</p>
+      <h2 class="section-title">Od oguljenega papirja do <span class="gradient-text">QR menija</span></h2>
+      <p class="section-desc">Povlecite drsnik in v enem pogledu primerjajte star način s podih e-cenikom.</p>
+    </div>
+
+    <div class="compare-widget reveal" id="compareWidget">
+      <div class="compare-pane compare-pane-before" id="compareBeforePane">
+        <span class="compare-tag">Prej</span>
+        <div class="compare-paper">
+          <div class="compare-paper-stain" aria-hidden="true"></div>
+          <div class="compare-paper-line" style="width:72%"></div>
+          <div class="compare-paper-line" style="width:46%"></div>
+          <div class="compare-paper-line" style="width:61%"></div>
+          <div class="compare-paper-line" style="width:38%"></div>
+          <div class="compare-paper-line" style="width:55%"></div>
+          <div class="compare-paper-line" style="width:29%"></div>
+        </div>
+      </div>
+
+      <div class="compare-pane compare-pane-after" id="compareAfterPane">
+        <span class="compare-tag">Potem</span>
+        <div class="compare-phone">
+          <div class="compare-phone-notch" aria-hidden="true"></div>
+          <svg class="compare-qr" viewBox="0 0 7 7" aria-hidden="true">
+            <rect width="7" height="7" fill="none"/>
+          </svg>
+          <div class="compare-phone-item"><span>Kava</span><span>1,20 €</span></div>
+          <div class="compare-phone-item"><span>Cappuccino</span><span>1,80 €</span></div>
+          <div class="compare-phone-item"><span>Burek</span><span>2,50 €</span></div>
+        </div>
+      </div>
+
+      <div class="compare-divider" id="compareDivider" aria-hidden="true">
+        <div class="compare-handle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+      </div>
+
+      <input type="range" min="0" max="100" value="50" class="compare-range" id="compareRange" aria-label="Primerjaj natisnjen meni z QR e-cenikom">
+    </div>
   </div>
 </section>
 
@@ -333,6 +405,58 @@
         <summary>Izdelate tudi nekaj, kar ni v paketih?</summary>
         <p>Seveda. Za CRM sisteme, interne portale in spletne aplikacije po meri pripravimo individualno ponudbo po dogovoru.</p>
       </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     KALKULATOR PRIHRANKOV
+     ================================================================ -->
+<section id="savings" class="savings">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Kalkulator</p>
+      <h2 class="section-title">Koliko <span class="gradient-text">prihranite</span>?</h2>
+      <p class="section-desc">Vnesite svoje številke in ocenite, koliko vas letno stane tiskanje menijev — in koliko časa prihranite z digitalnim e-cenikom.</p>
+    </div>
+
+    <div class="savings-card glass reveal">
+      <div class="savings-inputs">
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsPrintCount">Kolikokrat na leto natisnete/zamenjate menije</label>
+            <input class="savings-num" type="number" id="savingsPrintCountNum" min="1" max="24" step="1" value="4" inputmode="numeric" aria-label="Kolikokrat na leto — število">
+          </div>
+          <input class="savings-range" type="range" id="savingsPrintCount" min="1" max="24" step="1" value="4">
+        </div>
+
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsCopies">Koliko kosov menijev natisnete naenkrat</label>
+            <input class="savings-num" type="number" id="savingsCopiesNum" min="1" max="300" step="1" value="20" inputmode="numeric" aria-label="Kosov naenkrat — število">
+          </div>
+          <input class="savings-range" type="range" id="savingsCopies" min="1" max="300" step="1" value="20">
+        </div>
+
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsCost">Ocena stroška tiska na kos (€)<span class="savings-field-note"> — uredljivo, približna ocena</span></label>
+            <input class="savings-num" type="number" id="savingsCostNum" min="0.10" max="3" step="0.05" value="0.50" inputmode="decimal" aria-label="Strošek tiska na kos v evrih">
+          </div>
+          <input class="savings-range" type="range" id="savingsCost" min="0.10" max="3" step="0.05" value="0.50">
+        </div>
+      </div>
+
+      <div class="savings-result">
+        <p class="savings-result-label">Ocenjen letni prihranek pri tisku</p>
+        <div class="savings-result-amount" id="savingsAmount">40,00 €</div>
+        <p class="savings-result-approx">≈ Ocena — dejanski prihranek je odvisen od vaših dobaviteljev in obsega tiska.</p>
+        <p class="savings-result-time">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Plus: brez čakanja na tiskarno ob vsaki spremembi cene — meni posodobite sami, v nekaj sekundah.
+        </p>
+        <a href="#contact" class="btn btn-primary savings-cta">Povprašaj za ponudbo</a>
+      </div>
     </div>
   </div>
 </section>
@@ -578,6 +702,7 @@
 <script src="js/main.js"></script>
 <script src="js/blog.js"></script>
 <script src="js/widgets.js"></script>
+<script src="js/interactive.js"></script>
 
 </body>
 </html>
