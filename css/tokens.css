@@ -5,6 +5,31 @@
    kodiranih barv / velikosti / senc zunaj te datoteke.
    ================================================================ */
 
+/* ── Pisave — samostojno gostovani spremenljivi datoteki ─────────
+   Namesto Google Fonts CSS (dodaten DNS/povezavni krog + ~37 datotek
+   za pisave/podskupine, ki jih stran nikoli ne uporabi — cirilica,
+   grščina, vietnamščina …) samo ena spremenljiva datoteka na družino.
+   Preverjeno (fonttools + izris v brskalniku), da "latin" podskupina
+   pri teh dveh spremenljivih pisavah že vsebuje č/š/ž/ć in da uteži
+   100–900 pravilno izriše ena sama datoteka — "latin-ext" ni potreben.
+   font-display: swap ostane — brez njega bi besedilo obviselo nevidno,
+   dokler se pisava ne naloži. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../fonts/quicksand-latin.woff2') format('woff2');
+}
+
 :root {
   /* ── Barve — nevtralna lestvica ─────────────────────────────── */
   /* Topel, skoraj črn odtenek (ne hladno-modri "SaaS" navy) —
