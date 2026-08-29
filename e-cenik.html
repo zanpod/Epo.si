@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPO Cenik — QR e-cenik za gostince | EPO.SI</title>
+  <meta name="description" content="EPO Cenik — digitalni QR e-cenik za kavarne, restavracije in gostilne. Preizkusite ga v živo, izračunajte prihranek pri tiskanju in povprašajte za ponudbo.">
+  <link rel="canonical" href="https://agencijaepo.si/e-cenik.html">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <meta name="theme-color" content="#17130f">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sl_SI">
+  <meta property="og:site_name" content="EPO.SI">
+  <meta property="og:url" content="https://agencijaepo.si/e-cenik.html">
+  <meta property="og:title" content="EPO Cenik — QR e-cenik za gostince">
+  <meta property="og:description" content="Digitalni QR e-cenik za kavarne, restavracije in gostilne. Preizkusite ga v živo in izračunajte prihranek pri tiskanju.">
+  <meta property="og:image" content="https://agencijaepo.si/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="EPO Cenik — QR e-cenik za gostince">
+  <meta name="twitter:description" content="Digitalni QR e-cenik za kavarne, restavracije in gostilne. Preizkusite ga v živo.">
+  <meta name="twitter:image" content="https://agencijaepo.si/og-image.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <noscript><style>.reveal{opacity:1!important;transform:none!important;}</style></noscript>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ================================================================
+     NAVIGACIJA
+     ================================================================ -->
+<nav class="navbar scrolled" id="navbar" role="navigation" aria-label="Glavna navigacija">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html#home" class="nav-logo" data-logo><span class="logo-mark">EPO</span><span class="logo-suffix">.SI</span></a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="index.html#home">Domov</a></li>
+        <li><a href="index.html#about">O nas</a></li>
+        <li><a href="index.html#services">Storitve</a></li>
+        <li><a href="index.html#pricing">Cenik</a></li>
+        <li><a href="e-cenik.html" class="active">E-cenik</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="index.html#contact">Kontakt</a></li>
+      </ul>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Odpri meni" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="nav-menu-mobile" id="navMobile" role="dialog" aria-modal="true" aria-label="Mobilna navigacija">
+  <a href="index.html#home">Domov</a>
+  <a href="index.html#about">O nas</a>
+  <a href="index.html#services">Storitve</a>
+  <a href="index.html#pricing">Cenik</a>
+  <a href="e-cenik.html">E-cenik</a>
+  <a href="blog.html">Blog</a>
+  <a href="index.html#contact">Kontakt</a>
+</div>
+
+<!-- ================================================================
+     HERO — EPO Cenik
+     ================================================================ -->
+<section id="home" class="hero hero-compact">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="hero-cursor-glow" id="heroCursorGlow" aria-hidden="true"></div>
+
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-badge">EPO Cenik — za gostince</div>
+
+        <h1 class="hero-heading">
+          QR e-cenik, ki <span class="gradient-text">dela namesto vas</span>
+        </h1>
+
+        <p class="hero-sub">
+          Digitalni jedilni list na mizi vaših gostov — brez tiskanja, brez čakanja na tiskarno ob vsaki spremembi cene. Cene, opise in slike urejate sami, sprememba pa je vidna takoj.
+        </p>
+
+        <div class="hero-ctas">
+          <a href="https://epocenik.netlify.app/" target="_blank" rel="noopener" class="btn btn-primary" id="ctaPrimary">
+            Preizkusi pravi demo
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <span class="magnetic-wrap" id="magneticWrap">
+            <a href="index.html#contact" class="btn btn-ghost" id="ctaSecondary">Povprašaj za ponudbo</a>
+          </span>
+        </div>
+      </div>
+
+      <!-- Živ interaktiven e-cenik — demo naročila brez pošiljanja -->
+      <div class="hero-demo glass" id="heroDemo" aria-labelledby="heroDemoBadge">
+        <div class="hero-demo-badge" id="heroDemoBadge">Preizkusite v živo →</div>
+        <p class="hero-demo-lead">Tako gostje naročajo prek QR e-cenika. Dodajte kakšno postavko in poglejte, kako se seštevek posodobi v realnem času.</p>
+
+        <div class="hero-demo-items" id="heroDemoItems">
+          <!-- Napolni js/interactive.js -->
+        </div>
+
+        <div class="hero-demo-total">
+          <span class="hero-demo-total-label">Skupaj</span>
+          <span class="hero-demo-total-amount" id="heroDemoTotal">0,00 €</span>
+        </div>
+
+        <p class="hero-demo-hint">Samo demonstracija — brez pravega naročila.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     PREJ / POTEM — papir proti QR e-ceniku
+     ================================================================ -->
+<section id="compare" class="compare">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Prej in potem</p>
+      <h2 class="section-title">Od oguljenega papirja do <span class="gradient-text">QR menija</span></h2>
+      <p class="section-desc">Povlecite drsnik in v enem pogledu primerjajte star način s podih e-cenikom.</p>
+    </div>
+
+    <div class="compare-widget reveal" id="compareWidget">
+      <div class="compare-pane compare-pane-before" id="compareBeforePane">
+        <span class="compare-tag">Prej</span>
+        <img class="compare-paper-photo" src="images/worn-menu.jpg" alt="Oguljen, zmečkan papirnat jedilni list z madeži od kave" loading="lazy">
+      </div>
+
+      <div class="compare-pane compare-pane-after" id="compareAfterPane">
+        <span class="compare-tag">Potem</span>
+        <div class="compare-phone">
+          <div class="compare-phone-notch" aria-hidden="true"></div>
+          <svg class="compare-qr" viewBox="0 0 7 7" aria-hidden="true">
+            <rect width="7" height="7" fill="none"/>
+          </svg>
+          <div class="compare-phone-item"><span>Kava</span><span>1,20 €</span></div>
+          <div class="compare-phone-item"><span>Cappuccino</span><span>1,80 €</span></div>
+          <div class="compare-phone-item"><span>Burek</span><span>2,50 €</span></div>
+        </div>
+      </div>
+
+      <div class="compare-divider" id="compareDivider" aria-hidden="true">
+        <div class="compare-handle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+      </div>
+
+      <input type="range" min="0" max="100" value="50" class="compare-range" id="compareRange" aria-label="Primerjaj natisnjen meni z QR e-cenikom">
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     KALKULATOR PRIHRANKOV
+     ================================================================ -->
+<section id="savings" class="savings">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Kalkulator</p>
+      <h2 class="section-title">Koliko <span class="gradient-text">prihranite</span>?</h2>
+      <p class="section-desc">Vnesite svoje številke in ocenite, koliko vas letno stane tiskanje menijev — in koliko časa prihranite z digitalnim e-cenikom.</p>
+    </div>
+
+    <div class="savings-card glass reveal">
+      <div class="savings-inputs">
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsPrintCount">Kolikokrat na leto natisnete/zamenjate menije</label>
+            <input class="savings-num" type="number" id="savingsPrintCountNum" min="1" max="24" step="1" value="4" inputmode="numeric" aria-label="Kolikokrat na leto — število">
+          </div>
+          <input class="savings-range" type="range" id="savingsPrintCount" min="1" max="24" step="1" value="4">
+        </div>
+
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsCopies">Koliko kosov menijev natisnete naenkrat</label>
+            <input class="savings-num" type="number" id="savingsCopiesNum" min="1" max="300" step="1" value="20" inputmode="numeric" aria-label="Kosov naenkrat — število">
+          </div>
+          <input class="savings-range" type="range" id="savingsCopies" min="1" max="300" step="1" value="20">
+        </div>
+
+        <div class="savings-field">
+          <div class="savings-field-head">
+            <label for="savingsCost">Ocena stroška tiska na kos (€)<span class="savings-field-note"> — uredljivo, približna ocena</span></label>
+            <input class="savings-num" type="number" id="savingsCostNum" min="0.10" max="3" step="0.05" value="0.50" inputmode="decimal" aria-label="Strošek tiska na kos v evrih">
+          </div>
+          <input class="savings-range" type="range" id="savingsCost" min="0.10" max="3" step="0.05" value="0.50">
+        </div>
+      </div>
+
+      <div class="savings-result">
+        <p class="savings-result-label">Ocenjen letni prihranek pri tisku</p>
+        <div class="savings-result-amount" id="savingsAmount">40,00 €</div>
+        <p class="savings-result-approx">≈ Ocena — dejanski prihranek je odvisen od vaših dobaviteljev in obsega tiska.</p>
+        <p class="savings-result-time">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Plus: brez čakanja na tiskarno ob vsaki spremembi cene — meni posodobite sami, v nekaj sekundah.
+        </p>
+        <a href="index.html#contact" class="btn btn-primary savings-cta">Povprašaj za ponudbo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     CENA PAKETA
+     ================================================================ -->
+<section id="ec-pricing" class="pricing">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Cena</p>
+      <h2 class="section-title">Paket <span class="gradient-text">EPO Cenik</span></h2>
+      <p class="section-desc">Ena transparentna cena — enkratna postavitev in mesečno vzdrževanje. Brez skritih stroškov.</p>
+    </div>
+
+    <div class="pricing-grid" style="max-width:420px;margin-inline:auto">
+      <div class="pricing-card pricing-card-featured glass reveal">
+        <span class="pricing-badge">Za gostince</span>
+        <h3 class="pricing-name">EPO Cenik</h3>
+        <p class="pricing-for">Digitalni e-cenik za gostince</p>
+        <div class="pricing-price">290 €<span class="pricing-once">postavitev</span></div>
+        <div class="pricing-monthly">+ 29 € / mesec</div>
+        <p class="pricing-after">Po prvem letu samo mesečna naročnina — brez ponovne postavitve.</p>
+        <ul class="pricing-features">
+          <li>Digitalni meni s QR kodo na mizi</li>
+          <li>Sproten pregled in posodabljanje cen</li>
+          <li>Sami posodabljate cene — brez tiskanja menijev</li>
+          <li>Gostovanje in tehnična podpora</li>
+        </ul>
+        <a href="index.html#contact" class="btn btn-primary pricing-cta">Povprašaj za ponudbo</a>
+        <a href="https://epocenik.netlify.app/" target="_blank" rel="noopener" class="pricing-detail-link">Preizkusi pravi demo →</a>
+      </div>
+    </div>
+
+    <p class="pricing-vat reveal">Nismo zavezanci za DDV — navedene cene so končne.</p>
+  </div>
+</section>
+
+<!-- ================================================================
+     POGOSTA VPRAŠANJA — e-cenik
+     ================================================================ -->
+<section id="ec-faq" class="faq">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Pogosta vprašanja</p>
+      <h2 class="section-title">Vprašanja o <span class="gradient-text">e-ceniku</span></h2>
+    </div>
+
+    <div class="faq-list">
+      <details class="faq-item glass reveal">
+        <summary>Ali gostje potrebujejo posebno aplikacijo?</summary>
+        <p>Ne. Meni odprejo preprosto s skeniranjem QR kode na mizi — odpre se v brskalniku, brez nalaganja česarkoli.</p>
+      </details>
+      <details class="faq-item glass reveal">
+        <summary>Kako hitro lahko spremenim cene ali ponudbo?</summary>
+        <p>Cene, opise in slike urejate sami prek admin panela. Sprememba je vidna takoj — brez čakanja na tiskarno.</p>
+      </details>
+      <details class="faq-item glass reveal">
+        <summary>Kaj pa gostje brez pametnega telefona?</summary>
+        <p>Priporočamo, da za izjeme obdržite še nekaj natisnjenih izvodov. Večina gostov pa danes brez težav uporabi telefon.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     KONČNI CTA
+     ================================================================ -->
+<section class="ec-cta">
+  <div class="container">
+    <div class="ec-cta-panel glass reveal">
+      <p class="section-label" style="justify-content:center">Pripravljeni?</p>
+      <h2 class="section-title">Preizkusite <span class="gradient-text">EPO Cenik</span></h2>
+      <p class="section-desc" style="margin-inline:auto">Pošljite povpraševanje in v kratkem pripravimo vaš digitalni e-cenik.</p>
+      <a href="index.html#contact" class="btn btn-primary">Povprašaj za ponudbo →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     NOGA
+     ================================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html#home" class="footer-logo" data-logo><span class="logo-mark">EPO</span><span class="logo-suffix">.SI</span></a>
+        <p class="footer-tagline">Spletne aplikacije in sistemi po meri — na ključ.</p>
+        <div class="social-links footer-social">
+          <a href="https://facebook.com" target="_blank" rel="noopener" class="social-link" data-social="facebook" aria-label="Facebook">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-link" data-social="linkedin" aria-label="LinkedIn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener" class="social-link" data-social="instagram" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-col-title">Povezave</h4>
+        <nav class="footer-links footer-links-col" aria-label="Spodnja navigacija">
+          <a href="index.html#home">Domov</a>
+          <a href="index.html#about">O nas</a>
+          <a href="index.html#services">Storitve</a>
+          <a href="index.html#pricing">Cenik</a>
+          <a href="e-cenik.html">E-cenik</a>
+          <a href="blog.html">Blog</a>
+          <a href="index.html#contact">Kontakt</a>
+        </nav>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-col-title">Podjetje</h4>
+        <div class="footer-company">
+          <span data-company-name>EPO.SI</span>
+          <span data-company-address hidden></span>
+          <span data-company-tax hidden></span>
+          <a href="mailto:info@agencijaepo.si" data-company-email>info@agencijaepo.si</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-inner">
+      <p class="footer-copy" data-copyright>© 2026 EPO.SI. Vse pravice pridržane.</p>
+      <nav class="footer-links" aria-label="Pravno">
+        <a href="zasebnost.html">Politika zasebnosti</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/main.js"></script>
+<script src="js/widgets.js"></script>
+<script src="js/interactive.js"></script>
+
+</body>
+</html>
