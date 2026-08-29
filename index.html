@@ -149,6 +149,56 @@
 </section>
 
 <!-- ================================================================
+     PREJ / POTEM — papir proti QR e-ceniku
+     ================================================================ -->
+<section id="compare" class="compare">
+  <div class="container">
+    <div class="services-header reveal">
+      <p class="section-label">Prej in potem</p>
+      <h2 class="section-title">Od oguljenega papirja do <span class="gradient-text">QR menija</span></h2>
+      <p class="section-desc">Povlecite drsnik in v enem pogledu primerjajte star način s podih e-cenikom.</p>
+    </div>
+
+    <div class="compare-widget reveal" id="compareWidget">
+      <div class="compare-pane compare-pane-before" id="compareBeforePane">
+        <span class="compare-tag">Prej</span>
+        <div class="compare-paper">
+          <div class="compare-paper-stain" aria-hidden="true"></div>
+          <div class="compare-paper-line" style="width:72%"></div>
+          <div class="compare-paper-line" style="width:46%"></div>
+          <div class="compare-paper-line" style="width:61%"></div>
+          <div class="compare-paper-line" style="width:38%"></div>
+          <div class="compare-paper-line" style="width:55%"></div>
+          <div class="compare-paper-line" style="width:29%"></div>
+        </div>
+      </div>
+
+      <div class="compare-pane compare-pane-after" id="compareAfterPane">
+        <span class="compare-tag">Potem</span>
+        <div class="compare-phone">
+          <div class="compare-phone-notch" aria-hidden="true"></div>
+          <svg class="compare-qr" viewBox="0 0 7 7" aria-hidden="true">
+            <rect width="7" height="7" fill="none"/>
+          </svg>
+          <div class="compare-phone-item"><span>Kava</span><span>1,20 €</span></div>
+          <div class="compare-phone-item"><span>Cappuccino</span><span>1,80 €</span></div>
+          <div class="compare-phone-item"><span>Burek</span><span>2,50 €</span></div>
+        </div>
+      </div>
+
+      <div class="compare-divider" id="compareDivider" aria-hidden="true">
+        <div class="compare-handle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+      </div>
+
+      <input type="range" min="0" max="100" value="50" class="compare-range" id="compareRange" aria-label="Primerjaj natisnjen meni z QR e-cenikom">
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
      O NAS
      ================================================================ -->
 <section id="about" class="about">

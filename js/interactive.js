@@ -1,11 +1,12 @@
 // ================================================================
 // interactive.js — Živ demo e-cenika, kalkulator prihrankov,
-// magnetni gumb in cursor-glow ozadje v hero sekciji.
+// prej/potem primerjava, magnetni gumb in cursor-glow v hero sekciji.
 // ================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
   initHeroDemo();
   initSavingsCalculator();
+  initCompareSlider();
   initMagneticButton();
   initHeroCursorGlow();
 });
@@ -109,6 +110,54 @@ function initSavingsCalculator() {
     bumpElement(amountEl);
   }
 
+  update();
+}
+
+// ── Bonus: prej/potem primerjava (papir proti QR e-ceniku) ──────
+// Preprost, deterministični vzorec, ki je videti kot QR koda — ni
+// dejansko berljiva koda, gre le za vizualni prikaz.
+const QR_FAKE_PATTERN = [
+  1,1,1,1,1,0,1,0,1,1,1,1,1,
+  1,0,0,0,1,0,0,0,0,0,1,0,1,
+  1,0,1,0,1,0,1,1,0,1,1,0,1,
+  1,0,1,0,1,0,0,0,1,0,0,0,1,
+  1,0,0,0,1,0,1,0,0,1,1,0,1,
+  0,0,0,0,0,0,0,1,1,0,0,0,0,
+  1,1,0,1,1,1,0,0,1,1,0,1,1,
+  0,0,0,0,0,0,1,0,0,0,1,0,0,
+  1,0,1,1,0,1,0,1,1,0,1,1,1,
+  1,0,0,0,1,0,1,0,0,0,0,0,1,
+  1,1,1,0,1,1,0,1,1,0,1,0,1,
+  1,0,0,0,0,0,1,0,0,0,1,0,0,
+  1,1,1,1,1,0,1,1,0,1,1,1,1,
+];
+
+function initCompareSlider() {
+  const widget    = document.getElementById('compareWidget');
+  const beforePane = document.getElementById('compareBeforePane');
+  const divider   = document.getElementById('compareDivider');
+  const range     = document.getElementById('compareRange');
+  const qrSvg     = widget?.querySelector('.compare-qr');
+  if (!widget || !beforePane || !divider || !range) return;
+
+  if (qrSvg) {
+    const size = 13;
+    qrSvg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    qrSvg.innerHTML = QR_FAKE_PATTERN
+      .map((on, i) => on ? `<rect x="${i % size}" y="${Math.floor(i / size)}" width="1" height="1" fill="currentColor"/>` : '')
+      .join('');
+  }
+
+  // "Prej" (papir) je zgornja plast — obrezana od desne, tako ostane
+  // vidna na levi glede na položaj drsnika; "Potem" je spodnja plast
+  // na celotni širini, vidna povsod, kjer je papir ne prekriva.
+  const update = () => {
+    const val = Number(range.value);
+    beforePane.style.clipPath = `inset(0 ${100 - val}% 0 0)`;
+    divider.style.left = `${val}%`;
+  };
+
+  range.addEventListener('input', update);
   update();
 }
 
