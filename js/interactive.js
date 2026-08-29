@@ -16,9 +16,10 @@ function formatEUR(amount) {
 }
 
 function bumpElement(el) {
+  // Dvojni rAF namesto branja offsetWidth — restart animacije brez
+  // prisilnega sinhronega preračuna postavitve (t.i. "forced reflow").
   el.classList.remove('bump');
-  void el.offsetWidth; // ponovno sproži animacijo
-  el.classList.add('bump');
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('bump')));
 }
 
 // ── Naloga 1: živ interaktiven e-cenik ─────────────────────────

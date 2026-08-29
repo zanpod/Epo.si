@@ -10,6 +10,27 @@ document.addEventListener('DOMContentLoaded', () => {
   trackPageView();
 });
 
+// ── Optimizirane slike (Netlify Image CDN) ─────────────────────
+// Admin-naložene fotografije (Supabase Storage) so pogosto naravnost s
+// telefona — večje, kot jih stran kadarkoli prikaže. Preusmeri jih prek
+// /.netlify/images za spremembo velikosti/formata "on the fly", z varno
+// vrnitvijo na izvirni URL, če transformacija kadar koli spodleti (glej
+// tudi netlify.toml [images] remote_images).
+function optimizedImg(url, width) {
+  if (!url || !/^https?:\/\//.test(url)) return url;
+  return `/.netlify/images?url=${encodeURIComponent(url)}&w=${width}&q=75&fm=webp`;
+}
+
+// Ena globalna past za napake nalaganja slik — registrirana zgodaj,
+// preden se katera koli slika sploh vstavi v DOM. `error` na <img> se
+// ne razširja (bubble), zato poslušamo v "capture" fazi.
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (img.tagName === 'IMG' && img.dataset.fallback && img.src !== img.dataset.fallback) {
+    img.src = img.dataset.fallback;
+  }
+}, true);
+
 // ── Analitika obiskov (anonimno, lastno v Supabase) ───────────
 async function trackPageView() {
   if (typeof supabaseClient === 'undefined') return;
@@ -162,7 +183,7 @@ function applySettings(s) {
   const aboutImg = document.getElementById('aboutImage');
   if (aboutImg) {
     if (s.about_image_url) {
-      aboutImg.innerHTML = `<img src="${s.about_image_url}" alt="Profilna slika" class="about-image" loading="lazy" decoding="async">`;
+      aboutImg.innerHTML = `<img src="${optimizedImg(s.about_image_url, 600)}" data-fallback="${escHtml(s.about_image_url)}" alt="Profilna slika" class="about-image" loading="lazy" decoding="async">`;
     }
   }
 
@@ -349,7 +370,7 @@ function showProjects() {
   grid.innerHTML = visible.map((p, i) => `
     <div class="project-card glass reveal" style="transition-delay:${(i % PAGE_SIZE) * 80}ms">
       ${p.image_url
-        ? `<img src="${p.image_url}" alt="${escHtml(p.title)}" class="project-image" loading="lazy" decoding="async">`
+        ? `<img src="${optimizedImg(p.image_url, 600)}" data-fallback="${escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-image" loading="lazy" decoding="async">`
         : `<div class="project-image-placeholder">${escHtml(p.title[0])}</div>`}
       <div class="project-body">
         <h3 class="project-title">${escHtml(p.title)}</h3>

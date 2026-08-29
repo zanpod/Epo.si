@@ -1,0 +1,12 @@
+# Netlify build/runtime configuration — https://docs.netlify.com/
+#
+# [images].remote_images allowlists external domains the Netlify Image
+# CDN (/.netlify/images) is allowed to fetch and transform on the fly.
+# Needed so admin-uploaded photos (stored in Supabase Storage) can be
+# resized/re-encoded at delivery time instead of served at full
+# original resolution. Every <img> that uses this endpoint also carries
+# a data-fallback + global onerror handler (see js/main.js) that swaps
+# back to the original, un-transformed URL if this ever fails — so a
+# mistake here degrades to "no optimization", not a broken image.
+[images]
+  remote_images = ["^https://ebcwiesqpnthzgowjsjq\\.supabase\\.co/.*"]
