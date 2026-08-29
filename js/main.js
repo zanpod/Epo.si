@@ -162,7 +162,7 @@ function applySettings(s) {
   const aboutImg = document.getElementById('aboutImage');
   if (aboutImg) {
     if (s.about_image_url) {
-      aboutImg.innerHTML = `<img src="${s.about_image_url}" alt="Profilna slika" class="about-image">`;
+      aboutImg.innerHTML = `<img src="${s.about_image_url}" alt="Profilna slika" class="about-image" loading="lazy" decoding="async">`;
     }
   }
 
@@ -349,7 +349,7 @@ function showProjects() {
   grid.innerHTML = visible.map((p, i) => `
     <div class="project-card glass reveal" style="transition-delay:${(i % PAGE_SIZE) * 80}ms">
       ${p.image_url
-        ? `<img src="${p.image_url}" alt="${escHtml(p.title)}" class="project-image" loading="lazy">`
+        ? `<img src="${p.image_url}" alt="${escHtml(p.title)}" class="project-image" loading="lazy" decoding="async">`
         : `<div class="project-image-placeholder">${escHtml(p.title[0])}</div>`}
       <div class="project-body">
         <h3 class="project-title">${escHtml(p.title)}</h3>

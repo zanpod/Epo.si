@@ -396,7 +396,7 @@ document.getElementById('addStatBtn')?.addEventListener('click', () => {
 document.getElementById('aboutImageFile')?.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const url = await uploadFile(file, 'about/profile');
+  const url = await uploadFile(file, 'about/profile', { resize: {} });
   if (url) {
     await updateSettings({ about_image_url: url });
     const preview = document.getElementById('aboutImagePreview');
@@ -580,7 +580,7 @@ document.getElementById('projImageFile')?.addEventListener('change', async (e) =
   if (!file) return;
   const id = getVal('projId');
   const path = `projects/${Date.now()}-${file.name}`;
-  const url = await uploadFile(file, path);
+  const url = await uploadFile(file, path, { resize: {} });
   if (!url) return;
 
   const preview = document.getElementById('projImagePreview');
@@ -641,7 +641,7 @@ function quillImageHandler() {
   input.onchange = async () => {
     const file = input.files[0];
     if (!file) return;
-    const url = await uploadFile(file, `blog/content-${Date.now()}-${file.name}`);
+    const url = await uploadFile(file, `blog/content-${Date.now()}-${file.name}`, { resize: {} });
     if (!url) return;
     const range = quillEditor.getSelection(true);
     quillEditor.insertEmbed(range.index, 'image', url, 'user');
@@ -818,7 +818,7 @@ function removeBlogTag(i) {
 document.getElementById('blogCoverFile')?.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const url = await uploadFile(file, `blog/${Date.now()}-${file.name}`);
+  const url = await uploadFile(file, `blog/${Date.now()}-${file.name}`, { resize: {} });
   if (!url) return;
   setVal('blogCoverUrl', url);
   const preview = document.getElementById('blogCoverPreview');
@@ -1657,7 +1657,43 @@ async function updateSettings(payload, btn = null) {
   }
 }
 
-async function uploadFile(file, path) {
+// Zmanjša in ponovno stisne fotografijo pred nalaganjem (Canvas, brez
+// dodatnih knjižnic) — večina naloženih fotografij je naravnost s telefona
+// (več MB, tisoče px), končni prikaz na strani pa je vedno majhna kartica
+// ali profilna slika. SVG/GIF (animacije) in že dovolj majhne datoteke
+// pustimo pri miru; ob kakršni koli napaki vrnemo prvotno datoteko.
+function resizeImageFile(file, { maxDimension = 1600, quality = 0.82 } = {}) {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+      resolve(file);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+      if (scale >= 1 && file.size < 400 * 1024) {
+        resolve(file); // že dovolj majhna — ne ponovno stiskaj po nepotrebnem
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        if (!blob) { resolve(file); return; }
+        resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
+    img.src = objectUrl;
+  });
+}
+
+async function uploadFile(file, path, { resize } = {}) {
+  if (resize) file = await resizeImageFile(file, resize);
+
   const ext  = file.name.split('.').pop();
   const full = `${path}.${ext}`;
 
