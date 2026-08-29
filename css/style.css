@@ -1687,6 +1687,10 @@ body::before {
   .hero-heading { font-size: clamp(2rem, 8vw, 3rem); margin-inline: auto; }
   .hero-sub { margin-inline: auto; }
   .hero-ctas { flex-direction: column; align-items: center; }
+  /* Swipe-to-scroll je na dotik napravah samoumeven — kazalnik lahko
+     (posebej pri povečani pisavi/dostopnostnih nastavitvah) prekriva
+     spodnji CTA gumb, zato ga na mobilnem skrijemo. */
+  .hero-scroll { display: none; }
 
   .about, .services, .projects, .pricing, .contact, .faq { padding: var(--space-8) 0; }
 
