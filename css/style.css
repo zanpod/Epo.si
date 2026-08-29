@@ -2924,6 +2924,7 @@ body.has-chat-fab {
 
 .article-cover {
   width: 100%;
+  aspect-ratio: 8 / 5;
   max-height: 480px;
   object-fit: cover;
   border-radius: var(--radius-lg);
