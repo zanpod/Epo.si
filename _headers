@@ -1,0 +1,20 @@
+# Netlify custom headers — https://docs.netlify.com/routing/headers/
+# Moderate cache lifetime for static assets (not the HTML pages, which
+# should always be revalidated) to address "short cache lifetime"
+# Lighthouse findings, without risking stale CSS/JS for a full year
+# on a site that's still actively changing.
+
+/css/*
+  Cache-Control: public, max-age=604800
+
+/js/*
+  Cache-Control: public, max-age=604800
+
+/images/*
+  Cache-Control: public, max-age=604800
+
+/favicon.svg
+  Cache-Control: public, max-age=604800
+
+/og-image.png
+  Cache-Control: public, max-age=604800
