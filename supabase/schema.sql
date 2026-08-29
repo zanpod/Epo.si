@@ -16,7 +16,7 @@ create table if not exists settings (
   contact_email text default 'hello@example.com',
   contact_phone text default '+1 (555) 000-0000',
 
-  github_url text default 'https://github.com',
+  facebook_url text default 'https://facebook.com',
   linkedin_url text default 'https://linkedin.com',
   instagram_url text default 'https://instagram.com',
 

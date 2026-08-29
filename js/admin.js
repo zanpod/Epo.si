@@ -1087,7 +1087,7 @@ async function loadSettings() {
   setVal('setLogoText',      data.logo_text);
   setVal('setEmail',         data.contact_email);
   setVal('setPhone',         data.contact_phone);
-  setVal('setGithub',        data.github_url);
+  setVal('setFacebook',      data.facebook_url);
   setVal('setLinkedin',      data.linkedin_url);
   setVal('setInstagram',     data.instagram_url);
   setVal('setMetaTitle',     data.meta_title);
@@ -1105,7 +1105,7 @@ document.getElementById('settingsForm')?.addEventListener('submit', async (e) =>
     logo_text:        getVal('setLogoText'),
     contact_email:    getVal('setEmail'),
     contact_phone:    getVal('setPhone'),
-    github_url:       getVal('setGithub'),
+    facebook_url:     getVal('setFacebook'),
     linkedin_url:     getVal('setLinkedin'),
     instagram_url:    getVal('setInstagram'),
     meta_title:       getVal('setMetaTitle'),
