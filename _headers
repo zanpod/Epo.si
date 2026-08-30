@@ -1,14 +1,19 @@
 # Netlify custom headers — https://docs.netlify.com/routing/headers/
-# Moderate cache lifetime for static assets (not the HTML pages, which
-# should always be revalidated) to address "short cache lifetime"
-# Lighthouse findings, without risking stale CSS/JS for a full year
-# on a site that's still actively changing.
+# CSS/JS filenames never change (no build step/hashing), so any fixed
+# max-age makes browsers keep serving an old file for that whole window
+# after a deploy, no matter how many times the visitor refreshes — this
+# bit us directly once already. `no-cache` still lets the browser keep a
+# cached copy, but forces a revalidation request (ETag) on every load:
+# unchanged files come back as a fast, bodyless 304, changed ones are
+# fetched fresh immediately. Images/favicon keep a real cache lifetime
+# since a changed image gets a new URL (admin re-uploads), so nothing
+# there is ever silently stale.
 
 /css/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: no-cache
 
 /js/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: no-cache
 
 /images/*
   Cache-Control: public, max-age=604800
