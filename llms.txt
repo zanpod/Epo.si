@@ -1,0 +1,24 @@
+# EPO.SI
+
+> Agencija za spletni razvoj po meri — spletne strani, spletne aplikacije, digitalni ceniki (SaaS) in sistemi za podjetja v Sloveniji.
+
+EPO.SI gradi spletne rešitve po meri: od predstavitvenih spletnih strani in spletnih aplikacij do internih admin panelov, CRM sistemov in digitalnih cenikov. Vse na ključ — razvoj, gostovanje in vzdrževanje.
+
+## Storitve
+
+- Spletni razvoj: spletne strani in spletne aplikacije po meri
+- UI/UX oblikovanje: uporabniški vmesniki in uporabniška izkušnja
+- SaaS produkti: npr. EPO Cenik — digitalni QR e-cenik za gostince
+- Hitrost in SEO: optimizacija Core Web Vitals, dostopnosti in iskalnikov
+- Gostovanje in vzdrževanje spletnih rešitev
+
+## Strani
+
+- [Domača stran](https://agencijaepo.si/): pregled storitev, cenik, kontaktni obrazec
+- [EPO Cenik](https://agencijaepo.si/e-cenik.html): digitalni QR e-cenik za kavarne, restavracije in gostilne — živa demo predstavitev, izračun prihranka pri tiskanju, cenik, pogosta vprašanja
+- [Blog](https://agencijaepo.si/blog.html): novice in članki o spletnem razvoju
+- [Politika zasebnosti](https://agencijaepo.si/zasebnost.html)
+
+## Kontakt
+
+E-pošta: info@agencijaepo.si

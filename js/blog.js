@@ -297,6 +297,27 @@ function updateArticleSeo(p) {
 
   const canonical = document.querySelector('link[rel="canonical"]');
   if (canonical) canonical.href = location.href;
+
+  const ld = document.getElementById('articleLdJson');
+  if (ld) {
+    const data = {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: title,
+      description: desc,
+      datePublished: p.published_at,
+      author: { '@type': 'Person', name: p.author_name || 'EPO.SI' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'EPO.SI',
+        logo: { '@type': 'ImageObject', url: 'https://agencijaepo.si/favicon-32.png' },
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': location.href },
+    };
+    if (p.cover_image_url) data.image = p.cover_image_url;
+    // Prepreči, da bi "</script>" znotraj katerega koli polja predčasno zaprl tag.
+    ld.textContent = JSON.stringify(data).replace(/</g, '\\u003c');
+  }
 }
 
 function setMeta(selector, value) {
