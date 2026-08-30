@@ -201,6 +201,9 @@ body::before {
 }
 
 .nav-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
@@ -208,6 +211,8 @@ body::before {
   color: var(--text);
   letter-spacing: var(--tracking-tight);
 }
+
+.logo-icon { display: block; flex-shrink: 0; width: 1.5em; height: 1.5em; }
 
 .nav-links {
   display: flex;
@@ -903,6 +908,9 @@ body::before {
 }
 
 .footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
   font-family: var(--font-heading);
   font-size: var(--text-md);
   font-weight: var(--weight-bold);
