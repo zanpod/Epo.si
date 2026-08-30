@@ -169,7 +169,7 @@ async function loadSiteData() {
 let logoIconSeq = 0;
 function logoIconSvg() {
   const gid = `epoLogoGradJs${logoIconSeq++}`;
-  return `<svg class="logo-icon" viewBox="0 0 84 84" fill="none" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6EA8FF"/><stop offset="100%" stop-color="#A98BFF"/></linearGradient></defs><rect x="1" y="1" width="82" height="82" rx="20" fill="#0A0C14" stroke="#232A3D" stroke-width="1.5"/><rect x="24" y="26" width="36" height="7" rx="3.5" fill="url(#${gid})"/><rect x="24" y="38.5" width="26" height="7" rx="3.5" fill="#6EA8FF"/><rect x="24" y="51" width="36" height="7" rx="3.5" fill="url(#${gid})"/></svg>`;
+  return `<svg class="logo-icon" viewBox="0 0 84 84" fill="none" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4a7fe0"/><stop offset="100%" stop-color="#7ba3ec"/></linearGradient></defs><rect x="1" y="1" width="82" height="82" rx="20" fill="#17130f" stroke="#29221a" stroke-width="1.5"/><rect x="24" y="26" width="36" height="7" rx="3.5" fill="url(#${gid})"/><rect x="24" y="38.5" width="26" height="7" rx="3.5" fill="#4a7fe0"/><rect x="24" y="51" width="36" height="7" rx="3.5" fill="url(#${gid})"/></svg>`;
 }
 
 // Razdeli logotip na akcentni znak + enobarven pripon (npr. "EPO" + ".SI").
