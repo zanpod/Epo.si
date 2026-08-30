@@ -139,15 +139,33 @@ function logoTextHtml(text) {
   return `<span class="logo-mark">${escHtml(text.slice(0, dot))}</span><span class="logo-suffix">${escHtml(text.slice(dot))}</span>`;
 }
 
+function renderLogo(el, s) {
+  if (s.logo_image_url) {
+    el.innerHTML = `<img src="${s.logo_image_url}" alt="${escHtml(s.logo_text || s.site_name || 'EPO.SI')}" loading="lazy">`;
+  } else {
+    el.innerHTML = logoTextHtml(s.logo_text || 'EPO.SI');
+  }
+}
+
+// Logotip iz zadnjega znanega stanja (localStorage) — izriše se takoj, še
+// preden se vrne Supabase poizvedba, da ob ponovnem obisku ni vidnega
+// preklopa iz privzetega besedila na dejansko naloženo sliko logotipa.
+function applyCachedLogo() {
+  try {
+    const cached = JSON.parse(localStorage.getItem('epo_logo_cache'));
+    if (cached) document.querySelectorAll('[data-logo]').forEach(el => renderLogo(el, cached));
+  } catch (err) { /* ni na voljo (zaseben način ipd.) — ostane privzeti tekst */ }
+}
+applyCachedLogo();
+
 function applySettings(s) {
   // Logo
-  document.querySelectorAll('[data-logo]').forEach(el => {
-    if (s.logo_image_url) {
-      el.innerHTML = `<img src="${s.logo_image_url}" alt="${escHtml(s.logo_text || s.site_name || 'EPO.SI')}" loading="lazy">`;
-    } else {
-      el.innerHTML = logoTextHtml(s.logo_text || 'EPO.SI');
-    }
-  });
+  document.querySelectorAll('[data-logo]').forEach(el => renderLogo(el, s));
+  try {
+    localStorage.setItem('epo_logo_cache', JSON.stringify({
+      logo_image_url: s.logo_image_url, logo_text: s.logo_text, site_name: s.site_name,
+    }));
+  } catch (err) { /* localStorage nedosegljiv/poln — logotip se še vedno pravilno prikaže */ }
 
   // Hero
   const heroHeading = document.getElementById('heroHeading');
