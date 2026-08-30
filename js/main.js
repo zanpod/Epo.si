@@ -3,6 +3,7 @@
 // ================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  hydrateFromCache();
   initNav();
   loadSiteData();
   initScrollReveal();
@@ -114,6 +115,29 @@ function initScrollReveal() {
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 
+// ── Predpomnjenje strani (localStorage) ─────────────────────────
+// Vsa vsebina od Supabase (logo, hero, about, storitve, projekti …) se
+// izriše šele, ko se poizvedba vrne — brez predpomnjenja bi se ob vsaki
+// osvežitvi za trenutek prikazal prazen/privzeti izgled iz HTML-ja, nato
+// pa "poskočila" prava vsebina. Zadnje uspešno naložene podatke shranimo
+// tukaj in jih izrišemo takoj ob zagonu (klicano na začetku
+// DOMContentLoaded, še preden se sploh začne nova poizvedba — mora
+// počakati do takrat, da so vse spodnje `const`/`let` deklaracije, ki jih
+// applySettings/renderServices/renderProjects potrebujejo, že izvedene).
+// Supabase klic teče naprej v ozadju kot prej in predpomnilnik osveži,
+// če se je kaj spremenilo.
+const SITE_CACHE_KEY = 'epo_site_cache_v1';
+
+function hydrateFromCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(SITE_CACHE_KEY));
+    if (!cached) return;
+    if (cached.settings) applySettings(cached.settings);
+    if (cached.services) renderServices(cached.services);
+    if (cached.projects) renderProjects(cached.projects);
+  } catch (err) { /* ni na voljo (zaseben način ipd.) — ostane privzeti izgled iz HTML */ }
+}
+
 // ── Load site data from Supabase ──────────────────────────────
 async function loadSiteData() {
   try {
@@ -126,6 +150,14 @@ async function loadSiteData() {
     if (settingsRes.data) applySettings(settingsRes.data);
     if (servicesRes.data) renderServices(servicesRes.data);
     if (projectsRes.data) renderProjects(projectsRes.data);
+
+    try {
+      localStorage.setItem(SITE_CACHE_KEY, JSON.stringify({
+        settings: settingsRes.data || null,
+        services: servicesRes.data || null,
+        projects: projectsRes.data || null,
+      }));
+    } catch (err) { /* localStorage nedosegljiv/poln — stran deluje naprej brez predpomnjenja */ }
   } catch (err) {
     console.warn('Could not load data from Supabase:', err.message);
   }
@@ -147,25 +179,9 @@ function renderLogo(el, s) {
   }
 }
 
-// Logotip iz zadnjega znanega stanja (localStorage) — izriše se takoj, še
-// preden se vrne Supabase poizvedba, da ob ponovnem obisku ni vidnega
-// preklopa iz privzetega besedila na dejansko naloženo sliko logotipa.
-function applyCachedLogo() {
-  try {
-    const cached = JSON.parse(localStorage.getItem('epo_logo_cache'));
-    if (cached) document.querySelectorAll('[data-logo]').forEach(el => renderLogo(el, cached));
-  } catch (err) { /* ni na voljo (zaseben način ipd.) — ostane privzeti tekst */ }
-}
-applyCachedLogo();
-
 function applySettings(s) {
   // Logo
   document.querySelectorAll('[data-logo]').forEach(el => renderLogo(el, s));
-  try {
-    localStorage.setItem('epo_logo_cache', JSON.stringify({
-      logo_image_url: s.logo_image_url, logo_text: s.logo_text, site_name: s.site_name,
-    }));
-  } catch (err) { /* localStorage nedosegljiv/poln — logotip se še vedno pravilno prikaže */ }
 
   // Hero
   const heroHeading = document.getElementById('heroHeading');
