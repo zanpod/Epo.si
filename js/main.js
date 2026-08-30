@@ -163,12 +163,22 @@ async function loadSiteData() {
   }
 }
 
+// Znak logotipa — modro-vijolični preliv "E" iz treh vodoravnih linij, enak
+// kot na favicon datotekah. Gradient id mora biti unikaten na stran (nav +
+// noga imata vsak svoj <svg>), zato šteje navzgor pri vsakem klicu.
+let logoIconSeq = 0;
+function logoIconSvg() {
+  const gid = `epoLogoGradJs${logoIconSeq++}`;
+  return `<svg class="logo-icon" viewBox="0 0 84 84" fill="none" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6EA8FF"/><stop offset="100%" stop-color="#A98BFF"/></linearGradient></defs><rect x="1" y="1" width="82" height="82" rx="20" fill="#0A0C14" stroke="#232A3D" stroke-width="1.5"/><rect x="24" y="26" width="36" height="7" rx="3.5" fill="url(#${gid})"/><rect x="24" y="38.5" width="26" height="7" rx="3.5" fill="#6EA8FF"/><rect x="24" y="51" width="36" height="7" rx="3.5" fill="url(#${gid})"/></svg>`;
+}
+
 // Razdeli logotip na akcentni znak + enobarven pripon (npr. "EPO" + ".SI").
 // Če besedilo ne vsebuje pike, ga izriše enobarvno brez uganjevanja.
 function logoTextHtml(text) {
   const dot = text.lastIndexOf('.');
-  if (dot <= 0) return `<span class="logo-suffix">${escHtml(text)}</span>`;
-  return `<span class="logo-mark">${escHtml(text.slice(0, dot))}</span><span class="logo-suffix">${escHtml(text.slice(dot))}</span>`;
+  const icon = logoIconSvg();
+  if (dot <= 0) return `${icon}<span class="logo-suffix">${escHtml(text)}</span>`;
+  return `${icon}<span class="logo-mark">${escHtml(text.slice(0, dot))}</span><span class="logo-suffix">${escHtml(text.slice(dot))}</span>`;
 }
 
 function renderLogo(el, s) {
