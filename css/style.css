@@ -477,6 +477,9 @@ body::before {
   color: var(--text-muted);
   font-size: var(--text-base);
   line-height: 1.9;
+  /* Bio se izriše s textContent (main.js) — obdrži prazne vrstice med
+     odstavki namesto da jih strne v en sam blok besedila. */
+  white-space: pre-line;
 }
 
 /* Seznam prednosti — navaden urejevalen seznam z majhno črtico, ne
