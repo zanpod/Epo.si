@@ -361,6 +361,23 @@ function serviceIconSvg(icon) {
   return SERVICE_ICON_MAP[key] || SERVICE_ICON_FALLBACK;
 }
 
+// Skupine storitev — po naslovu, ne po ločenem polju v bazi (9 kartic v
+// eni vrsti je preveč za obiskovalca; 4 razumljive skupine povedo, kaj
+// sploh rabi). Neznan naslov pade v "Drugo", da nova storitev iz admin
+// panela nikoli ne izgine, tudi če je ne dodamo v spodnji seznam.
+const SERVICE_CATEGORY_ORDER = ['Splet', 'Poslovna orodja', 'Razvoj po meri', 'Podpora'];
+const SERVICE_CATEGORY_BY_TITLE = {
+  'Predstavitvene spletne strani':    'Splet',
+  'Postavitev digitalne prisotnosti': 'Splet',
+  'Optimizacija':                     'Splet',
+  'Digitalni e-ceniki za gostinstvo': 'Poslovna orodja',
+  'Sistemi za rezervacije':           'Poslovna orodja',
+  'CRM sistemi po meri':              'Poslovna orodja',
+  'Admin paneli po meri':             'Poslovna orodja',
+  'Spletne aplikacije po meri':       'Razvoj po meri',
+  'Vzdrževanje in podpora':           'Podpora',
+};
+
 function renderServices(services) {
   const grid = document.getElementById('servicesGrid');
   if (!grid) return;
@@ -370,13 +387,33 @@ function renderServices(services) {
     return;
   }
 
-  grid.innerHTML = services.map((s, i) => `
-    <div class="service-card glass reveal" style="transition-delay:${i * 80}ms">
-      <span class="service-icon" aria-hidden="true">${serviceIconSvg(s.icon)}</span>
-      <h3 class="service-title">${escHtml(s.title)}</h3>
-      <p class="service-desc">${escHtml(s.description)}</p>
-    </div>
-  `).join('');
+  const groups = new Map();
+  services.forEach(s => {
+    const cat = SERVICE_CATEGORY_BY_TITLE[s.title] || 'Drugo';
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat).push(s);
+  });
+  const orderedCats = [...SERVICE_CATEGORY_ORDER, ...[...groups.keys()].filter(c => !SERVICE_CATEGORY_ORDER.includes(c))]
+    .filter(cat => groups.has(cat));
+
+  let i = 0;
+  grid.innerHTML = orderedCats.map(cat => {
+    const cards = groups.get(cat).map(s => {
+      const html = `
+        <div class="service-card glass reveal" style="transition-delay:${(i % 9) * 60}ms">
+          <span class="service-icon" aria-hidden="true">${serviceIconSvg(s.icon)}</span>
+          <h3 class="service-title">${escHtml(s.title)}</h3>
+          <p class="service-desc">${escHtml(s.description)}</p>
+        </div>`;
+      i++;
+      return html;
+    }).join('');
+    return `
+      <div class="service-category">
+        <p class="service-category-label">${escHtml(cat)}</p>
+        <div class="services-grid">${cards}</div>
+      </div>`;
+  }).join('');
 
   initScrollReveal();
 }
