@@ -148,7 +148,7 @@
   --text-xl:   clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);    /* h3 */
   --text-2xl:  clamp(1.875rem, 1.5rem + 1.5vw, 2.5rem);    /* h2 */
   --text-3xl:  clamp(2.25rem, 1.6rem + 2.5vw, 3.25rem);    /* h1 sekundarni */
-  --text-4xl:  clamp(2.75rem, 1.7rem + 4vw, 4.5rem);       /* hero h1 */
+  --text-4xl:  clamp(2.5rem, 1.9rem + 3vw, 3.75rem);       /* hero h1 — močan, a ne pretiran */
 
   /* ── Razmiki — lestvica 4px ──────────────────────────────────── */
   --space-1:  0.25rem;  /*  4px */
@@ -163,14 +163,16 @@
   --space-10: 8rem;     /* 128px */
 
   /* ── Površine in globina ─────────────────────────────────────── */
-  --radius-sm:   10px;  /* gumbi, polja, značke */
-  --radius-lg:   20px;  /* kartice, paneli, modali */
-  --radius-full: 999px; /* pilule, avatarji */
+  --radius-sm:   8px;    /* gumbi, polja, značke */
+  --radius-lg:   14px;   /* kartice, paneli, modali — manj "bubbly SaaS" videza */
+  --radius-full: 999px;  /* pilule, avatarji */
 
   --shadow-sm:       0 2px 8px rgba(13, 9, 6, 0.28);
   --shadow-md:       0 8px 24px rgba(13, 9, 6, 0.36);
-  --shadow-elevated: 0 12px 32px rgba(13, 9, 6, 0.44);
-  --shadow-glow:     0 0 32px rgba(74, 127, 224, 0.22);
+  --shadow-elevated: 0 10px 28px rgba(13, 9, 6, 0.34);
+  /* Premišljen moder poudarek namesto neonskega sija — mehka, kratka
+     senca v akcentni barvi, ne omnidirekcijski "glow". */
+  --shadow-glow:     0 6px 18px rgba(74, 127, 224, 0.16);
 
   /* ── Gibanje ─────────────────────────────────────────────────── */
   --ease: cubic-bezier(0.2, 0, 0, 1);
