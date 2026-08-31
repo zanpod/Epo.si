@@ -199,25 +199,43 @@ function applySettings(s) {
   const ctaPrimary  = document.getElementById('ctaPrimary');
   const ctaSecondary = document.getElementById('ctaSecondary');
 
-  // Meta — samo na naslovnici; ostale strani (npr. blog) imajo lasten naslov/opis.
+  // Vse spodaj samo na naslovnici — #heroHeading/#ctaPrimary/#ctaSecondary
+  // uporabljata tudi druge strani (npr. e-cenik.html) za lastne, čisto
+  // drugačne gumbe; brez tega gate-a bi jih te nastavitve tiho prepisale.
   if (heroHeading) {
     document.title = s.meta_title || document.title;
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc && s.meta_description) metaDesc.content = s.meta_description;
-  }
 
-  if (heroHeading && s.hero_heading) heroHeading.textContent = s.hero_heading;
-  if (heroSub && s.hero_subheading) heroSub.textContent = s.hero_subheading;
-  if (ctaPrimary) {
-    if (s.cta_primary_text) ctaPrimary.textContent = s.cta_primary_text;
-    if (s.cta_primary_link) {
-      // Sekcija s projekti je zaenkrat skrita — preusmeri na storitve.
-      ctaPrimary.href = s.cta_primary_link === '#projects' ? '#services' : s.cta_primary_link;
+    if (s.hero_heading) {
+      // Zadnja beseda/besedna zveza je vedno v akcentni barvi (isti vzorec
+      // kot pri vseh naslovih sekcij) — besedilo iz baze je navadno
+      // besedilo brez oznak, zato barvo tu vedno znova sestavimo namesto
+      // z .textContent pobrisati vgrajeni <span>.
+      const words = s.hero_heading.trim().split(/\s+/);
+      const last = words.pop();
+      heroHeading.innerHTML = words.length
+        ? `${escHtml(words.join(' '))} <span class="gradient-text">${escHtml(last)}</span>`
+        : `<span class="gradient-text">${escHtml(last)}</span>`;
     }
-  }
-  if (ctaSecondary) {
-    if (s.cta_secondary_text) ctaSecondary.textContent = s.cta_secondary_text;
-    if (s.cta_secondary_link) ctaSecondary.href = s.cta_secondary_link;
+    if (heroSub && s.hero_subheading) heroSub.textContent = s.hero_subheading;
+    if (ctaPrimary) {
+      if (s.cta_primary_text) {
+        // .textContent na celotnem gumbu bi pobrisal puščico (SVG) zraven —
+        // besedilo zato cilja samo na .btn-label znotraj gumba.
+        const label = ctaPrimary.querySelector('.btn-label');
+        if (label) label.textContent = s.cta_primary_text;
+        else ctaPrimary.textContent = s.cta_primary_text;
+      }
+      if (s.cta_primary_link) {
+        // Sekcija s projekti je zaenkrat skrita — preusmeri na storitve.
+        ctaPrimary.href = s.cta_primary_link === '#projects' ? '#services' : s.cta_primary_link;
+      }
+    }
+    if (ctaSecondary) {
+      if (s.cta_secondary_text) ctaSecondary.textContent = s.cta_secondary_text;
+      if (s.cta_secondary_link) ctaSecondary.href = s.cta_secondary_link;
+    }
   }
 
   // About
