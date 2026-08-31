@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initSavingsCalculator();
   initCompareSlider();
   initMagneticButton();
-  initHeroCursorGlow();
 });
 
 function formatEUR(amount) {
@@ -184,22 +183,3 @@ function initMagneticButton() {
   });
 }
 
-// ── Naloga 3: cursor-glow ozadje v hero sekciji ─────────────────
-function initHeroCursorGlow() {
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-
-  const hero = document.querySelector('.hero');
-  const glow = document.getElementById('heroCursorGlow');
-  if (!hero || !glow) return;
-
-  hero.addEventListener('mousemove', (e) => {
-    const rect = hero.getBoundingClientRect();
-    glow.style.left = `${e.clientX - rect.left}px`;
-    glow.style.top  = `${e.clientY - rect.top}px`;
-    glow.classList.add('active');
-  });
-
-  hero.addEventListener('mouseleave', () => {
-    glow.classList.remove('active');
-  });
-}

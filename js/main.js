@@ -199,25 +199,43 @@ function applySettings(s) {
   const ctaPrimary  = document.getElementById('ctaPrimary');
   const ctaSecondary = document.getElementById('ctaSecondary');
 
-  // Meta — samo na naslovnici; ostale strani (npr. blog) imajo lasten naslov/opis.
+  // Vse spodaj samo na naslovnici — #heroHeading/#ctaPrimary/#ctaSecondary
+  // uporabljata tudi druge strani (npr. e-cenik.html) za lastne, čisto
+  // drugačne gumbe; brez tega gate-a bi jih te nastavitve tiho prepisale.
   if (heroHeading) {
     document.title = s.meta_title || document.title;
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc && s.meta_description) metaDesc.content = s.meta_description;
-  }
 
-  if (heroHeading && s.hero_heading) heroHeading.textContent = s.hero_heading;
-  if (heroSub && s.hero_subheading) heroSub.textContent = s.hero_subheading;
-  if (ctaPrimary) {
-    if (s.cta_primary_text) ctaPrimary.textContent = s.cta_primary_text;
-    if (s.cta_primary_link) {
-      // Sekcija s projekti je zaenkrat skrita — preusmeri na storitve.
-      ctaPrimary.href = s.cta_primary_link === '#projects' ? '#services' : s.cta_primary_link;
+    if (s.hero_heading) {
+      // Zadnja beseda/besedna zveza je vedno v akcentni barvi (isti vzorec
+      // kot pri vseh naslovih sekcij) — besedilo iz baze je navadno
+      // besedilo brez oznak, zato barvo tu vedno znova sestavimo namesto
+      // z .textContent pobrisati vgrajeni <span>.
+      const words = s.hero_heading.trim().split(/\s+/);
+      const last = words.pop();
+      heroHeading.innerHTML = words.length
+        ? `${escHtml(words.join(' '))} <span class="gradient-text">${escHtml(last)}</span>`
+        : `<span class="gradient-text">${escHtml(last)}</span>`;
     }
-  }
-  if (ctaSecondary) {
-    if (s.cta_secondary_text) ctaSecondary.textContent = s.cta_secondary_text;
-    if (s.cta_secondary_link) ctaSecondary.href = s.cta_secondary_link;
+    if (heroSub && s.hero_subheading) heroSub.textContent = s.hero_subheading;
+    if (ctaPrimary) {
+      if (s.cta_primary_text) {
+        // .textContent na celotnem gumbu bi pobrisal puščico (SVG) zraven —
+        // besedilo zato cilja samo na .btn-label znotraj gumba.
+        const label = ctaPrimary.querySelector('.btn-label');
+        if (label) label.textContent = s.cta_primary_text;
+        else ctaPrimary.textContent = s.cta_primary_text;
+      }
+      if (s.cta_primary_link) {
+        // Sekcija s projekti je zaenkrat skrita — preusmeri na storitve.
+        ctaPrimary.href = s.cta_primary_link === '#projects' ? '#services' : s.cta_primary_link;
+      }
+    }
+    if (ctaSecondary) {
+      if (s.cta_secondary_text) ctaSecondary.textContent = s.cta_secondary_text;
+      if (s.cta_secondary_link) ctaSecondary.href = s.cta_secondary_link;
+    }
   }
 
   // About
@@ -361,6 +379,23 @@ function serviceIconSvg(icon) {
   return SERVICE_ICON_MAP[key] || SERVICE_ICON_FALLBACK;
 }
 
+// Skupine storitev — po naslovu, ne po ločenem polju v bazi (9 kartic v
+// eni vrsti je preveč za obiskovalca; 4 razumljive skupine povedo, kaj
+// sploh rabi). Neznan naslov pade v "Drugo", da nova storitev iz admin
+// panela nikoli ne izgine, tudi če je ne dodamo v spodnji seznam.
+const SERVICE_CATEGORY_ORDER = ['Splet', 'Poslovna orodja', 'Razvoj po meri', 'Podpora'];
+const SERVICE_CATEGORY_BY_TITLE = {
+  'Predstavitvene spletne strani':    'Splet',
+  'Postavitev digitalne prisotnosti': 'Splet',
+  'Optimizacija':                     'Splet',
+  'Digitalni e-ceniki za gostinstvo': 'Poslovna orodja',
+  'Sistemi za rezervacije':           'Poslovna orodja',
+  'CRM sistemi po meri':              'Poslovna orodja',
+  'Admin paneli po meri':             'Poslovna orodja',
+  'Spletne aplikacije po meri':       'Razvoj po meri',
+  'Vzdrževanje in podpora':           'Podpora',
+};
+
 function renderServices(services) {
   const grid = document.getElementById('servicesGrid');
   if (!grid) return;
@@ -370,13 +405,33 @@ function renderServices(services) {
     return;
   }
 
-  grid.innerHTML = services.map((s, i) => `
-    <div class="service-card glass reveal" style="transition-delay:${i * 80}ms">
-      <span class="service-icon" aria-hidden="true">${serviceIconSvg(s.icon)}</span>
-      <h3 class="service-title">${escHtml(s.title)}</h3>
-      <p class="service-desc">${escHtml(s.description)}</p>
-    </div>
-  `).join('');
+  const groups = new Map();
+  services.forEach(s => {
+    const cat = SERVICE_CATEGORY_BY_TITLE[s.title] || 'Drugo';
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat).push(s);
+  });
+  const orderedCats = [...SERVICE_CATEGORY_ORDER, ...[...groups.keys()].filter(c => !SERVICE_CATEGORY_ORDER.includes(c))]
+    .filter(cat => groups.has(cat));
+
+  let i = 0;
+  grid.innerHTML = orderedCats.map(cat => {
+    const cards = groups.get(cat).map(s => {
+      const html = `
+        <div class="service-card glass reveal" style="transition-delay:${(i % 9) * 60}ms">
+          <span class="service-icon" aria-hidden="true">${serviceIconSvg(s.icon)}</span>
+          <h3 class="service-title">${escHtml(s.title)}</h3>
+          <p class="service-desc">${escHtml(s.description)}</p>
+        </div>`;
+      i++;
+      return html;
+    }).join('');
+    return `
+      <div class="service-category">
+        <p class="service-category-label">${escHtml(cat)}</p>
+        <div class="services-grid">${cards}</div>
+      </div>`;
+  }).join('');
 
   initScrollReveal();
 }

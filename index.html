@@ -55,7 +55,7 @@
 <nav class="navbar" id="navbar" role="navigation" aria-label="Glavna navigacija">
   <div class="container">
     <div class="nav-inner">
-      <a href="#home" class="nav-logo" data-logo><svg class="logo-icon" viewBox="0 0 84 84" fill="none" aria-hidden="true"><defs><linearGradient id="epoLogoGradNav" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4a7fe0"/><stop offset="100%" stop-color="#7ba3ec"/></linearGradient></defs><rect x="1" y="1" width="82" height="82" rx="20" fill="#17130f" stroke="#29221a" stroke-width="1.5"/><rect x="24" y="26" width="36" height="7" rx="3.5" fill="url(#epoLogoGradNav)"/><rect x="24" y="38.5" width="26" height="7" rx="3.5" fill="#4a7fe0"/><rect x="24" y="51" width="36" height="7" rx="3.5" fill="url(#epoLogoGradNav)"/></svg><span class="logo-mark">EPO</span><span class="logo-suffix">.SI</span></a>
+      <a href="#home" class="nav-logo" data-logo></a>
 
       <ul class="nav-links" role="list">
         <li><a href="#home"     data-nav>Domov</a></li>
@@ -93,23 +93,19 @@
 <section id="home" class="hero">
   <!-- Animirane barvne lise -->
   <div class="hero-bg" aria-hidden="true"></div>
-  <div class="hero-cursor-glow" id="heroCursorGlow" aria-hidden="true"></div>
 
   <div class="container">
     <div class="hero-content">
       <div class="hero-badge">Kmalu odpiramo</div>
 
-      <h1 class="hero-heading" id="heroHeading">
-        Digitalna orodja, ki poganjajo vaš <span class="gradient-text">posel</span>
-      </h1>
+      <!-- Napolni JS (main.js applySettings) iz nastavitev v Supabase -->
+      <h1 class="hero-heading" id="heroHeading"></h1>
 
-      <p class="hero-sub" id="heroSub">
-        Pri EPO.SI gradimo spletne aplikacije in sisteme po meri — od digitalnih cenikov in rezervacijskih sistemov do internih admin panelov in CRM rešitev. Vse na ključ: razvoj, gostovanje, vzdrževanje.
-      </p>
+      <p class="hero-sub" id="heroSub"></p>
 
       <div class="hero-ctas">
         <a href="#services" class="btn btn-primary" id="ctaPrimary">
-          Poglej rešitve
+          <span class="btn-label">Poglej rešitve</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
         <span class="magnetic-wrap" id="magneticWrap">
@@ -143,12 +139,11 @@
       <div class="about-text">
         <div class="reveal">
           <p class="section-label">O nas</p>
-          <h2 class="section-title">Strastni do <span class="gradient-text">odličnih rešitev</span></h2>
+          <h2 class="section-title">Kdo stoji za <span class="gradient-text">EPO.SI</span></h2>
         </div>
 
-        <p class="about-bio reveal" id="aboutBio">
-          Smo ekipa izkušenih spletnih razvijalcev z veseljem do ustvarjanja modernih digitalnih rešitev. Specializirani smo za celoten razvoj — od zasnove do objave. Z veseljem pomagamo podjetjem in posameznikom uresničiti njihove digitalne cilje.
-        </p>
+        <!-- Napolni JS iz nastavitev v Supabase -->
+        <p class="about-bio reveal" id="aboutBio"></p>
 
         <div class="reveal">
           <p style="font-size:0.8rem;font-weight:600;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:0.75rem">Prednosti</p>
@@ -166,25 +161,8 @@
       </div>
     </div>
 
-    <!-- Statistike -->
-    <div class="about-stats" id="statsWrap">
-      <div class="stat-card glass reveal">
-        <div class="stat-number">5+</div>
-        <div class="stat-label">Let izkušenj</div>
-      </div>
-      <div class="stat-card glass reveal">
-        <div class="stat-number">50+</div>
-        <div class="stat-label">Zaključenih projektov</div>
-      </div>
-      <div class="stat-card glass reveal">
-        <div class="stat-number">30+</div>
-        <div class="stat-label">Zadovoljnih strank</div>
-      </div>
-      <div class="stat-card glass reveal">
-        <div class="stat-number">99%</div>
-        <div class="stat-label">Zadovoljstvo strank</div>
-      </div>
-    </div>
+    <!-- Statistike — napolni JS iz nastavitev v Supabase -->
+    <div class="about-stats" id="statsWrap"></div>
   </div>
 </section>
 
@@ -196,40 +174,10 @@
     <div class="services-header reveal">
       <p class="section-label">Kaj počnemo</p>
       <h2 class="section-title">Naše <span class="gradient-text">storitve</span></h2>
-      <p class="section-desc">Od koncepta do objave — gradimo digitalna orodja, ki vašemu poslu prihranijo čas in pripeljejo več strank.</p>
+      <p class="section-desc">Izdelamo orodje, ki reši konkreten problem v vašem poslu. Od spletne strani in e-cenika do rezervacijskega sistema, CRM-ja ali interne aplikacije.</p>
     </div>
 
-    <div class="services-grid" id="servicesGrid">
-      <!-- Napolni JS; privzete kartice -->
-      <div class="service-card glass reveal">
-        <span class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </span>
-        <h3 class="service-title">UI / UX Oblikovanje</h3>
-        <p class="service-desc">Ustvarjamo intuitivne in estetske vmesnike, ki jih uporabniki obožujejo. Pikselsko natančne dizajne pretvorimo v odzivno kodo.</p>
-      </div>
-      <div class="service-card glass reveal">
-        <span class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 6 3 12 8 18"/><polyline points="16 6 21 12 16 18"/></svg>
-        </span>
-        <h3 class="service-title">Spletni razvoj</h3>
-        <p class="service-desc">Gradimo hitre, moderne spletne aplikacije s čisto kodo in dobrimi praksami. Od MVP-jev do velikih platform.</p>
-      </div>
-      <div class="service-card glass reveal">
-        <span class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-        </span>
-        <h3 class="service-title">Mobile-First pristop</h3>
-        <p class="service-desc">Vsak projekt gradimo z mobilnim pristopom in testiramo na vseh zaslonih za brezhibno izkušnjo na vsakem naprave.</p>
-      </div>
-      <div class="service-card glass reveal">
-        <span class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        </span>
-        <h3 class="service-title">Hitrost &amp; SEO</h3>
-        <p class="service-desc">Optimiziramo Core Web Vitals, dostopnost in iskalnike, da vaša stran ne le lepo izgleda, ampak tudi dobro rangira.</p>
-      </div>
-    </div>
+    <div class="services-grid" id="servicesGrid"></div>
   </div>
 </section>
 
@@ -242,7 +190,7 @@
       <p class="section-label">Cenik</p>
       <h2 class="section-title">Preprosti <span class="gradient-text">paketi</span></h2>
       <p class="section-desc">Transparentne cene na ključ — enkratna postavitev in mesečno vzdrževanje (gostovanje, domena, posodobitve in podpora). Za rešitve izven paketov pripravimo individualno ponudbo po dogovoru.</p>
-      <p class="pricing-highlight">Brez WordPressa, brez vdorov, brez počasnih strani. Moderna tehnologija, ki je hitra in varna.</p>
+      <p class="pricing-highlight">Brez WordPressa, brez vdorov, brez počasnih strani — hitro in varno.</p>
       <p class="pricing-setup-notice">Trenutno smo v fazi ustanavljanja s.p. — z veseljem sprejmemo povpraševanja, z izvajanjem naročil pa pričnemo takoj, ko bo dejavnost uradno registrirana.</p>
     </div>
 
@@ -525,7 +473,7 @@
   <div class="container">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="#home" class="footer-logo" data-logo><svg class="logo-icon" viewBox="0 0 84 84" fill="none" aria-hidden="true"><defs><linearGradient id="epoLogoGradFooter" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4a7fe0"/><stop offset="100%" stop-color="#7ba3ec"/></linearGradient></defs><rect x="1" y="1" width="82" height="82" rx="20" fill="#17130f" stroke="#29221a" stroke-width="1.5"/><rect x="24" y="26" width="36" height="7" rx="3.5" fill="url(#epoLogoGradFooter)"/><rect x="24" y="38.5" width="26" height="7" rx="3.5" fill="#4a7fe0"/><rect x="24" y="51" width="36" height="7" rx="3.5" fill="url(#epoLogoGradFooter)"/></svg><span class="logo-mark">EPO</span><span class="logo-suffix">.SI</span></a>
+        <a href="#home" class="footer-logo" data-logo></a>
         <p class="footer-tagline">Spletne aplikacije in sistemi po meri — na ključ.</p>
         <div class="social-links footer-social">
           <a href="https://facebook.com" target="_blank" rel="noopener" class="social-link" data-social="facebook" aria-label="Facebook">

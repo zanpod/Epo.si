@@ -320,7 +320,9 @@ body::before {
   padding-top: var(--header-height);
 }
 
-/* Animated gradient background */
+/* Ozadje — ena mirujoča, zelo mehka lisa (brez plavajoče animacije in
+   brez podvojenega "dvojni neonski oblak" učinka), samo rahel namig
+   barve v zgornjem kotu namesto SaaS-template žarenja čez pol zaslona. */
 .hero-bg {
   position: absolute;
   inset: 0;
@@ -330,34 +332,11 @@ body::before {
 .hero-bg::before {
   content: '';
   position: absolute;
-  width: 760px;
-  height: 760px;
-  background: radial-gradient(circle, var(--accent-08) 0%, transparent 70%);
-  top: -220px;
-  right: -220px;
-  animation: float1 22s ease-in-out infinite;
-}
-
-.hero-bg::after {
-  content: '';
-  position: absolute;
-  width: 520px;
-  height: 520px;
-  background: radial-gradient(circle, var(--accent-08) 0%, transparent 70%);
-  bottom: -140px;
-  left: -140px;
-  animation: float2 26s ease-in-out infinite;
-}
-
-@keyframes float1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(-30px, 30px) scale(1.04); }
-  66%       { transform: translate(20px, -20px) scale(0.97); }
-}
-
-@keyframes float2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%       { transform: translate(35px, -40px) scale(1.05); }
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle, var(--accent-04) 0%, transparent 72%);
+  top: -260px;
+  right: -160px;
 }
 
 .hero-content {
@@ -369,32 +348,29 @@ body::before {
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 1rem;
-  background: var(--accent-08);
-  border: 1px solid var(--accent-20);
-  border-radius: var(--radius-full);
+  gap: 0.6rem;
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
-  color: var(--accent);
-  letter-spacing: 0.06em;
-  margin-bottom: 2rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
 }
 
 .hero-badge::before {
   content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 20px;
+  height: 1.5px;
   background: var(--accent);
 }
 
 .hero-heading {
   font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
   margin-bottom: var(--space-5);
   padding-bottom: 0.12em;
-  max-width: 900px;
+  max-width: 820px;
 }
 
 .hero-sub {
@@ -451,43 +427,48 @@ body::before {
 
 .about-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 0.85fr 1.15fr;
   gap: 5rem;
   align-items: center;
 }
 
 .about-image-wrap {
   position: relative;
+  max-width: 380px;
 }
 
+/* Odmaknjen okvir za fotografijo — kot passe-partout za tiskano sliko,
+   ne solidna barvna ploskev "za sijaj" kot pri generičnih SaaS karticah. */
 .about-image-wrap::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  background: var(--accent);
+  inset: 0;
+  transform: translate(14px, 14px);
+  border: 1.5px solid var(--accent-30);
   border-radius: var(--radius-lg);
   z-index: -1;
-  opacity: 0.6;
 }
 
 .about-image {
   width: 100%;
   aspect-ratio: 4/5;
   object-fit: cover;
-  border-radius: calc(var(--radius-lg) - 2px);
+  border-radius: var(--radius-lg);
   display: block;
+  box-shadow: var(--shadow-md);
 }
 
 .about-image-placeholder {
   width: 100%;
   aspect-ratio: 4/5;
-  border-radius: calc(var(--radius-lg) - 2px);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent);
+  box-shadow: var(--shadow-md);
 }
 
 .about-text { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -496,26 +477,39 @@ body::before {
   color: var(--text-muted);
   font-size: var(--text-base);
   line-height: 1.9;
+  /* Bio se izriše s textContent (main.js) — obdrži prazne vrstice med
+     odstavki namesto da jih strne v en sam blok besedila. */
+  white-space: pre-line;
 }
 
-.skills-wrap { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+/* Seznam prednosti — navaden urejevalen seznam z majhno črtico, ne
+   oblak modrih "pilulk". */
+.skills-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1.5rem;
+}
 
 .skill-tag {
-  padding: 0.35rem 0.9rem;
-  background: var(--accent-08);
-  border: 1px solid var(--accent-20);
-  border-radius: var(--radius-full);
+  position: relative;
+  padding-left: 1.1rem;
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--accent-text-on-tint);
-  transition: all var(--duration-base) var(--ease);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+  transition: color var(--duration-base) var(--ease);
 }
 
-.skill-tag:hover {
-  background: var(--accent-20);
-  border-color: var(--accent-45);
-  box-shadow: 0 0 12px var(--accent-20);
+.skill-tag::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 1.5px;
+  background: var(--accent);
 }
+
+.skill-tag:hover { color: var(--text); }
 
 .about-stats {
   display: grid;
@@ -532,9 +526,7 @@ body::before {
 }
 
 .stat-card:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-elevated);
-  transform: translateY(-4px);
+  border-color: var(--accent-45);
 }
 
 .stat-number {
@@ -562,16 +554,28 @@ body::before {
 }
 
 .services-header {
-  text-align: center;
-  margin-bottom: 4rem;
+  max-width: 640px;
+  margin-bottom: 3.5rem;
 }
-
-.services-header .section-desc { margin-inline: auto; }
 
 .services-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
+}
+
+/* Skupine storitev (js/main.js renderServices) — #servicesGrid je sam
+   tudi .services-grid, zato mora vsaka skupina zavzeti celo vrstico. */
+.service-category { grid-column: 1 / -1; }
+.service-category + .service-category { margin-top: 3rem; }
+
+.service-category-label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  margin-bottom: 1.25rem;
 }
 
 .service-card {
@@ -583,8 +587,8 @@ body::before {
 
 .service-card:hover {
   border-color: var(--accent-45);
-  box-shadow: var(--shadow-elevated);
-  transform: translateY(-6px);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-3px);
 }
 
 .service-icon {
@@ -644,8 +648,8 @@ body::before {
 
 .project-card:hover {
   border-color: var(--accent-45);
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-elevated);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-sm);
 }
 
 .project-image {
@@ -737,11 +741,9 @@ body::before {
 }
 
 .contact-header {
-  text-align: center;
-  margin-bottom: 4rem;
+  max-width: 640px;
+  margin-bottom: 3.5rem;
 }
-
-.contact-header .section-desc { margin-inline: auto; }
 
 .contact-grid {
   display: grid;
@@ -812,8 +814,7 @@ body::before {
 .social-link:hover {
   background: var(--accent-12);
   border-color: var(--accent-45);
-  transform: translateY(-3px);
-  box-shadow: 0 4px 16px var(--accent-20);
+  transform: translateY(-2px);
 }
 
 /* Contact Form */
@@ -2167,8 +2168,8 @@ body.has-chat-fab {
 
 .pricing-card:hover {
   border-color: var(--accent-45);
-  box-shadow: var(--shadow-elevated);
-  transform: translateY(-6px);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-3px);
 }
 
 .pricing-card-featured {
@@ -2228,22 +2229,19 @@ body.has-chat-fab {
 
 .pricing-highlight {
   margin-top: 0.9rem;
-  margin-inline: auto;
   max-width: 640px;
   font-weight: var(--weight-regular);
   color: var(--text-muted);
 }
 
 .pricing-setup-notice {
-  display: inline-flex;
+  display: block;
   margin-top: 1.25rem;
-  padding: 0.5rem 1.1rem;
+  padding-left: 0.9rem;
   max-width: 640px;
-  background: var(--overlay-04);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
+  border-left: 2px solid var(--border-strong);
   font-size: var(--text-xs);
-  line-height: 1.4;
+  line-height: 1.5;
   color: var(--text-subtle);
 }
 
@@ -2330,7 +2328,6 @@ body.has-chat-fab {
 
 .faq-list {
   max-width: 760px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -2686,8 +2683,8 @@ body.has-chat-fab {
 
 .blog-card:hover {
   border-color: var(--accent-45);
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-elevated);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-sm);
 }
 
 .blog-card-image-wrap { position: relative; }
@@ -3429,22 +3426,6 @@ body.has-chat-fab {
   align-items: center;
 }
 
-/* Mehka svetla lisa, ki sledi kurzorju po hero ozadju — samo desktop (JS jo aktivira) */
-.hero-cursor-glow {
-  position: absolute;
-  z-index: 0;
-  width: 480px;
-  height: 480px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-12) 0%, transparent 70%);
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--duration-slow) var(--ease);
-  will-change: transform, opacity;
-}
-.hero-cursor-glow.active { opacity: 1; }
-
 /* ── Živ interaktiven e-cenik ──────────────────────────────────── */
 .hero-demo {
   position: relative;
@@ -3780,7 +3761,6 @@ body.has-chat-fab {
 }
 
 @media (max-width: 768px) {
-  .hero-cursor-glow { display: none; }
   .savings { padding: var(--space-8) 0; }
   .savings-card { padding: var(--space-5); gap: var(--space-6); }
 }
