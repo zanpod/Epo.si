@@ -99,17 +99,34 @@ function updateScrollProgress() {
   bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
 }
 
-// ── Kartice: sijaj, ki sledi kazalcu ob hoverju ─────────────────
-// En delegiran listener (namesto po enega na kartico) — dela tudi za
-// kartice storitev/projektov, ki se izrišejo šele po nalaganju podatkov.
+// ── Kartice: sijaj, ki sledi kazalcu (miška) ali prstu (dotik) ──
+// En delegiran listener na dogodek (namesto po enega na kartico) — dela
+// tudi za kartice storitev/projektov, ki se izrišejo šele po nalaganju
+// podatkov. Na dotik ni "hover", zato sijaj ob tapu na kratko prižgemo
+// prek razreda .spot-active in ga po premoru sami ugasnemo.
 function initCardSpotlight() {
   const SPOTLIGHT_SELECTOR = '.service-card, .project-card, .pricing-card, .stat-card, .faq-item';
+
+  const setSpotPosition = (card, clientX, clientY) => {
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--spot-x', `${clientX - rect.left}px`);
+    card.style.setProperty('--spot-y', `${clientY - rect.top}px`);
+  };
+
   document.body.addEventListener('mousemove', (e) => {
     const card = e.target.closest(SPOTLIGHT_SELECTOR);
     if (!card) return;
-    const rect = card.getBoundingClientRect();
-    card.style.setProperty('--spot-x', `${e.clientX - rect.left}px`);
-    card.style.setProperty('--spot-y', `${e.clientY - rect.top}px`);
+    setSpotPosition(card, e.clientX, e.clientY);
+  }, { passive: true });
+
+  document.body.addEventListener('touchstart', (e) => {
+    const card = e.target.closest(SPOTLIGHT_SELECTOR);
+    if (!card) return;
+    const touch = e.touches[0];
+    setSpotPosition(card, touch.clientX, touch.clientY);
+    card.classList.add('spot-active');
+    clearTimeout(card._spotTimer);
+    card._spotTimer = setTimeout(() => card.classList.remove('spot-active'), 700);
   }, { passive: true });
 }
 
@@ -286,16 +303,24 @@ function applySettings(s) {
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc && s.meta_description) metaDesc.content = s.meta_description;
 
-    if (s.hero_heading) {
+    // Ohrani že sestavljen HTML, če se besedilo ni spremenilo od zadnje
+    // izrisave (cache -> live fetch) — sicer bi se vstopna animacija
+    // besed nesmiselno sprožila dvakrat zapored.
+    if (s.hero_heading && heroHeading.dataset.heroText !== s.hero_heading) {
+      heroHeading.dataset.heroText = s.hero_heading;
       // Zadnja beseda/besedna zveza je vedno v akcentni barvi (isti vzorec
       // kot pri vseh naslovih sekcij) — besedilo iz baze je navadno
       // besedilo brez oznak, zato barvo tu vedno znova sestavimo namesto
       // z .textContent pobrisati vgrajeni <span>.
+      // Vsaka beseda dobi svoj <span> — omogoča vstopno animacijo "beseda
+      // za besedo" ob nalaganju, ki deluje enako na dotik in miško (za
+      // razliko od hover-efektov drugje na strani).
       const words = s.hero_heading.trim().split(/\s+/);
       const last = words.pop();
-      heroHeading.innerHTML = words.length
-        ? `${escHtml(words.join(' '))} <span class="gradient-text">${escHtml(last)}</span>`
-        : `<span class="gradient-text">${escHtml(last)}</span>`;
+      const wordSpan = (w, i) => `<span class="hero-word" style="--i:${i}">${escHtml(w)}</span>`;
+      heroHeading.innerHTML = words.map(wordSpan).join(' ')
+        + (words.length ? ' ' : '')
+        + `<span class="hero-word gradient-text" style="--i:${words.length}">${escHtml(last)}</span>`;
     }
     if (heroSub && s.hero_subheading) heroSub.textContent = s.hero_subheading;
     if (ctaPrimary) {

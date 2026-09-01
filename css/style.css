@@ -161,17 +161,17 @@ body::before {
 /* ── Scroll animation ───────────────────────────────────────── */
 .reveal {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(24px) scale(0.98);
   transition: opacity var(--duration-slow) var(--ease), transform var(--duration-slow) var(--ease);
 }
 .reveal.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
-/* ── Cursor spotlight — sledi miški znotraj kartice, viden samo ob
-   hoverju (brez lastnega premikanja v mirovanju). Pozicijo (--spot-x/
-   --spot-y) nastavlja js/main.js. */
+/* ── Spotlight — sledi miški (hover) ali prstu (tap, prek .spot-active
+   iz js/main.js) znotraj kartice; brez lastnega premikanja v mirovanju.
+   Pozicijo (--spot-x/--spot-y) nastavlja js/main.js. */
 .service-card, .project-card, .pricing-card, .stat-card, .faq-item {
   position: relative;
 }
@@ -187,8 +187,19 @@ body::before {
   transition: opacity var(--duration-base) var(--ease);
 }
 .service-card:hover::before, .project-card:hover::before, .pricing-card:hover::before,
-.stat-card:hover::before, .faq-item:hover::before {
+.stat-card:hover::before, .faq-item:hover::before,
+.service-card.spot-active::before, .project-card.spot-active::before, .pricing-card.spot-active::before,
+.stat-card.spot-active::before, .faq-item.spot-active::before {
   opacity: 1;
+}
+
+/* ── Otipljiv odziv na pritisk — na miški in dotiku enako (:active
+   sproži oboje), da se kartice in gumbi čutijo "žive" tudi brez hoverja. */
+.btn:active {
+  transform: scale(0.96);
+}
+.service-card:active, .project-card:active, .pricing-card:active, .faq-item:active {
+  transform: scale(0.985);
 }
 
 /* ── Napredek branja — tanka črta pod navigacijo, ki se polni s
@@ -407,6 +418,20 @@ body::before {
   margin-bottom: var(--space-5);
   padding-bottom: 0.12em;
   max-width: 820px;
+}
+
+/* Vsaka beseda naslova se ob nalaganju rahlo dvigne na svoje mesto,
+   zamaknjeno po vrsti — deluje enako na dotik in miško, brez hoverja. */
+.hero-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.35em);
+  animation: heroWordIn 640ms var(--ease) forwards;
+  animation-delay: calc(var(--i, 0) * 55ms + 100ms);
+}
+
+@keyframes heroWordIn {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .hero-sub {
