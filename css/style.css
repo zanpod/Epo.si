@@ -169,6 +169,42 @@ body::before {
   transform: translateY(0);
 }
 
+/* ── Cursor spotlight — sledi miški znotraj kartice, viden samo ob
+   hoverju (brez lastnega premikanja v mirovanju). Pozicijo (--spot-x/
+   --spot-y) nastavlja js/main.js. */
+.service-card, .project-card, .pricing-card, .stat-card, .faq-item {
+  position: relative;
+}
+.service-card::before, .project-card::before, .pricing-card::before,
+.stat-card::before, .faq-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle 220px at var(--spot-x, 50%) var(--spot-y, 50%), var(--accent-soft), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease);
+}
+.service-card:hover::before, .project-card:hover::before, .pricing-card:hover::before,
+.stat-card:hover::before, .faq-item:hover::before {
+  opacity: 1;
+}
+
+/* ── Napredek branja — tanka črta pod navigacijo, ki se polni s
+   scrollom (odziv na dejansko dejanje uporabnika, ne samodejna
+   animacija v mirovanju). */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2.5px;
+  width: 0%;
+  background: var(--accent);
+  z-index: 1001;
+  transition: width 80ms linear;
+}
+
 
 /* ================================================================
    NAVIGATION
@@ -601,8 +637,14 @@ body::before {
   border-radius: var(--radius-sm);
   background: var(--accent-08);
   color: var(--accent);
+  transition: transform var(--duration-base) var(--ease), background var(--duration-base) var(--ease);
 }
 .service-icon svg { width: 24px; height: 24px; }
+
+.service-card:hover .service-icon {
+  transform: scale(1.1) rotate(-4deg);
+  background: var(--accent-soft);
+}
 
 .service-title {
   font-size: var(--text-md);
@@ -2370,6 +2412,8 @@ body.has-chat-fab {
   padding: 0 0 1.4rem;
   margin: 0;
   line-height: 1.6;
+  overflow: hidden;
+  transition: height 260ms var(--ease), opacity 200ms var(--ease), padding-bottom 260ms var(--ease);
 }
 
 /* ================================================================

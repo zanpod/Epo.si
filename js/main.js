@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSiteData();
   initScrollReveal();
   initContactForm();
+  initCardSpotlight();
+  initFaqAccordion();
   trackPageView();
 });
 
@@ -70,6 +72,7 @@ function initNav() {
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 20);
     updateActiveLink();
+    updateScrollProgress();
   }, { passive: true });
 
   toggle?.addEventListener('click', () => {
@@ -84,6 +87,82 @@ function initNav() {
       mobileMenu?.classList.remove('open');
       document.body.style.overflow = '';
     });
+  });
+}
+
+// ── Napredek scrolla ────────────────────────────────────────────
+function updateScrollProgress() {
+  const bar = document.getElementById('scrollProgress');
+  if (!bar) return;
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+  bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+}
+
+// ── Kartice: sijaj, ki sledi kazalcu ob hoverju ─────────────────
+// En delegiran listener (namesto po enega na kartico) — dela tudi za
+// kartice storitev/projektov, ki se izrišejo šele po nalaganju podatkov.
+function initCardSpotlight() {
+  const SPOTLIGHT_SELECTOR = '.service-card, .project-card, .pricing-card, .stat-card, .faq-item';
+  document.body.addEventListener('mousemove', (e) => {
+    const card = e.target.closest(SPOTLIGHT_SELECTOR);
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--spot-x', `${e.clientX - rect.left}px`);
+    card.style.setProperty('--spot-y', `${e.clientY - rect.top}px`);
+  }, { passive: true });
+}
+
+// ── FAQ: mehko odpiranje/zapiranje namesto trenutnega preklopa ──
+function initFaqAccordion() {
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const summary = item.querySelector('summary');
+    const content = item.querySelector('p');
+    if (!summary || !content) return;
+
+    summary.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (item.hasAttribute('open')) {
+        collapseFaqItem(item, content);
+      } else {
+        expandFaqItem(item, content);
+      }
+    });
+  });
+}
+
+function expandFaqItem(item, content) {
+  item.setAttribute('open', '');
+  const targetHeight = content.scrollHeight;
+  content.style.height = '0px';
+  content.style.paddingBottom = '0px';
+  content.style.opacity = '0';
+  void content.offsetHeight; // vsili reflow, preden zaženemo tranzicijo
+  requestAnimationFrame(() => {
+    content.style.height = `${targetHeight}px`;
+    content.style.paddingBottom = '';
+    content.style.opacity = '1';
+  });
+  content.addEventListener('transitionend', function onEnd(e) {
+    if (e.target !== content || e.propertyName !== 'height') return;
+    content.style.height = 'auto';
+    content.removeEventListener('transitionend', onEnd);
+  });
+}
+
+function collapseFaqItem(item, content) {
+  content.style.height = `${content.scrollHeight}px`;
+  void content.offsetHeight;
+  requestAnimationFrame(() => {
+    content.style.height = '0px';
+    content.style.paddingBottom = '0px';
+    content.style.opacity = '0';
+  });
+  content.addEventListener('transitionend', function onEnd(e) {
+    if (e.target !== content || e.propertyName !== 'height') return;
+    item.removeAttribute('open');
+    content.style.paddingBottom = '';
+    content.removeEventListener('transitionend', onEnd);
   });
 }
 
