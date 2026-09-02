@@ -367,9 +367,12 @@ body::before {
   padding-top: var(--header-height);
 }
 
-/* Ozadje — ena mirujoča, zelo mehka lisa (brez plavajoče animacije in
-   brez podvojenega "dvojni neonski oblak" učinka), samo rahel namig
-   barve v zgornjem kotu namesto SaaS-template žarenja čez pol zaslona. */
+/* Ozadje — ena mirujoča, zelo mehka lisa (brez lastnega, v mirovanju
+   vrtečega se "floating blob" učinka in brez podvojenega "dvojni
+   neonski oblak" učinka), samo rahel namig barve v zgornjem kotu
+   namesto SaaS-template žarenja čez pol zaslona. Spodaj (@supports)
+   se ista lisa vseeno premakne — a IZKLJUČNO vezano na scroll uporabnika,
+   ne v mirovanju. */
 .hero-bg {
   position: absolute;
   inset: 0;
@@ -390,6 +393,35 @@ body::before {
   position: relative;
   z-index: 1;
   padding: var(--space-10) 0 var(--space-7);
+}
+
+/* ── Izstop heroja ob scrollu — vsebina se ob zapuščanju hero sekcije
+   rahlo pogrezne in zbledi, sijaj v ozadju pa se premakne. Vezano
+   izključno na dejanski scroll uporabnika (scroll-driven, ne časovna
+   animacija), zato ne krši zgornjega "brez mirujočega gibanja" pravila.
+   @supports poskrbi, da brskalniki brez podpore preprosto vidijo
+   normalno mirujočo stran — nič se ne pokvari. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-content {
+      animation: heroRecede linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 90vh;
+    }
+    .hero-bg::before {
+      animation: heroGlowDrift linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 90vh;
+    }
+  }
+}
+
+@keyframes heroRecede {
+  to { transform: translateY(56px); opacity: 0.25; }
+}
+
+@keyframes heroGlowDrift {
+  to { transform: translate(-48px, 40px) scale(1.2); opacity: 0.45; }
 }
 
 .hero-badge {
